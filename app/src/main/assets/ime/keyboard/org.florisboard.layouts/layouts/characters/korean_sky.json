@@ -1,0 +1,22 @@
+[
+  [
+    { "$": "auto_text_key", "code": 12643, "label": "ㅣ" },
+    { "$": "auto_text_key", "code": 12641, "label": "ㅡ" },
+    { "$": "auto_text_key", "code": 12623, "label": "ㅏ" }
+  ],
+  [
+    { "$": "auto_text_key", "code": 12593, "label": "ㄱㅋㄲ" },
+    { "$": "auto_text_key", "code": 12596, "label": "ㄴㄹ" },
+    { "$": "auto_text_key", "code": 12599, "label": "ㄷㅌㄸ" }
+  ],
+  [
+    { "$": "auto_text_key", "code": 12610, "label": "ㅂㅍㅃ" },
+    { "$": "auto_text_key", "code": 12613, "label": "ㅅㅎㅆ" },
+    { "$": "auto_text_key", "code": 12616, "label": "ㅈㅊㅉ" }
+  ],
+  [
+    { "$": "auto_text_key", "code": 12615, "label": "ㅇㅁ" },
+    { "$": "auto_text_key", "code": 32, "label": "SPACE" },
+    { "$": "auto_text_key", "code": 10, "label": "ENTER" }
+  ]
+]

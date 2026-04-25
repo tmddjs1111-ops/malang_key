@@ -111,7 +111,8 @@ tasks.register<JavaExec>("generateJsonSchema") {
     dependsOn("build")
     mainClass.set("org.florisboard.lib.snygg.SnyggJsonSchemaGenerator")
     //FIXME: find a way that doesn't use android.libraryVariants
-    val debugVariant = android.libraryVariants.first { it.name == "debug" }
+    val androidExt = project.extensions.getByName("android") as com.android.build.gradle.LibraryExtension
+    val debugVariant = androidExt.libraryVariants.first { it.name == "debug" }
     classpath = files(
         debugVariant.javaCompileProvider.get().classpath.map { it.absolutePath },
     )

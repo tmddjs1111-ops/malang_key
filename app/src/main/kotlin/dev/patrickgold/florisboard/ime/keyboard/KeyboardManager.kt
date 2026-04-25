@@ -551,6 +551,17 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
         candidate?.let { commitCandidate(it) }
+
+        // Malang Key Migration: SKY layout specific SPACE behavior
+        // In SKY layout, if there's composing text, SPACE commits it and stops.
+        val subtype = subtypeManager.activeSubtype
+        if (subtype.primaryLocale.language == "ko" && subtype.layoutMap.characters.componentId.contains("sky")) {
+            if (editorInstance.activeContent.composing.isValid && editorInstance.activeContent.composing.length > 0) { // Check if something is being composed
+                editorInstance.finalizeComposingText(editorInstance.activeContent.composingText.toString()) // Commit preedit
+                return
+            }
+        }
+
         if (prefs.keyboard.spaceBarSwitchesToCharacters.get()) {
             when (activeState.keyboardMode) {
                 KeyboardMode.NUMERIC_ADVANCED,

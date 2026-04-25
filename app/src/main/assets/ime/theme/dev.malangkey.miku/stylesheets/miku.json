@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
+  "@defines": {
+    "--primary": "#00acc1",
+    "--primary-variant": "#00838f",
+    "--secondary": "#ff4081",
+    "--background": "rgba(0, 0, 0, 0.1)",
+    "--surface": "rgba(255, 255, 255, 0.15)",
+    "--surface-variant": "rgba(255, 255, 255, 0.3)",
+    "--on-background": "#ffffff",
+    "--on-surface": "#ffffff",
+    "--shape": "rounded-corner(4dp, 4dp, 4dp, 4dp)"
+  },
+  "window": {
+    "background-image": "uri(`flex:/BG.jpg`)",
+    "content-scale": "crop"
+  },
+  "key": {
+    "background": "var(--surface)",
+    "foreground": "var(--on-surface)",
+    "font-size": "20sp",
+    "shape": "var(--shape)",
+    "shadow-elevation": "0dp"
+  },
+  "key:pressed": {
+    "background": "var(--surface-variant)"
+  },
+  "key[code=32]": {
+    "background": "rgba(255, 255, 255, 0.1)",
+    "border-width": "0.5dp",
+    "border-color": "rgba(255, 255, 255, 0.2)"
+  }
+}

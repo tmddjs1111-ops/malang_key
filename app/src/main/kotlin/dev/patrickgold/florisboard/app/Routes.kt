@@ -141,6 +141,10 @@ object Routes {
         object Keyboard
 
         @Serializable
+        @Deeplink("settings/keyboard/selection")
+        object KeyboardSelection
+
+        @Serializable
         @Deeplink("settings/keyboard/input-feedback")
         object InputFeedback
 
@@ -296,6 +300,7 @@ object Routes {
             }
 
             composableWithDeepLink(Settings.Keyboard::class) { KeyboardScreen() }
+            composableWithDeepLink(Settings.KeyboardSelection::class) { KeyboardSelectionScreen() }
             composableWithDeepLink(Settings.InputFeedback::class) { InputFeedbackScreen() }
 
             composableWithDeepLink(Settings.Smartbar::class) { SmartbarScreen() }

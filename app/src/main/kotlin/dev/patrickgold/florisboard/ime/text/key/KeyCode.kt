@@ -139,4 +139,8 @@ object KeyCode {
     const val HALF_SPACE =                  8204
 
     const val CJK_SPACE =                  12288
+
+    const val KOREAN_STROKE_ADD =          -9801
+    const val KOREAN_DOUBLE_CONSONANT =    -9802
+    const val KOREAN_CYCLE =               -9803
 }

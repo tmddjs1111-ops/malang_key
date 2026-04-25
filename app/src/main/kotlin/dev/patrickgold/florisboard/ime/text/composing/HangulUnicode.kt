@@ -26,6 +26,11 @@ class HangulUnicode : Composer {
     override val label: String = "Hangul Unicode"
     override val toRead: Int = 1
 
+    @kotlinx.serialization.Transient
+    private var lastInputTime: Long = 0
+    @kotlinx.serialization.Transient
+    private var lastInputStr: String = ""
+
     // Initial consonants, ordered for syllable creation
     private val initials = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
     // Medial vowels, ordered for syllable creation
@@ -60,8 +65,41 @@ class HangulUnicode : Composer {
     private val finalCompRev = reverseComp(finalComp)
     private val medialCompRev = reverseComp(medialComp)
 
-    private fun syllable(ini: Int, med: Int, fin:Int): Char {
-        return (ini*588 + med*28 + fin + 44032).toChar()
+    private val strokeMap = mapOf(
+        'ㄱ' to 'ㅋ', 'ㄴ' to 'ㄷ', 'ㄷ' to 'ㅌ', 'ㅁ' to 'ㅂ', 'ㅂ' to 'ㅍ',
+        'ㅅ' to 'ㅈ', 'ㅈ' to 'ㅊ', 'ㅇ' to 'ㅎ', 'ㅏ' to 'ㅑ', 'ㅓ' to 'ㅕ',
+        'ㅗ' to 'ㅛ', 'ㅜ' to 'ㅠ'
+    )
+
+    private val doubleMap = mapOf(
+        'ㄱ' to 'ㄲ', 'ㄷ' to 'ㄸ', 'ㅂ' to 'ㅃ', 'ㅅ' to 'ㅆ', 'ㅈ' to 'ㅉ',
+        'ㅏ' to 'ㅑ', 'ㅓ' to 'ㅕ', 'ㅗ' to 'ㅛ', 'ㅜ' to 'ㅠ', 'ㅐ' to 'ㅒ', 'ㅔ' to 'ㅖ'
+    )
+
+    private val cycleMap = mapOf(
+        'ㄱ' to "ㄱㅋㄲ", 'ㅋ' to "ㅋㄲㄱ", 'ㄲ' to "ㄲㄱㅋ",
+        'ㄴ' to "ㄴㄹ", 'ㄹ' to "ㄹㄴ",
+        'ㄷ' to "ㄷㅌㄸ", 'ㅌ' to "ㅌㄸㄷ", 'ㄸ' to "ㄸㄷㅌ",
+        'ㅂ' to "ㅂㅍㅃ", 'ㅍ' to "ㅍㅃㅂ", 'ㅃ' to "ㅃㅂㅍ",
+        'ㅁ' to "ㅁㅅㅆ", 'ㅅ' to "ㅅㅆㅁ", 'ㅆ' to "ㅆㅁㅅ",
+        'ㅈ' to "ㅈㅊㅉ", 'ㅊ' to "ㅊㅉㅈ", 'ㅉ' to "ㅉㅈㅊ",
+        'ㅇ' to "ㅇㅎ", 'ㅎ' to "ㅎㅇ",
+        'ㅣ' to "ㅣㅡㅢ", 'ㅡ' to "ㅡㅢㅣ", 'ㅢ' to "ㅢㅣㅡ",
+        'ㅏ' to "ㅏㅑ", 'ㅑ' to "ㅑㅏ",
+        'ㅓ' to "ㅓㅕ", 'ㅕ' to "ㅕㅓ",
+        'ㅗ' to "ㅗㅛ", 'ㅛ' to "ㅛㅗ",
+        'ㅜ' to "ㅜㅠ", 'ㅠ' to "ㅠㅜ"
+    )
+
+    private val cheonjiinVowels = mapOf(
+        "ㅣ\u318D" to "ㅏ", "ㅏ\u318D" to "ㅑ", "ㅏㅣ" to "ㅐ", "ㅑㅣ" to "ㅒ",
+        "\u318Dㅣ" to "ㅓ", "\u318Dㅓ" to "ㅕ", "ㅓㅣ" to "ㅔ", "ㅕㅣ" to "ㅖ",
+        "\u318Dㅡ" to "ㅗ", "ㅗ\u318D" to "ㅛ", "ㅡ\u318D" to "ㅜ", "ㅜ\u318D" to "ㅠ",
+        "ㅡㅣ" to "ㅢ"
+    )
+
+    private fun syllable(ini: Int, med: Int, fin: Int): Char {
+        return (ini * 588 + med * 28 + fin + 44032).toChar()
     }
 
     private fun syllableBlocks(syllOrd: Int): List<Int> {
@@ -72,12 +110,101 @@ class HangulUnicode : Composer {
     }
 
     override fun getActions(precedingText: String, toInsert: String): Pair<Int, String> {
+        val now = System.currentTimeMillis()
+        val isFastRepeat = (now - lastInputTime < 400) && (toInsert == lastInputStr)
+        
+        lastInputTime = now
+        lastInputStr = toInsert
+
+        if (toInsert == "STROKE_ADD" || toInsert == "DOUBLE_CONSONANT" || toInsert == "CYCLE" || isFastRepeat) {
+            if (precedingText.isEmpty()) return 0 to toInsert
+            val lastChar = precedingText.last()
+            
+            val effectiveToInsert = if (isFastRepeat) {
+                // If it's a layout like Sky or Naratgul, we might want CYCLE. 
+                // If it's Danmoeum, we want DOUBLE_CONSONANT.
+                // For simplicity, we try CYCLE then DOUBLE.
+                if (cycleMap.containsKey(lastChar)) "CYCLE" else "DOUBLE_CONSONANT"
+            } else {
+                toInsert
+            }
+
+            if (effectiveToInsert == "CYCLE") {
+                cycleMap[lastChar]?.let { return 1 to it[1].toString() }
+            } else if (effectiveToInsert == "DOUBLE_CONSONANT") {
+                doubleMap[lastChar]?.let { return 1 to it.toString() }
+            } else if (effectiveToInsert == "STROKE_ADD") {
+                strokeMap[lastChar]?.let { return 1 to it.toString() }
+            }
+            
+            if (lastChar.code in 44032..55203) {
+                val ord = lastChar.code - 44032
+                val ini = ord / 588
+                val med = ord % 588 / 28
+                val fin = ord % 28
+                
+                if (fin > 0) {
+                    val finChar = finals[fin]
+                    val nextChar = when (effectiveToInsert) {
+                        "CYCLE" -> cycleMap[finChar]?.get(1)
+                        "STROKE_ADD" -> strokeMap[finChar]
+                        "DOUBLE_CONSONANT" -> doubleMap[finChar]
+                        else -> null
+                    }
+                    nextChar?.let {
+                        val newFin = finals.indexOf(it)
+                        if (newFin != -1) return 1 to syllable(ini, med, newFin).toString()
+                    }
+                } else {
+                    if (effectiveToInsert == "CYCLE") {
+                        val iniChar = initials[ini]
+                        cycleMap[iniChar]?.let {
+                            val newIni = initials.indexOf(it[1])
+                            if (newIni != -1) return 1 to syllable(newIni, med, 0).toString()
+                        }
+                    } else {
+                        val medChar = medials[med]
+                        val nextMed = if (effectiveToInsert == "STROKE_ADD") strokeMap[medChar] else doubleMap[medChar]
+                        nextMed?.let {
+                            val newMed = medials.indexOf(it)
+                            if (newMed != -1) return 1 to syllable(ini, newMed, 0).toString()
+                        }
+                        
+                        val iniChar = initials[ini]
+                        val nextIni = if (effectiveToInsert == "STROKE_ADD") strokeMap[iniChar] else doubleMap[iniChar]
+                        nextIni?.let {
+                            val newIni = initials.indexOf(it)
+                            if (newIni != -1) return 1 to syllable(newIni, med, 0).toString()
+                        }
+                    }
+                }
+            }
+            return if (isFastRepeat) 0 to toInsert else 0 to ""
+        }
+
         val c = toInsert.firstOrNull()
-        // precedingText is "at least the last 1 character of what's currently here"
         if (precedingText.isEmpty() || c == null) {
             return 0 to toInsert
         }
         val lastChar = precedingText.last()
+        
+        // Cheonjiin vowel composition
+        val combo = "$lastChar$c"
+        cheonjiinVowels[combo]?.let { return 1 to it }
+        
+        if (lastChar.code in 44032..55203) {
+            val ord = lastChar.code - 44032
+            val ini = ord / 588
+            val med = ord % 588 / 28
+            val fin = ord % 28
+            if (fin == 0) {
+                val medChar = medials[med]
+                cheonjiinVowels["$medChar$c"]?.let {
+                    val newMed = medials.indexOf(it)
+                    if (newMed != -1) return 1 to syllable(ini, newMed, 0).toString()
+                }
+            }
+        }
         val lastOrd = lastChar.code
 
         if (lastChar in initials && c in medials) {

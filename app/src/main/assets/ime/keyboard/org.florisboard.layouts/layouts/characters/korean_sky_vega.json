@@ -2,57 +2,84 @@
     [
         {
             "code": 12593,
-            "label": "ㄱㅋ"
-        },
-        {
-            "code": 12643,
-            "label": "ㅣㅡ"
-        },
-        {
-            "code": 12623,
-            "label": "ㅏㅑ"
-        }
-    ],
-    [
-        {
-            "code": 12599,
-            "label": "ㄷㅌ"
+            "label": "ㄱㅋㄲ"
         },
         {
             "code": 12596,
             "label": "ㄴㄹ"
         },
         {
-            "code": 12627,
-            "label": "ㅓㅕ"
+            "code": 12599,
+            "label": "ㄷㅌㄸ"
         }
     ],
     [
-        {
-            "code": 12609,
-            "label": "ㅁㅅ"
-        },
         {
             "code": 12610,
-            "label": "ㅂㅍ"
+            "label": "ㅂㅍㅃ"
         },
         {
-            "code": 12631,
-            "label": "ㅗㅛ"
+            "code": 12613,
+            "label": "ㅅㅎㅆ"
+        },
+        {
+            "code": 12616,
+            "label": "ㅈㅊㅉ"
         }
     ],
     [
         {
-            "code": 12616,
-            "label": "ㅈㅊ"
-        },
-        {
             "code": 12615,
-            "label": "ㅇㅎ"
+            "label": "ㅇㅁ"
         },
         {
-            "code": 12636,
-            "label": "ㅜㅠ"
+            "code": 12643,
+            "label": "ㅣ"
+        },
+        {
+            "code": 12641,
+            "label": "ㅡ"
+        }
+    ],
+    [
+        {
+            "code": -11,
+            "label": "⇧",
+            "type": "modifier"
+        },
+        {
+            "code": 12623,
+            "label": "ㅏ"
+        },
+        {
+            "code": 12685,
+            "label": "·"
+        },
+        {
+            "code": -7,
+            "label": "⌫"
+        }
+    ],
+    [
+        {
+            "code": -202,
+            "label": "!#1",
+            "type": "system_gui"
+        },
+        {
+            "code": -227,
+            "label": "🌐",
+            "type": "system_gui"
+        },
+        {
+            "code": 32,
+            "label": " ",
+            "weight": 2
+        },
+        {
+            "code": 10,
+            "label": "⏎",
+            "type": "enter_editing"
         }
     ]
 ]

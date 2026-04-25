@@ -106,14 +106,14 @@ fun HomeScreen() = FlorisScreen {
             }
         }*/
         Preference(
-            icon = Icons.Outlined.Palette,
-            title = stringRes(R.string.settings__theme__title),
-            onClick = { navController.navigate(Routes.Settings.Theme) },
-        )
-        Preference(
             icon = Icons.Outlined.Keyboard,
             title = stringRes(R.string.settings__keyboard__title),
             onClick = { navController.navigate(Routes.Settings.Keyboard) },
+        )
+        Preference(
+            icon = Icons.Outlined.Palette,
+            title = stringRes(R.string.settings__theme__title),
+            onClick = { navController.navigate(Routes.Settings.Theme) },
         )
         Preference(
             icon = Icons.Default.SmartButton,

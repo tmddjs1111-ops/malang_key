@@ -389,7 +389,8 @@
           "patrickgold",
           "MalangKey"
         ],
-        "direction": "ltr"
+        "direction": "ltr",
+        "modifier": null
       },
       {
         "id": "korean_danmoeum",
@@ -407,7 +408,8 @@
           "patrickgold",
           "MalangKey"
         ],
-        "direction": "ltr"
+        "direction": "ltr",
+        "modifier": null
       },
       {
         "id": "korean_sky_vega",
@@ -416,7 +418,8 @@
           "patrickgold",
           "MalangKey"
         ],
-        "direction": "ltr"
+        "direction": "ltr",
+        "modifier": null
       },
       {
         "id": "kurdish",

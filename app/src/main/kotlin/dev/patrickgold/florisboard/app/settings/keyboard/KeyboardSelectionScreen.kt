@@ -61,6 +61,8 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                     } else {
                         subtypeManager.addSubtype(subtype)
                     }
+                    // Force refresh keyboard cache
+                    keyboardManager.resources.anyChangedVersion.value += 1
                 },
                 headlineContent = {
                     Text(text = charactersLayout?.label ?: preset.locale.displayName())

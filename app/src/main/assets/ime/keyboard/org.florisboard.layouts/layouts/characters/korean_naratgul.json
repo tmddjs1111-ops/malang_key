@@ -1,22 +1,88 @@
 [
   [
-    { "code": 12593, "label": "ㄱ" },
-    { "code": 12596, "label": "ㄴ" },
-    { "code": -9803, "label": "ㅏ/ㅓ", "groupId": 100 }
+    {
+      "code": 12593,
+      "label": "ㄱ"
+    },
+    {
+      "code": 12596,
+      "label": "ㄴ"
+    },
+    {
+      "code": -9803,
+      "label": "ㅏ/ㅓ",
+      "groupId": 100
+    }
   ],
   [
-    { "code": 12601, "label": "ㄹ" },
-    { "code": 12609, "label": "ㅁ" },
-    { "code": -9803, "label": "ㅗ/ㅜ", "groupId": 101 }
+    {
+      "code": 12601,
+      "label": "ㄹ"
+    },
+    {
+      "code": 12609,
+      "label": "ㅁ"
+    },
+    {
+      "code": -9803,
+      "label": "ㅗ/ㅜ",
+      "groupId": 101
+    }
   ],
   [
-    { "code": 12613, "label": "ㅅ" },
-    { "code": 12615, "label": "ㅇ" },
-    { "code": -9803, "label": "ㅣ/ㅡ", "groupId": 102 }
+    {
+      "code": 12613,
+      "label": "ㅅ"
+    },
+    {
+      "code": 12615,
+      "label": "ㅇ"
+    },
+    {
+      "code": -9803,
+      "label": "ㅣ/ㅡ",
+      "groupId": 102
+    }
   ],
   [
-    { "code": -9801, "label": "획추가" },
-    { "code": -9802, "label": "쌍자음" },
-    { "code": -7, "label": "⌫" }
+    {
+      "code": -11,
+      "label": "⇧",
+      "type": "modifier"
+    },
+    {
+      "code": -9801,
+      "label": "획추가"
+    },
+    {
+      "code": -9802,
+      "label": "쌍자음"
+    },
+    {
+      "code": -7,
+      "label": "⌫"
+    }
+  ],
+  [
+    {
+      "code": -202,
+      "label": "!#1",
+      "type": "system_gui"
+    },
+    {
+      "code": -227,
+      "label": "🌐",
+      "type": "system_gui"
+    },
+    {
+      "code": 32,
+      "label": " ",
+      "weight": 2
+    },
+    {
+      "code": 10,
+      "label": "⏎",
+      "type": "enter_editing"
+    }
   ]
 ]

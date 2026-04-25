@@ -43,6 +43,11 @@
     ],
     [
         {
+            "code": -11,
+            "label": "⇧",
+            "type": "modifier"
+        },
+        {
             "code": -9803,
             "label": "CYCLE"
         },
@@ -53,6 +58,28 @@
         {
             "code": -7,
             "label": "⌫"
+        }
+    ],
+    [
+        {
+            "code": -202,
+            "label": "!#1",
+            "type": "system_gui"
+        },
+        {
+            "code": -227,
+            "label": "🌐",
+            "type": "system_gui"
+        },
+        {
+            "code": 32,
+            "label": " ",
+            "weight": 2
+        },
+        {
+            "code": 10,
+            "label": "⏎",
+            "type": "enter_editing"
         }
     ]
 ]

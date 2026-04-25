@@ -1,22 +1,85 @@
 [
   [
-    { "$": "auto_text_key", "code": 12643, "label": "ㅣ" },
-    { "$": "auto_text_key", "code": 12641, "label": "ㅡ" },
-    { "$": "auto_text_key", "code": 12623, "label": "ㅏ" }
+    {
+      "code": 12643,
+      "label": "ㅣ"
+    },
+    {
+      "code": 12641,
+      "label": "ㅡ"
+    },
+    {
+      "code": 12623,
+      "label": "ㅏ"
+    }
   ],
   [
-    { "$": "auto_text_key", "code": 12593, "label": "ㄱㅋㄲ" },
-    { "$": "auto_text_key", "code": 12596, "label": "ㄴㄹ" },
-    { "$": "auto_text_key", "code": 12599, "label": "ㄷㅌㄸ" }
+    {
+      "code": 12593,
+      "label": "ㄱㅋㄲ"
+    },
+    {
+      "code": 12596,
+      "label": "ㄴㄹ"
+    },
+    {
+      "code": 12599,
+      "label": "ㄷㅌㄸ"
+    }
   ],
   [
-    { "$": "auto_text_key", "code": 12610, "label": "ㅂㅍㅃ" },
-    { "$": "auto_text_key", "code": 12613, "label": "ㅅㅎㅆ" },
-    { "$": "auto_text_key", "code": 12616, "label": "ㅈㅊㅉ" }
+    {
+      "code": 12610,
+      "label": "ㅂㅍㅃ"
+    },
+    {
+      "code": 12613,
+      "label": "ㅅㅎㅆ"
+    },
+    {
+      "code": 12616,
+      "label": "ㅈㅊㅉ"
+    }
   ],
   [
-    { "$": "auto_text_key", "code": 12615, "label": "ㅇㅁ" },
-    { "$": "auto_text_key", "code": 32, "label": "SPACE" },
-    { "$": "auto_text_key", "code": 10, "label": "ENTER" }
+    {
+      "code": -11,
+      "label": "⇧",
+      "type": "modifier"
+    },
+    {
+      "code": 12615,
+      "label": "ㅇㅁ"
+    },
+    {
+      "code": 12685,
+      "label": "·"
+    },
+    {
+      "code": -7,
+      "label": "⌫"
+    }
+  ],
+  [
+    {
+      "code": -202,
+      "label": "!#1",
+      "type": "system_gui"
+    },
+    {
+      "code": -227,
+      "label": "🌐",
+      "type": "system_gui"
+    },
+    {
+      "code": 32,
+      "label": " ",
+      "weight": 2
+    },
+    {
+      "code": 10,
+      "label": "⏎",
+      "type": "enter_editing"
+    }
   ]
 ]

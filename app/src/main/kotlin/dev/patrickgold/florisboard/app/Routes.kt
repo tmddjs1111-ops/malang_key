@@ -64,6 +64,7 @@ import dev.patrickgold.florisboard.app.settings.dictionary.UserDictionaryType
 import dev.patrickgold.florisboard.app.settings.gestures.GesturesScreen
 import dev.patrickgold.florisboard.app.settings.keyboard.InputFeedbackScreen
 import dev.patrickgold.florisboard.app.settings.keyboard.KeyboardScreen
+import dev.patrickgold.florisboard.app.settings.keyboard.KeyboardSelectionScreen
 import dev.patrickgold.florisboard.app.settings.localization.LanguagePackManagerScreen
 import dev.patrickgold.florisboard.app.settings.localization.LanguagePackManagerScreenAction
 import dev.patrickgold.florisboard.app.settings.localization.LocalizationScreen

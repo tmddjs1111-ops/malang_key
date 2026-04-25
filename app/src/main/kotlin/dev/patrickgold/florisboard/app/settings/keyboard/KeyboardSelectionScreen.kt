@@ -16,17 +16,20 @@
 
 package dev.patrickgold.florisboard.app.settings.keyboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.ime.keyboard.LayoutType
 import dev.patrickgold.florisboard.keyboardManager
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
 import dev.patrickgold.florisboard.subtypeManager
-import dev.patrickgold.jetpref.datastore.ui.Preference
 import org.florisboard.lib.compose.stringRes
 
 @Composable
@@ -47,9 +50,8 @@ fun KeyboardSelectionScreen() = FlorisScreen {
             val isChecked = subtypes.any { it.equalsExcludingId(preset.toSubtype()) }
             val charactersLayout = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)
             
-            Preference(
-                title = charactersLayout?.label ?: preset.locale.displayName(),
-                onClick = {
+            ListItem(
+                modifier = Modifier.clickable {
                     val subtype = preset.toSubtype()
                     if (isChecked) {
                         val existingSubtype = subtypes.find { it.equalsExcludingId(subtype) }
@@ -60,7 +62,10 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                         subtypeManager.addSubtype(subtype)
                     }
                 },
-                trailingIcon = {
+                headlineContent = {
+                    Text(text = charactersLayout?.label ?: preset.locale.displayName())
+                },
+                trailingContent = {
                     Checkbox(
                         checked = isChecked,
                         onCheckedChange = null,

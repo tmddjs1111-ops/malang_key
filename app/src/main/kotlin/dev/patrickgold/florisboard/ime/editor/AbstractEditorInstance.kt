@@ -351,8 +351,9 @@ abstract class AbstractEditorInstance(context: Context) {
         }
         val ic = currentInputConnection() ?: return false
         val composer = determineComposer(subtypeManager.activeSubtype.composer)
+        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         val previous = content.textBeforeSelection.takeLast(composer.toRead.coerceAtLeast(if (deletePreviousSpace) 1 else 0))
-        val (tempRm, tempText) = composer.getActions(previous, char)
+        val (tempRm, tempText) = composer.getActions(previous, char, layoutId)
         val rm = if (deletePreviousSpace && previous.isNotEmpty() && previous.last() == ' ') tempRm + 1 else tempRm
         val finalText = buildString(tempText.length + 2) {
             if (insertSpaceBeforeChar) append(' ')

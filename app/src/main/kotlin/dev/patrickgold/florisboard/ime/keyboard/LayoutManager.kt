@@ -335,6 +335,10 @@ class LayoutManager(context: Context) {
 
         when (keyboardMode) {
             KeyboardMode.CHARACTERS -> {
+                if (subtype.layoutMap.characters.componentId.contains("korean")) {
+                    main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
+                    return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)
+                }
                 if (prefs.keyboard.numberRow.get()) {
                     extension = LTN(LayoutType.NUMERIC_ROW, subtype.layoutMap.numericRow)
                 }

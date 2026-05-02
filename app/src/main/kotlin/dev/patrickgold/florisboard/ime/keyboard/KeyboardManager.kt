@@ -80,6 +80,7 @@ import org.florisboard.lib.android.showShortToastSync
 import org.florisboard.lib.android.systemService
 import org.florisboard.lib.kotlin.collectIn
 import org.florisboard.lib.kotlin.collectLatestIn
+import org.florisboard.lib.kotlin.safeSubstring
 
 private val DoubleSpacePeriodMatcher = """([^.!?‽\s]\s)""".toRegex()
 
@@ -98,6 +99,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
 
     val resources = KeyboardManagerResources()
     val activeState = ObservableKeyboardState.new()
+    val isLanguageHudVisible = MutableStateFlow(false)
+    val languageHudProgress = MutableStateFlow(0.0f) // 0.0 to 1.0
+    val languageHudDirection = MutableStateFlow(0) // -1 for left, 1 for right
     var smartbarVisibleDynamicActionsCount by mutableIntStateOf(0)
     private var lastToastReference = WeakReference<Toast>(null)
 
@@ -445,10 +449,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleEnter() {
         val info = editorInstance.activeInfo
         val isShiftPressed = inputEventDispatcher.isPressed(KeyCode.SHIFT)
+        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         if (editorInstance.tryPerformEnterCommitRaw()) {
             return
         }
-        if (info.imeOptions.flagNoEnterAction || info.inputAttributes.flagTextMultiLine && isShiftPressed) {
+        if (info.imeOptions.flagNoEnterAction || (info.inputAttributes.flagTextMultiLine && isShiftPressed) || layoutId.contains("sky")) {
             editorInstance.performEnter()
         } else {
             when (val action = info.imeOptions.action) {
@@ -552,13 +557,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         val candidate = nlpManager.getAutoCommitCandidate()
         candidate?.let { commitCandidate(it) }
 
-        // Malang Key Migration: SKY layout specific SPACE behavior
-        // In SKY layout, if there's composing text, SPACE commits it and stops.
-        val subtype = subtypeManager.activeSubtype
-        if (subtype.primaryLocale.language == "ko" && subtype.layoutMap.characters.componentId.contains("sky")) {
-            if (editorInstance.activeContent.composing.isValid && editorInstance.activeContent.composing.length > 0) { // Check if something is being composed
-                editorInstance.finalizeComposingText(editorInstance.activeContent.composingText.toString()) // Commit preedit
-                return
+        // Malang Key Migration: Multi-tap layout specific SPACE behavior
+        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
+        val isMultiTap = layoutId.contains("sky") || layoutId.contains("cheonjiin") || layoutId.contains("naratgul")
+        if (activeState.isComposingEnabled || isMultiTap) {
+            val composer = resources.composers.value[subtypeManager.activeSubtype.composer] ?: dev.patrickgold.florisboard.ime.text.composing.Appender
+            val consumed = composer.onSpacePressed(editorInstance.activeContent.textBeforeSelection, layoutId)
+            val content = editorInstance.activeContent
+            if (consumed || content.composing.isValid) {
+                val composingText = content.text.safeSubstring(content.localComposing.start, content.localComposing.end)
+                if (composingText.isNotEmpty()) {
+                    editorInstance.finalizeComposingText(composingText)
+                }
+                if (consumed) return
             }
         }
 

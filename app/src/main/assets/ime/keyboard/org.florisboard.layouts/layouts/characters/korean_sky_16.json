@@ -1,0 +1,116 @@
+[
+    [
+        {
+            "code": 12593,
+            "label": "ㄱㅋ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12596,
+            "label": "ㄴㄹ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12599,
+            "label": "ㄷㅌ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": -232,
+            "label": "⌨",
+            "type": "system_gui",
+            "weight": 1.0,
+            "grow": 1.0
+        }
+    ],
+    [
+        {
+            "code": 12610,
+            "label": "ㅂㅍ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12613,
+            "label": "ㅅㅎ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12616,
+            "label": "ㅈㅊ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": -7,
+            "label": "⌫",
+            "type": "enter_editing",
+            "weight": 1.0,
+            "grow": 1.0
+        }
+    ],
+    [
+        {
+            "code": 12615,
+            "label": "ㅇㅁ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12643,
+            "label": "ㅣ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 12641,
+            "label": "ㅡ",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 46,
+            "label": "·",
+            "weight": 1.0,
+            "grow": 1.0
+        }
+    ],
+    [
+        {
+            "code": -204,
+            "label": "123",
+            "type": "system_gui",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 32,
+            "label": "SPACE",
+            "weight": 1.0,
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": -227,
+                    "label": "🌐"
+                }
+            }
+        },
+        {
+            "code": 44,
+            "label": ",",
+            "weight": 1.0,
+            "grow": 1.0
+        },
+        {
+            "code": 10,
+            "label": "⏎",
+            "type": "character",
+            "weight": 1.0,
+            "grow": 1.0
+        }
+    ]
+]

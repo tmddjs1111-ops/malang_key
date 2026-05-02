@@ -35,12 +35,34 @@ interface Composer {
      * @param precedingText The preceding text which is already committed to the target editor field. The string is
      *  typically [toRead] characters long, however it can also be empty or have more characters than [toRead].
      * @param toInsert The character (either single char or single char + diacritics) which are about to be inserted.
+     * @param layoutId The currently active layout ID (from layoutMap.characters.componentId), if available.
      *
      * @return A pair of an integer specifying how many chars from the end to delete from [precedingText] and a string
      *  representing the new transformed character to insert. If the composer does not have an action, `0 to toInsert`
      *  should be returned.
      */
-    fun getActions(precedingText: String, toInsert: String): Pair<Int, String>
+    fun getActions(precedingText: String, toInsert: String, layoutId: String? = null): Pair<Int, String>
+
+    /**
+     * Requests the composer to provide an action for a backspace event.
+     * Use this to implement custom decompose logic (e.g., decomposing a Hangul syllable).
+     *
+     * @return `null` if the composer does not handle backspace, or a pair where the first value is
+     *  the amount of characters to delete before the cursor, and the second value is the string to insert.
+     */
+    fun getActionsForBackspace(precedingText: String, layoutId: String? = null): Pair<Int, String>? {
+        return null
+    }
+
+    /**
+     * Called when the user presses the spacebar.
+     * Use this to implement custom spacebar logic (e.g. escaping cycle state in multi-tap keyboards).
+     *
+     * @return `true` if the space was consumed (swallowed), `false` if a real space should be inserted.
+     */
+    fun onSpacePressed(precedingText: String, layoutId: String? = null): Boolean {
+        return false
+    }
 }
 
 /**
@@ -53,7 +75,7 @@ object Appender : Composer {
     override val label = "Appender"
     override val toRead = 0
 
-    override fun getActions(precedingText: String, toInsert: String): Pair<Int, String> {
+    override fun getActions(precedingText: String, toInsert: String, layoutId: String?): Pair<Int, String> {
         return 0 to toInsert
     }
 }
@@ -69,7 +91,7 @@ class WithRules(
 
     @Transient val ruleOrder = rules.keys.toList().sortedBy { it.length }.reversed()
 
-    override fun getActions(precedingText: String, toInsert: String): Pair<Int, String> {
+    override fun getActions(precedingText: String, toInsert: String, layoutId: String?): Pair<Int, String> {
         val str = precedingText + toInsert
         for (key in ruleOrder) {
             if (str.lowercase().endsWith(key)) {

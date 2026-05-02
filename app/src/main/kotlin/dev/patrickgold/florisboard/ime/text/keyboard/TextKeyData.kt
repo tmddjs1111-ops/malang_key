@@ -49,12 +49,14 @@ data class TextKeyData(
     override val code: Int = KeyCode.UNSPECIFIED,
     override val label: String = "",
     override val groupId: Int = KeyData.GROUP_DEFAULT,
-    override val popup: PopupSet<AbstractKeyData>? = null
+    override val popup: PopupSet<AbstractKeyData>? = null,
+    val weight: Float = 1.0f,
+    val grow: Float = 0.0f,
 ) : KeyData {
     override fun compute(evaluator: ComputingEvaluator): KeyData? {
         return if (evaluator.isSlot(this)) {
             evaluator.slotData(this)?.let { data ->
-                TextKeyData(type, data.code, data.label, groupId, popup)
+                TextKeyData(type, data.code, data.label, groupId, popup, weight, grow)
             }
         } else {
             this

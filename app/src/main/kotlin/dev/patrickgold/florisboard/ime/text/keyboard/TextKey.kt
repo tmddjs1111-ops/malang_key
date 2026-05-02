@@ -122,6 +122,7 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
             isVisible = true
 
             flayShrink = when (keyboardMode) {
+                KeyboardMode.GRID_16KEY -> 0.0f
                 KeyboardMode.NUMERIC,
                 KeyboardMode.NUMERIC_ADVANCED,
                 KeyboardMode.PHONE,
@@ -137,6 +138,7 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                 }
             }
             flayGrow = when (keyboardMode) {
+                KeyboardMode.GRID_16KEY -> (computed as? TextKeyData)?.grow ?: 0.0f
                 KeyboardMode.NUMERIC,
                 KeyboardMode.PHONE,
                 KeyboardMode.PHONE2 -> 0.0f
@@ -150,6 +152,7 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                 }
             }
             flayWidthFactor = when (keyboardMode) {
+                KeyboardMode.GRID_16KEY -> (computed as? TextKeyData)?.weight ?: 1.0f
                 KeyboardMode.NUMERIC,
                 KeyboardMode.PHONE,
                 KeyboardMode.PHONE2 -> 2.68f

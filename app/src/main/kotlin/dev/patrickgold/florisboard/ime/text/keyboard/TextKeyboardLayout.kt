@@ -80,6 +80,7 @@ import dev.patrickgold.florisboard.ime.text.key.KeyVariation
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import dev.patrickgold.florisboard.ime.window.LocalWindowController
 import dev.patrickgold.florisboard.keyboardManager
+import dev.patrickgold.florisboard.subtypeManager
 import dev.patrickgold.florisboard.lib.FlorisRect
 import dev.patrickgold.florisboard.lib.Pointer
 import dev.patrickgold.florisboard.lib.PointerMap
@@ -226,7 +227,10 @@ fun TextKeyboardLayout(
         ) {
             TextKey(data = TextKeyData.UNSPECIFIED).also { desiredKey ->
                 desiredKey.touchBounds.apply {
-                    width = keyboardWidth / 10f
+                    width = when (keyboard.mode) {
+                        KeyboardMode.GRID_16KEY -> keyboardWidth / ((keyboard as TextKeyboard).maxKeyCountPerRow().toFloat() + 0.25f)
+                        else -> keyboardWidth / 10f
+                    }
                     height = when (keyboard.mode) {
                         KeyboardMode.CHARACTERS,
                         KeyboardMode.NUMERIC_ADVANCED,
@@ -301,6 +305,7 @@ fun TextKeyboardLayout(
         }
 
         popupUiController.RenderPopups()
+        // LanguageHud()
     }
 
     LaunchedEffect(Unit) {
@@ -390,7 +395,7 @@ private fun TextKeyButton(
 
 @Suppress("unused_parameter")
 private class TextKeyboardLayoutController(
-    context: Context,
+    val context: Context,
 ) : SwipeGesture.Listener, GlideTypingGesture.Listener {
     private val prefs by FlorisPreferenceStore
     private val editorInstance by context.editorInstance()
@@ -833,86 +838,106 @@ private class TextKeyboardLayoutController(
         val pointer = pointerMap.findById(event.pointerId) ?: return false
 
         return when (event.type) {
-            SwipeGesture.Type.TOUCH_MOVE -> when (event.direction) {
-                SwipeGesture.Direction.LEFT -> {
-                    val action = prefs.gestures.spaceBarSwipeLeft.get()
-                    if (action == SwipeAction.MOVE_CURSOR_LEFT) {
-                        abs(event.relUnitCountX).let {
-                            val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
-                            if (count > 0) {
-                                inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
-                                if (!pointer.hasTriggeredMassSelection) {
-                                    pointer.hasTriggeredMassSelection = true
-                                    editorInstance.massSelection.begin()
-                                }
-                                keyboardManager.handleArrow(KeyCode.ARROW_LEFT, count)
-                            }
-                        }
-                        true
-                    } else {
-                        action != SwipeAction.NO_ACTION
-                    }
+            SwipeGesture.Type.TOUCH_MOVE -> {
+                val absUnitX = abs(event.absUnitCountX)
+                val direction = if (event.absUnitCountX > 0) 1 else -1
+
+                // Update HUD state
+                if (absUnitX >= 1) {
+                    keyboardManager.isLanguageHudVisible.value = true
+                    keyboardManager.languageHudDirection.value = direction
+                    keyboardManager.languageHudProgress.value = (absUnitX / 8.0f).coerceIn(0.0f, 1.0f)
                 }
-                SwipeGesture.Direction.RIGHT -> {
-                    val action = prefs.gestures.spaceBarSwipeRight.get()
-                    if (action == SwipeAction.MOVE_CURSOR_RIGHT) {
-                        abs(event.relUnitCountX).let {
-                            val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
-                            if (count > 0) {
-                                inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
-                                if (!pointer.hasTriggeredMassSelection) {
-                                    pointer.hasTriggeredMassSelection = true
-                                    editorInstance.massSelection.begin()
+
+                when (event.direction) {
+                    SwipeGesture.Direction.LEFT -> {
+                        val action = prefs.gestures.spaceBarSwipeLeft.get()
+                        if (action == SwipeAction.MOVE_CURSOR_LEFT) {
+                            abs(event.relUnitCountX).let {
+                                val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
+                                if (count > 0) {
+                                    inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
+                                    if (!pointer.hasTriggeredMassSelection) {
+                                        pointer.hasTriggeredMassSelection = true
+                                        editorInstance.massSelection.begin()
+                                    }
+                                    keyboardManager.handleArrow(KeyCode.ARROW_LEFT, count)
                                 }
-                                keyboardManager.handleArrow(KeyCode.ARROW_RIGHT, count)
                             }
+                            true
+                        } else {
+                            action != SwipeAction.NO_ACTION
                         }
-                        true
-                    } else {
-                        action != SwipeAction.NO_ACTION
                     }
+                    SwipeGesture.Direction.RIGHT -> {
+                        val action = prefs.gestures.spaceBarSwipeRight.get()
+                        if (action == SwipeAction.MOVE_CURSOR_RIGHT) {
+                            abs(event.relUnitCountX).let {
+                                val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
+                                if (count > 0) {
+                                    inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
+                                    if (!pointer.hasTriggeredMassSelection) {
+                                        pointer.hasTriggeredMassSelection = true
+                                        editorInstance.massSelection.begin()
+                                    }
+                                    keyboardManager.handleArrow(KeyCode.ARROW_RIGHT, count)
+                                }
+                            }
+                            true
+                        } else {
+                            action != SwipeAction.NO_ACTION
+                        }
+                    }
+                    else -> false
                 }
-                else -> false
             }
-            SwipeGesture.Type.TOUCH_UP -> when (event.direction) {
-                SwipeGesture.Direction.LEFT -> {
-                    prefs.gestures.spaceBarSwipeLeft.get().let {
-                        when {
-                            it == SwipeAction.NO_ACTION -> {
-                                false
-                            }
-                            it != SwipeAction.MOVE_CURSOR_LEFT -> {
-                                keyboardManager.executeSwipeAction(it)
-                                true
-                            }
-                            else -> {
-                                false
-                            }
-                        }
-                    }
-                }
-                SwipeGesture.Direction.RIGHT -> {
-                    prefs.gestures.spaceBarSwipeRight.get().let {
-                        when {
-                            it == SwipeAction.NO_ACTION -> {
-                                false
-                            }
-                            it != SwipeAction.MOVE_CURSOR_RIGHT -> {
-                                keyboardManager.executeSwipeAction(it)
-                                true
-                            }
-                            else -> {
-                                false
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    if (event.absUnitCountY < -6) {
-                        keyboardManager.executeSwipeAction(prefs.gestures.spaceBarSwipeUp.get())
-                        true
+            SwipeGesture.Type.TOUCH_UP -> {
+                val absUnitX = abs(event.absUnitCountX)
+                val direction = if (event.absUnitCountX > 0) 1 else -1
+                val isHudTriggered = keyboardManager.isLanguageHudVisible.value
+
+                // Hide HUD
+                keyboardManager.isLanguageHudVisible.value = false
+                keyboardManager.languageHudProgress.value = 0.0f
+
+                if (isHudTriggered && absUnitX >= 4) {
+                    val subtypeManager = this@TextKeyboardLayoutController.context.subtypeManager().value
+                    if (direction > 0) {
+                        subtypeManager.switchToNextSubtype()
                     } else {
-                        false
+                        subtypeManager.switchToPrevSubtype()
+                    }
+                    true
+                } else {
+                    when (event.direction) {
+                        SwipeGesture.Direction.LEFT -> {
+                            prefs.gestures.spaceBarSwipeLeft.get().let {
+                                if (it != SwipeAction.NO_ACTION && it != SwipeAction.MOVE_CURSOR_LEFT) {
+                                    keyboardManager.executeSwipeAction(it)
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                        }
+                        SwipeGesture.Direction.RIGHT -> {
+                            prefs.gestures.spaceBarSwipeRight.get().let {
+                                if (it != SwipeAction.NO_ACTION && it != SwipeAction.MOVE_CURSOR_RIGHT) {
+                                    keyboardManager.executeSwipeAction(it)
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                        }
+                        else -> {
+                            if (event.absUnitCountY < -6) {
+                                keyboardManager.executeSwipeAction(prefs.gestures.spaceBarSwipeUp.get())
+                                true
+                            } else {
+                                false
+                            }
+                        }
                     }
                 }
             }

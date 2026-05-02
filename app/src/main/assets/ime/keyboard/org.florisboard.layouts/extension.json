@@ -389,8 +389,7 @@
           "patrickgold",
           "MalangKey"
         ],
-        "direction": "ltr",
-        "modifier": null
+        "direction": "ltr"
       },
       {
         "id": "korean_danmoeum",
@@ -414,6 +413,16 @@
       {
         "id": "korean_sky_vega",
         "label": "한국어 - 스카이",
+        "authors": [
+          "patrickgold",
+          "MalangKey"
+        ],
+        "direction": "ltr",
+        "modifier": null
+      },
+      {
+        "id": "korean_sky_16",
+        "label": "한국어 - 스카이 (16키)",
         "authors": [
           "patrickgold",
           "MalangKey"

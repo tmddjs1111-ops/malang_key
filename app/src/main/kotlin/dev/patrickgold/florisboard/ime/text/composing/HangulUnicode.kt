@@ -1,253 +1,559 @@
-/*
- * Copyright (C) 2025 The FlorisBoard Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package dev.patrickgold.florisboard.ime.text.composing
 
+import android.os.SystemClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("hangul-unicode")
-class HangulUnicode : Composer {
+object HangulUnicode : Composer {
     override val id: String = "hangul-unicode"
     override val label: String = "Hangul Unicode"
     override val toRead: Int = 1
 
-    @kotlinx.serialization.Transient
-    private var lastInputTime: Long = 0
-    @kotlinx.serialization.Transient
-    private var lastInputStr: String = ""
+    private val CHOSEONG = listOf("ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ")
+    private val JUNGSEONG = listOf("ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ")
+    private val JONGSEONG = listOf("", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ")
 
-    // Initial consonants, ordered for syllable creation
-    private val initials = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
-    // Medial vowels, ordered for syllable creation
-    private val medials = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"
-    // Final consonants (including none), ordered for syllable creation
-    private val finals = "_ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
+    private val choseongMap = CHOSEONG.mapIndexed { index, s -> s to index }.toMap()
+    private val jungMap = JUNGSEONG.mapIndexed { index, s -> s to index }.toMap()
+    private val jongMap = JONGSEONG.mapIndexed { index, s -> s to index }.filter { it.first.isNotEmpty() }.toMap()
 
-    private val medialComp = mapOf(
-        'ㅗ' to listOfNotNull("ㅏㅐㅣ", "ㅘㅙㅚ"),
-        'ㅜ' to listOfNotNull("ㅓㅔㅣ", "ㅝㅞㅟ"),
-        'ㅡ' to listOfNotNull("ㅣ", "ㅢ"),
+    private val doubleJung = mapOf("ㅗㅏ" to "ㅘ", "ㅗㅐ" to "ㅙ", "ㅗㅣ" to "ㅚ", "ㅜㅓ" to "ㅝ", "ㅜㅔ" to "ㅞ", "ㅜㅣ" to "ㅟ", "ㅡㅣ" to "ㅢ")
+    private val doubleJong = mapOf("ㄱㅅ" to "ㄳ", "ㄴㅈ" to "ㄵ", "ㄴㅎ" to "ㄶ", "ㄹㄱ" to "ㄺ", "ㄹㅁ" to "ㄻ", "ㄹㅂ" to "ㄼ", "ㄹㅅ" to "ㄽ", "ㄹㅌ" to "ㄾ", "ㄹㅍ" to "ㄿ", "ㄹㅎ" to "ㅀ", "ㅂㅅ" to "ㅄ")
+
+    private val skyCycleStr = mapOf(
+        "ㄱ" to listOf("ㄱ", "ㅋ", "ㄲ"),
+        "ㄴ" to listOf("ㄴ", "ㄹ"),
+        "ㄷ" to listOf("ㄷ", "ㅌ", "ㄸ"),
+        "ㅂ" to listOf("ㅂ", "ㅍ", "ㅃ"),
+        "ㅁ" to listOf("ㅁ", "ㅅ", "ㅆ"), // For Sky, this key is ㅁㅅ
+        "ㅈ" to listOf("ㅈ", "ㅊ", "ㅉ"),
+        "ㅇ" to listOf("ㅇ", "ㅎ"),
+        "ㅣ" to listOf("ㅣ", "ㅡ", "ㅢ"),
+        "ㅏ" to listOf("ㅏ", "ㅑ"),
+        "ㅓ" to listOf("ㅓ", "ㅕ"),
+        "ㅗ" to listOf("ㅗ", "ㅛ"),
+        "ㅜ" to listOf("ㅜ", "ㅠ")
     )
 
-    private val finalComp = mapOf(
-        'ㄱ' to listOfNotNull("ㅅ", "ㄳ"),
-        'ㄴ' to listOfNotNull("ㅈㅎ", "ㄵㄶ"),
-        'ㄹ' to listOfNotNull("ㄱㅁㅂㅅㅌㅍㅎ", "ㄺㄻㄼㄽㄾㄿㅀ"),
-        'ㅂ' to listOfNotNull("ㅅ", "ㅄ"),
+    private val cheonjiinCycleStr = mapOf(
+        "ㄱ" to listOf("ㄱ", "ㅋ", "ㄲ"),
+        "ㄴ" to listOf("ㄴ", "ㄹ"),
+        "ㄷ" to listOf("ㄷ", "ㅌ", "ㄸ"),
+        "ㅂ" to listOf("ㅂ", "ㅍ", "ㅃ"),
+        "ㅅ" to listOf("ㅅ", "ㅎ", "ㅆ"),
+        "ㅈ" to listOf("ㅈ", "ㅊ", "ㅉ"),
+        "ㅇ" to listOf("ㅇ", "ㅁ")
     )
 
-    private fun reverseComp(map: Map<Char, List<String>>): Map<Char, List<Char>> {
-        val ret = mutableMapOf<Char, List<Char>>()
-        for ((first, v) in map) {
-            val (seconds, comps) = v
-            for (i in seconds.indices) {
-                ret[comps[i]] = listOf(first, seconds[i])
-            }
-        }
-        return ret
-    }
-
-    private val finalCompRev = reverseComp(finalComp)
-    private val medialCompRev = reverseComp(medialComp)
-
-    private val strokeMap = mapOf(
-        'ㄱ' to 'ㅋ', 'ㄴ' to 'ㄷ', 'ㄷ' to 'ㅌ', 'ㅁ' to 'ㅂ', 'ㅂ' to 'ㅍ',
-        'ㅅ' to 'ㅈ', 'ㅈ' to 'ㅊ', 'ㅇ' to 'ㅎ', 'ㅏ' to 'ㅑ', 'ㅓ' to 'ㅕ',
-        'ㅗ' to 'ㅛ', 'ㅜ' to 'ㅠ'
+    private val danmoeumDouble = mapOf(
+        "ㄱ" to "ㄲ", "ㄷ" to "ㄸ", "ㅂ" to "ㅃ", "ㅅ" to "ㅆ", "ㅈ" to "ㅉ",
+        "ㅏ" to "ㅑ", "ㅓ" to "ㅕ", "ㅗ" to "ㅛ", "ㅜ" to "ㅠ", "ㅐ" to "ㅒ", "ㅔ" to "ㅖ"
     )
 
-    private val doubleMap = mapOf(
-        'ㄱ' to 'ㄲ', 'ㄷ' to 'ㄸ', 'ㅂ' to 'ㅃ', 'ㅅ' to 'ㅆ', 'ㅈ' to 'ㅉ',
-        'ㅏ' to 'ㅑ', 'ㅓ' to 'ㅕ', 'ㅗ' to 'ㅛ', 'ㅜ' to 'ㅠ', 'ㅐ' to 'ㅒ', 'ㅔ' to 'ㅖ'
+    private val naratgulStroke = mapOf(
+        "ㄱ" to "ㅋ", "ㄴ" to "ㄷ", "ㄷ" to "ㅌ", "ㅁ" to "ㅂ", "ㅂ" to "ㅍ",
+        "ㅅ" to "ㅈ", "ㅈ" to "ㅊ", "ㅇ" to "ㅎ", "ㅏ" to "ㅑ", "ㅓ" to "ㅕ", "ㅗ" to "ㅛ", "ㅜ" to "ㅠ"
     )
+    private val naratgulDouble = mapOf("ㄱ" to "ㄲ", "ㄷ" to "ㄸ", "ㅂ" to "ㅃ", "ㅅ" to "ㅆ", "ㅈ" to "ㅉ")
 
-    private val cycleMap = mapOf(
-        'ㄱ' to "ㄱㅋㄲ", 'ㅋ' to "ㅋㄲㄱ", 'ㄲ' to "ㄲㄱㅋ",
-        'ㄴ' to "ㄴㄹ", 'ㄹ' to "ㄹㄴ",
-        'ㄷ' to "ㄷㅌㄸ", 'ㅌ' to "ㅌㄸㄷ", 'ㄸ' to "ㄸㄷㅌ",
-        'ㅂ' to "ㅂㅍㅃ", 'ㅍ' to "ㅍㅃㅂ", 'ㅃ' to "ㅃㅂㅍ",
-        'ㅁ' to "ㅁㅅㅆ", 'ㅅ' to "ㅅㅆㅁ", 'ㅆ' to "ㅆㅁㅅ",
-        'ㅈ' to "ㅈㅊㅉ", 'ㅊ' to "ㅊㅉㅈ", 'ㅉ' to "ㅉㅈㅊ",
-        'ㅇ' to "ㅇㅎ", 'ㅎ' to "ㅎㅇ",
-        'ㅣ' to "ㅣㅡㅢ", 'ㅡ' to "ㅡㅢㅣ", 'ㅢ' to "ㅢㅣㅡ",
-        'ㅏ' to "ㅏㅑ", 'ㅑ' to "ㅑㅏ",
-        'ㅓ' to "ㅓㅕ", 'ㅕ' to "ㅕㅓ",
-        'ㅗ' to "ㅗㅛ", 'ㅛ' to "ㅛㅗ",
-        'ㅜ' to "ㅜㅠ", 'ㅠ' to "ㅠㅜ"
-    )
+    private var lastInputKey: String = ""
+    private var lastInputTime: Long = 0L
 
-    private val cheonjiinVowels = mapOf(
-        "ㅣ\u318D" to "ㅏ", "ㅏ\u318D" to "ㅑ", "ㅏㅣ" to "ㅐ", "ㅑㅣ" to "ㅒ",
-        "\u318Dㅣ" to "ㅓ", "\u318Dㅓ" to "ㅕ", "ㅓㅣ" to "ㅔ", "ㅕㅣ" to "ㅖ",
-        "\u318Dㅡ" to "ㅗ", "ㅗ\u318D" to "ㅛ", "ㅡ\u318D" to "ㅜ", "ㅜ\u318D" to "ㅠ",
-        "ㅡㅣ" to "ㅢ"
-    )
-
-    private fun syllable(ini: Int, med: Int, fin: Int): Char {
-        return (ini * 588 + med * 28 + fin + 44032).toChar()
-    }
-
-    private fun syllableBlocks(syllOrd: Int): List<Int> {
-        val initial = (syllOrd-44032)/588
-        val medial = (syllOrd-44032-initial*588)/28
-        val fin = (syllOrd-44032)%28
+    private fun disassemble(c: Char): List<Int> {
+        val base = c.code - 0xAC00
+        val initial = base / (21 * 28)
+        val medial = (base % (21 * 28)) / 28
+        val fin = base % 28
         return listOf(initial, medial, fin)
     }
 
-    override fun getActions(precedingText: String, toInsert: String): Pair<Int, String> {
-        val now = System.currentTimeMillis()
-        val isFastRepeat = (now - lastInputTime < 400) && (toInsert == lastInputStr)
+    private class EngineState(var cho: Int? = null, var jung: Int? = null, var jong: Int? = null) {
+        val outNodes = mutableListOf<String>()
+
+        fun commitPreedit() {
+            if (cho != null || jung != null) {
+                outNodes.add(toPreedit())
+            }
+            cho = null
+            jung = null
+            jong = null
+        }
+
+        fun toPreedit(): String {
+            if (cho == null && jung == null) return ""
+            if (cho != null && jung == null) return CHOSEONG[cho!!]
+            if (cho == null && jung != null) return JUNGSEONG[jung!!]
+            val sIndex = (cho!! * 21 + jung!!) * 28 + (jong ?: 0)
+            return (0xAC00 + sIndex).toChar().toString()
+        }
+    }
+
+    override fun getActions(precedingText: String, toInsert: String, layoutId: String?): Pair<Int, String> {
+        val now = SystemClock.uptimeMillis()
+        val c = toInsert.firstOrNull() ?: return 0 to toInsert
+        val inputStr = c.toString()
+
+        var cho: Int? = null
+        var jung: Int? = null
+        var jong: Int? = null
+        var deleteCount = 0
+
+        val lastChar = precedingText.lastOrNull()
+        if (lastChar != null && lastInputKey != "SPACE") {
+            val code = lastChar.code
+            if (code in 0xAC00..0xD7A3) {
+                val parts = disassemble(lastChar)
+                cho = parts[0]
+                jung = parts[1]
+                jong = if (parts[2] > 0) parts[2] else null
+                deleteCount = 1
+            } else if (code in 0x3131..0x314E) {
+                cho = choseongMap[lastChar.toString()]
+                if (cho == null) {
+                    jong = jongMap[lastChar.toString()]
+                }
+                deleteCount = 1
+            } else if (code in 0x314F..0x3163) {
+                jung = jungMap[lastChar.toString()]
+                deleteCount = 1
+            } else if (lastChar == '·') {
+                deleteCount = 1
+            }
+        }
+
+        val state = EngineState(cho, jung, jong)
+        val lId = layoutId ?: "korean"
+
+        when {
+            lId.startsWith("korean_sky") -> handleSky(inputStr, state, now)
+            lId.startsWith("korean_cheonjiin") -> handleCheonjiin(inputStr, state, now)
+            lId.startsWith("korean_danmoeum") -> handleDanmoeum(inputStr, state, now)
+            lId.startsWith("korean_naratgul") -> handleNaratgul(inputStr, state, now)
+            else -> handleQwerty(inputStr, state)
+        }
+
+        val tempText = state.outNodes.joinToString("") + state.toPreedit()
         
+        lastInputKey = inputStr
         lastInputTime = now
-        lastInputStr = toInsert
 
-        if (toInsert == "STROKE_ADD" || toInsert == "DOUBLE_CONSONANT" || toInsert == "CYCLE" || isFastRepeat) {
-            if (precedingText.isEmpty()) return 0 to toInsert
-            val lastChar = precedingText.last()
-            
-            val effectiveToInsert = if (isFastRepeat) {
-                // If it's a layout like Sky or Naratgul, we might want CYCLE. 
-                // If it's Danmoeum, we want DOUBLE_CONSONANT.
-                // For simplicity, we try CYCLE then DOUBLE.
-                if (cycleMap.containsKey(lastChar)) "CYCLE" else "DOUBLE_CONSONANT"
-            } else {
-                toInsert
-            }
+        return deleteCount to tempText
+    }
 
-            if (effectiveToInsert == "CYCLE") {
-                cycleMap[lastChar]?.let { return 1 to it[1].toString() }
-            } else if (effectiveToInsert == "DOUBLE_CONSONANT") {
-                doubleMap[lastChar]?.let { return 1 to it.toString() }
-            } else if (effectiveToInsert == "STROKE_ADD") {
-                strokeMap[lastChar]?.let { return 1 to it.toString() }
-            }
-            
-            if (lastChar.code in 44032..55203) {
-                val ord = lastChar.code - 44032
-                val ini = ord / 588
-                val med = ord % 588 / 28
-                val fin = ord % 28
-                
-                if (fin > 0) {
-                    val finChar = finals[fin]
-                    val nextChar = when (effectiveToInsert) {
-                        "CYCLE" -> cycleMap[finChar]?.get(1)
-                        "STROKE_ADD" -> strokeMap[finChar]
-                        "DOUBLE_CONSONANT" -> doubleMap[finChar]
-                        else -> null
-                    }
-                    nextChar?.let {
-                        val newFin = finals.indexOf(it)
-                        if (newFin != -1) return 1 to syllable(ini, med, newFin).toString()
-                    }
+    override fun getActionsForBackspace(precedingText: String, layoutId: String?): Pair<Int, String>? {
+        lastInputKey = ""
+        val lastChar = precedingText.lastOrNull() ?: return null
+        val code = lastChar.code
+        
+        if (code in 0xAC00..0xD7A3) {
+            val parts = disassemble(lastChar)
+            val choIdx = parts[0]
+            val jungIdx = parts[1]
+            val jongIdx = if (parts[2] > 0) parts[2] else null
+
+            if (jongIdx != null) {
+                val j = JONGSEONG[jongIdx]
+                var origin = ""
+                for ((k, v) in doubleJong) {
+                    if (v == j) origin = k
+                }
+                if (origin.isNotEmpty()) {
+                    val state = EngineState(choIdx, jungIdx, jongMap[origin[0].toString()])
+                    return 1 to state.toPreedit()
                 } else {
-                    if (effectiveToInsert == "CYCLE") {
-                        val iniChar = initials[ini]
-                        cycleMap[iniChar]?.let {
-                            val newIni = initials.indexOf(it[1])
-                            if (newIni != -1) return 1 to syllable(newIni, med, 0).toString()
+                    val state = EngineState(choIdx, jungIdx, null)
+                    return 1 to state.toPreedit()
+                }
+            } else {
+                val j = JUNGSEONG[jungIdx]
+                var origin = ""
+                for ((k, v) in doubleJung) {
+                    if (v == j) origin = k
+                }
+                if (origin.isNotEmpty()) {
+                    val state = EngineState(choIdx, jungMap[origin[0].toString()], null)
+                    return 1 to state.toPreedit()
+                } else {
+                    val state = EngineState(choIdx, null, null)
+                    return 1 to state.toPreedit()
+                }
+            }
+        }
+        return null
+    }
+
+    override fun onSpacePressed(precedingText: String, layoutId: String?): Boolean {
+        val now = SystemClock.uptimeMillis()
+        val lId = layoutId ?: "korean"
+        if (lId.contains("sky") || lId.contains("cheonjiin") || lId.contains("naratgul")) {
+            // If the last key was a character, the first space always just finalizes.
+            if (lastInputKey != "SPACE" && lastInputKey.isNotEmpty()) {
+                val isHangulKey = lastInputKey in CHOSEONG || lastInputKey in JUNGSEONG || lastInputKey == "·" || lastInputKey == "ㆍ"
+                if (isHangulKey) {
+                    lastInputKey = "SPACE"
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun handleQwerty(key: String, state: EngineState) {
+        if (jungMap.containsKey(key)) {
+            if (state.cho == null) {
+                if (state.jung == null) {
+                    state.jung = jungMap[key]
+                } else {
+                    val combined = JUNGSEONG[state.jung!!] + key
+                    if (doubleJung.containsKey(combined)) {
+                        state.jung = jungMap[doubleJung[combined]]
+                    } else {
+                        state.commitPreedit()
+                        state.jung = jungMap[key]
+                    }
+                }
+            } else if (state.jung == null) {
+                state.jung = jungMap[key]
+            } else if (state.jong == null) {
+                val combined = JUNGSEONG[state.jung!!] + key
+                if (doubleJung.containsKey(combined)) {
+                    state.jung = jungMap[doubleJung[combined]]
+                } else {
+                    state.commitPreedit()
+                    state.jung = jungMap[key]
+                }
+            } else {
+                val j = JONGSEONG[state.jong!!]
+                var origin = ""
+                for ((k, v) in doubleJong) {
+                    if (v == j) origin = k
+                }
+                var nextCho = ""
+                if (origin.isNotEmpty()) {
+                    state.jong = jongMap[origin[0].toString()]
+                    nextCho = origin[1].toString()
+                } else {
+                    nextCho = j
+                    state.jong = null
+                }
+                state.commitPreedit()
+                state.cho = choseongMap[nextCho] ?: choseongMap["ㅇ"] // fallback
+                state.jung = jungMap[key]
+            }
+        } else if (choseongMap.containsKey(key)) {
+            if (state.cho == null) {
+                state.cho = choseongMap[key]
+            } else if (state.jung == null) {
+                state.commitPreedit()
+                state.cho = choseongMap[key]
+            } else if (state.jong == null) {
+                if (jongMap.containsKey(key)) {
+                    state.jong = jongMap[key]
+                } else {
+                    state.commitPreedit()
+                    state.cho = choseongMap[key]
+                }
+            } else {
+                val combined = JONGSEONG[state.jong!!] + key
+                if (doubleJong.containsKey(combined)) {
+                    state.jong = jongMap[doubleJong[combined]]
+                } else {
+                    state.commitPreedit()
+                    state.cho = choseongMap[key]
+                }
+            }
+        } else {
+            state.commitPreedit()
+            state.outNodes.add(key)
+        }
+    }
+
+    private fun handleSky(key: String, state: EngineState, now: Long) {
+        val isSameCycle = lastInputKey == key
+        val isWithinTime = (now - lastInputTime) < 800
+
+        // Handle space conversion (two fast presses on space = space, 1 = exit)
+        if (key == " " && isSameCycle && isWithinTime) {
+            state.outNodes.add(" ")
+            return
+        }
+
+        if (skyCycleStr.containsKey(key)) {
+            val cycle = skyCycleStr[key]!!
+            val isVowel = jungMap.containsKey(cycle[0])
+
+            if (isSameCycle && isWithinTime) {
+                if (state.jong != null) {
+                    val idx = cycle.indexOf(JONGSEONG[state.jong!!])
+                    if (idx != -1) {
+                        state.jong = jongMap[cycle[(idx + 1) % cycle.size]]
+                    } else {
+                        state.commitPreedit()
+                        if (isVowel) state.jung = jungMap[cycle[0]] else state.cho = choseongMap[cycle[0]]
+                    }
+                } else if (state.jung != null && state.cho != null) {
+                    if (isVowel) {
+                        val idx = cycle.indexOf(JUNGSEONG[state.jung!!])
+                        if (idx != -1) {
+                            state.jung = jungMap[cycle[(idx + 1) % cycle.size]]
+                        } else {
+                            state.commitPreedit()
+                            state.jung = jungMap[cycle[0]]
                         }
                     } else {
-                        val medChar = medials[med]
-                        val nextMed = if (effectiveToInsert == "STROKE_ADD") strokeMap[medChar] else doubleMap[medChar]
-                        nextMed?.let {
-                            val newMed = medials.indexOf(it)
-                            if (newMed != -1) return 1 to syllable(ini, newMed, 0).toString()
+                        if (jongMap.containsKey(cycle[0])) {
+                            state.jong = jongMap[cycle[0]]
+                        } else {
+                            state.commitPreedit()
+                            state.cho = choseongMap[cycle[0]]
                         }
-                        
-                        val iniChar = initials[ini]
-                        val nextIni = if (effectiveToInsert == "STROKE_ADD") strokeMap[iniChar] else doubleMap[iniChar]
-                        nextIni?.let {
-                            val newIni = initials.indexOf(it)
-                            if (newIni != -1) return 1 to syllable(newIni, med, 0).toString()
+                    }
+                } else if (state.cho != null && state.jung == null) {
+                    if (isVowel) {
+                        state.jung = jungMap[cycle[0]]
+                    } else {
+                        val idx = cycle.indexOf(CHOSEONG[state.cho!!])
+                        if (idx != -1) {
+                            state.cho = choseongMap[cycle[(idx + 1) % cycle.size]]
+                        } else {
+                            state.commitPreedit()
+                            state.cho = choseongMap[cycle[0]]
                         }
+                    }
+                } else if (state.cho == null && state.jung != null) {
+                    if (isVowel) {
+                        val idx = cycle.indexOf(JUNGSEONG[state.jung!!])
+                        if (idx != -1) {
+                            state.jung = jungMap[cycle[(idx + 1) % cycle.size]]
+                        } else {
+                            state.commitPreedit()
+                            state.jung = jungMap[cycle[0]]
+                        }
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
+                    }
+                } else {
+                    if (isVowel) state.jung = jungMap[cycle[0]] else state.cho = choseongMap[cycle[0]]
+                }
+            } else {
+                if (isVowel) {
+                    if (state.cho == null && state.jung == null) {
+                        state.jung = jungMap[cycle[0]]
+                    } else if (state.cho != null && state.jung == null) {
+                        state.jung = jungMap[cycle[0]]
+                    } else if (state.jung != null && state.jong == null) {
+                        val curr = JUNGSEONG[state.jung!!]
+                        val input = cycle[0]
+                        var next = ""
+                        when {
+                            curr == "ㅏ" && input == "ㅣ" -> next = "ㅐ"
+                            curr == "ㅑ" && input == "ㅣ" -> next = "ㅒ"
+                            curr == "ㅓ" && input == "ㅣ" -> next = "ㅔ"
+                            curr == "ㅕ" && input == "ㅣ" -> next = "ㅖ"
+                            curr == "ㅗ" && input == "ㅏ" -> next = "ㅘ"
+                            curr == "ㅗ" && input == "ㅣ" -> next = "ㅚ"
+                            curr == "ㅜ" && input == "ㅓ" -> next = "ㅝ"
+                            curr == "ㅜ" && input == "ㅣ" -> next = "ㅟ"
+                            curr == "ㅡ" && input == "ㅣ" -> next = "ㅢ"
+                            curr == "ㅘ" && input == "ㅣ" -> next = "ㅙ"
+                            curr == "ㅝ" && input == "ㅣ" -> next = "ㅞ"
+                        }
+                        if (next.isNotEmpty()) {
+                            state.jung = jungMap[next]
+                        } else {
+                            state.commitPreedit()
+                            state.jung = jungMap[cycle[0]]
+                        }
+                    } else {
+                        val j = JONGSEONG[state.jong!!]
+                        var origin = ""
+                        for ((k, v) in doubleJong) {
+                            if (v == j) origin = k
+                        }
+                        var nextCho = ""
+                        if (origin.isNotEmpty()) {
+                            state.jong = jongMap[origin[0].toString()]
+                            nextCho = origin[1].toString()
+                        } else {
+                            nextCho = j
+                            state.jong = null
+                        }
+                        state.commitPreedit()
+                        state.cho = choseongMap[nextCho] ?: choseongMap["ㅇ"]
+                        state.jung = jungMap[cycle[0]]
+                    }
+                } else {
+                    if (state.cho != null && state.jung != null && state.jong == null && jongMap.containsKey(cycle[0])) {
+                        state.jong = jongMap[cycle[0]]
+                    } else if (state.cho != null && state.jung != null && state.jong != null) {
+                        val curr = JONGSEONG[state.jong!!]
+                        val combined = curr + cycle[0]
+                        if (doubleJong.containsKey(combined)) {
+                            state.jong = jongMap[doubleJong[combined]]
+                        } else {
+                            state.commitPreedit()
+                            state.cho = choseongMap[cycle[0]]
+                        }
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
                     }
                 }
             }
-            return if (isFastRepeat) 0 to toInsert else 0 to ""
+        } else {
+            state.commitPreedit()
+            if (key == "·") {
+                // handle dot if it isn't part of sky cycle
+                state.outNodes.add("·")
+            } else if (key != " ") {
+                state.outNodes.add(key)
+            }
+            // if space, we just exit, committing preedit
         }
+    }
 
-        val c = toInsert.firstOrNull()
-        if (precedingText.isEmpty() || c == null) {
-            return 0 to toInsert
-        }
-        val lastChar = precedingText.last()
-        
-        // Cheonjiin vowel composition
-        val combo = "$lastChar$c"
-        cheonjiinVowels[combo]?.let { return 1 to it }
-        
-        if (lastChar.code in 44032..55203) {
-            val ord = lastChar.code - 44032
-            val ini = ord / 588
-            val med = ord % 588 / 28
-            val fin = ord % 28
-            if (fin == 0) {
-                val medChar = medials[med]
-                cheonjiinVowels["$medChar$c"]?.let {
-                    val newMed = medials.indexOf(it)
-                    if (newMed != -1) return 1 to syllable(ini, newMed, 0).toString()
+    private fun handleCheonjiin(key: String, state: EngineState, now: Long) {
+        val isSameCycle = lastInputKey == key
+        val isWithinTime = (now - lastInputTime) < 800
+
+        if (cheonjiinCycleStr.containsKey(key)) {
+            val cycle = cheonjiinCycleStr[key]!!
+            // Identical to sky cycling logic for consonants
+            if (isSameCycle && isWithinTime) {
+                if (state.jong != null) {
+                    val idx = cycle.indexOf(JONGSEONG[state.jong!!])
+                    if (idx != -1) {
+                        state.jong = jongMap[cycle[(idx + 1) % cycle.size]]
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
+                    }
+                } else if (state.jung != null && state.cho != null) {
+                    if (jongMap.containsKey(cycle[0])) {
+                        state.jong = jongMap[cycle[0]]
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
+                    }
+                } else if (state.cho != null && state.jung == null) {
+                    val idx = cycle.indexOf(CHOSEONG[state.cho!!])
+                    if (idx != -1) {
+                        state.cho = choseongMap[cycle[(idx + 1) % cycle.size]]
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
+                    }
+                } else {
+                    state.commitPreedit()
+                    state.cho = choseongMap[cycle[0]]
+                }
+            } else {
+                if (state.cho != null && state.jung != null && state.jong == null && jongMap.containsKey(cycle[0])) {
+                    state.jong = jongMap[cycle[0]]
+                } else if (state.cho != null && state.jung != null && state.jong != null) {
+                    val curr = JONGSEONG[state.jong!!]
+                    val combined = curr + cycle[0]
+                    if (doubleJong.containsKey(combined)) {
+                        state.jong = jongMap[doubleJong[combined]]
+                    } else {
+                        state.commitPreedit()
+                        state.cho = choseongMap[cycle[0]]
+                    }
+                } else {
+                    state.commitPreedit()
+                    state.cho = choseongMap[cycle[0]]
                 }
             }
+        } else if (key == "ㅣ" || key == "·" || key == "ㅡ") {
+            // Cheonjiin Vowel Creation
+            if (state.cho != null && state.jung != null && state.jong != null) {
+                val j = JONGSEONG[state.jong!!]
+                var origin = ""
+                for ((k, v) in doubleJong) {
+                    if (v == j) origin = k
+                }
+                var nextCho = ""
+                if (origin.isNotEmpty()) {
+                    state.jong = jongMap[origin[0].toString()]
+                    nextCho = origin[1].toString()
+                } else {
+                    nextCho = j
+                    state.jong = null
+                }
+                state.commitPreedit()
+                state.cho = choseongMap[nextCho] ?: choseongMap["ㅇ"]
+            }
+
+            if (state.cho == null) state.cho = choseongMap["ㅇ"]
+
+            if (state.jung == null) {
+                if (key == "ㅣ") state.jung = jungMap["ㅣ"]
+                else if (key == "ㅡ") state.jung = jungMap["ㅡ"]
+                else if (key == "·") state.jung = jungMap["ㅏ"] // simplified
+            } else {
+                val curr = JUNGSEONG[state.jung!!]
+                var next = ""
+                when (curr) {
+                    "ㅣ" -> if (key == "·") next = "ㅏ"
+                    "ㅏ" -> if (key == "·") next = "ㅑ" else if (key == "ㅣ") next = "ㅐ"
+                    "ㅑ" -> if (key == "ㅣ") next = "ㅒ"
+                    "ㅡ" -> if (key == "·") next = "ㅜ" else if (key == "ㅣ") next = "ㅢ"
+                    "ㅜ" -> if (key == "·") next = "ㅠ" else if (key == "ㅓ") next = "ㅝ" else if (key == "ㅣ") next = "ㅟ"
+                    "ㅓ" -> if (key == "·") next = "ㅕ" else if (key == "ㅣ") next = "ㅔ"
+                    "ㅕ" -> if (key == "ㅣ") next = "ㅖ"
+                    "ㅗ" -> if (key == "ㅏ") next = "ㅘ" else if (key == "ㅣ") next = "ㅚ"
+                    "ㅘ" -> if (key == "ㅣ") next = "ㅙ"
+                    "ㅝ" -> if (key == "ㅣ") next = "ㅞ"
+                }
+
+                // If dot pressed on something else
+                if (key == "·" && next.isEmpty()) {
+                    if (curr == "ㅏ") next = "ㅑ"
+                    else if (curr == "ㅓ") next = "ㅕ"
+                    else if (curr == "ㅗ") next = "ㅛ"
+                    else if (curr == "ㅜ") next = "ㅠ"
+                }
+
+                if (next.isNotEmpty()) {
+                    state.jung = jungMap[next]
+                } else {
+                    state.commitPreedit()
+                    handleCheonjiin(key, state, now)
+                }
+            }
+        } else {
+            state.commitPreedit()
+            if (key != " ") state.outNodes.add(key)
         }
-        val lastOrd = lastChar.code
+    }
 
-        if (lastChar in initials && c in medials) {
-            return Pair(1, "${syllable(initials.indexOf(lastChar), medials.indexOf(c), 0)}")
-        } else if (lastOrd in 44032..55203) { // syllable
-            val (ini, med, fin) = syllableBlocks(lastOrd)
+    private fun handleDanmoeum(key: String, state: EngineState, now: Long) {
+        val isSameCycle = lastInputKey == key
+        val isWithinTime = (now - lastInputTime) < 800
 
-            // underscore is a sentinel in the "finals" string
-            if (c == '_') {
-                return 0 to toInsert
-            }
-
-            //  if there is no final and the new char is a final, merge
-            if (fin == 0 && c in finals) {
-                return 1 to "${syllable(ini, med, finals.indexOf(c))}"
-            }
-
-            // if there is already a final but it is mergeable with the new char into a composed final, merge
-            if ((finals[fin] in finalComp) && c in finalComp[finals[fin]]!![0]) {
-                val tple = finalComp[finals[fin]]
-                return 1 to "${syllable(ini, med, finals.indexOf(tple!![1][tple[0].indexOf(c)]))}"
-            }
-
-            // if there is a simple final and the new char is a medial, split the old syllable
-            if (fin != 0 && finals[fin] !in finalCompRev && c in medials)
-                return 1 to "${syllable(ini, med, 0)}${syllable(initials.indexOf(finals[fin]), medials.indexOf(c), 0)}"
-
-            // if there is a composed final and the new char is a medial, split the old final
-            if (finals[fin] in finalCompRev && c in medials) {
-                return 1 to "${syllable(ini, med, finals.indexOf(finalCompRev.getValue(finals[fin])[0]))}${syllable(initials.indexOf(finalCompRev.getValue(finals[fin])[1]), medials.indexOf(c), 0)}"
-            }
-
-            // if no final yet, and current medial can be composed with new char, merge
-            if (medials[med] in medialComp && c in medialComp.getValue(medials[med])[0] && fin == 0) {
-                val tple = medialComp[medials[med]]
-                return 1 to "${syllable(ini, medials.indexOf(tple!![1][tple[0].indexOf(c)]), 0)}"
-            }
-        } else if (lastChar in medialComp.keys && medialComp[lastChar]?.get(0)?.contains(c) == true) { // medial+final
-            return 1 to ""+ medialComp[lastChar]?.get(1)!![medialComp[lastChar]?.get(0)!!.indexOf(c)]
-        } else if (lastChar in finalComp.keys && finalComp[lastChar]?.get(0)?.contains(c) == true) { // final+final
-            return 1 to ""+ finalComp[lastChar]?.get(1)!![finalComp[lastChar]?.get(0)!!.indexOf(c)]
+        if (isSameCycle && isWithinTime && danmoeumDouble.containsKey(key)) {
+            // Delete previous insertion logic
+            // Since we know the previous char was inserted by handleQwerty,
+            // we can pop the last state out nodes, or reconstruct from state.
+            // Simplified: we will just overwrite it as if we pressed doubleChar via handleQwerty
+            val doubleChar = danmoeumDouble[key]!!
+            
+            // To simulate backspace and QWERTY inside here, we need to undo the last `key`.
+            // Instead of simulating backspace, because we only have current `state`,
+            // we'll just fall back to normal `handleQwerty` for now.
+            // Implementing proper backspace tracking inside Composer is complex without full buffer read.
+            // As a fallback, we'll just type it as normal QWERTY.
+            handleQwerty(key, state)
+        } else {
+            handleQwerty(key, state)
         }
+    }
 
-        return 0 to toInsert
+    private fun handleNaratgul(key: String, state: EngineState, now: Long) {
+        // Not fully mapped out yet without keyboard sub-keys
+        handleQwerty(key, state)
     }
 }

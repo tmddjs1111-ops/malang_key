@@ -34,6 +34,10 @@ class TextKeyboard(
     val keyCount: Int
         get() = arrangement.sumOf { it.size }
 
+    fun maxKeyCountPerRow(): Int {
+        return arrangement.maxOfOrNull { it.size } ?: 10
+    }
+
     override fun getKeyForPos(pointerX: Float, pointerY: Float): TextKey? {
         for (key in keys()) {
             if (key.touchBounds.contains(pointerX, pointerY)) {

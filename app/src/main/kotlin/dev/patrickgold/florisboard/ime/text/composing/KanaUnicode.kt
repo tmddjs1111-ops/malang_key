@@ -341,7 +341,7 @@ class KanaUnicode : Composer {
         }
     }
 
-    override fun getActions(precedingText: String, toInsert: String): Pair<Int, String> {
+    override fun getActions(precedingText: String, toInsert: String, layoutId: String?): Pair<Int, String> {
         val c = toInsert.firstOrNull() ?: return 0 to toInsert
         // precedingText is "at least the last 1 character of what's currently here"
         if (precedingText.isEmpty()) {

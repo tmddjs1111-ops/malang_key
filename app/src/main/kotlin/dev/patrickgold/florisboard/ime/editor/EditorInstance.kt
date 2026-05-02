@@ -352,6 +352,21 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         return if (content.selection.isSelectionMode) {
             commitText("")
         } else runBlocking {
+            if (activeState.isComposingEnabled && unit == OperationUnit.CHARACTERS) {
+                val composer = determineComposer(subtypeManager.activeSubtype.composer)
+                val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
+                val actions = composer.getActionsForBackspace(content.textBeforeSelection, layoutId)
+                if (actions != null) {
+                    val (rm, insertText) = actions
+                    if (rm > 0) {
+                        deleteAroundCursor(OperationUnit.CHARACTERS, OperationScope.BEFORE_CURSOR, n = rm)
+                    }
+                    if (insertText.isNotEmpty()) {
+                        commitText(insertText)
+                    }
+                    return@runBlocking true
+                }
+            }
             deleteAroundCursor(unit, OperationScope.BEFORE_CURSOR, n = 1)
         }
     }

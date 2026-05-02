@@ -31,7 +31,8 @@ enum class KeyboardMode(val value: Int) {
     SMARTBAR_CLIPBOARD_CURSOR_ROW(8),
     @Deprecated(message = "TODO: remove")
     SMARTBAR_NUMBER_ROW(9),
-    SMARTBAR_QUICK_ACTIONS(10);
+    SMARTBAR_QUICK_ACTIONS(10),
+    GRID_16KEY(11);
 
     companion object {
         fun fromInt(int: Int) = entries.firstOrNull { it.value == int } ?: CHARACTERS

@@ -350,7 +350,11 @@ class LayoutManager(context: Context) {
                 return@async TextKeyboard(arrayOf(), keyboardMode, null, null)
             }
             KeyboardMode.NUMERIC -> {
-                main = LTN(LayoutType.NUMERIC, subtype.layoutMap.numeric)
+                if (subtype.layoutMap.characters.componentId.contains("korean_sky")) {
+                    main = LTN(LayoutType.NUMERIC, extCoreLayout("korean_sky_16_numeric"))
+                } else {
+                    main = LTN(LayoutType.NUMERIC, subtype.layoutMap.numeric)
+                }
             }
             KeyboardMode.NUMERIC_ADVANCED -> {
                 main = LTN(LayoutType.NUMERIC_ADVANCED, subtype.layoutMap.numericAdvanced)

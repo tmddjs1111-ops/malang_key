@@ -1,0 +1,26 @@
+[
+  [
+    { "code":   -7, "label": "지우기", "type": "enter_editing" },
+    { "code":   -7, "label": "지우기", "type": "enter_editing" },
+    { "code":   -7, "label": "지우기", "type": "enter_editing" },
+    { "code": -201, "label": "exit", "type": "system_gui" }
+  ],
+  [
+    { "code":   32, "label": "띄어쓰기" },
+    { "code": -227, "label": "한/영" },
+    { "code":   32, "label": "띄어쓰기" },
+    { "code": -201, "label": "exit", "type": "system_gui" }
+  ],
+  [
+    { "code":   10, "label": "확인", "type": "enter_editing" },
+    { "code":   10, "label": "확인", "type": "enter_editing" },
+    { "code":   10, "label": "확인", "type": "enter_editing" },
+    { "code": -201, "label": "exit", "type": "system_gui" }
+  ],
+  [
+    { "code": -201, "label": "exit", "type": "system_gui" },
+    { "code": -201, "label": "exit", "type": "system_gui" },
+    { "code": -201, "label": "exit", "type": "system_gui" },
+    { "code": -201, "label": "exit", "type": "system_gui" }
+  ]
+]

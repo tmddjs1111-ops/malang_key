@@ -831,6 +831,15 @@
     ],
     "numeric": [
       {
+        "id": "korean_sky_16_numeric",
+        "label": "Korean Sky 16key Numeric",
+        "authors": [
+          "patrickgold",
+          "MalangKey"
+        ],
+        "direction": "ltr"
+      },
+      {
         "id": "western_arabic",
         "label": "Western Arabic",
         "authors": [

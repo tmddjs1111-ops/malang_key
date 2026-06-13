@@ -4,19 +4,37 @@
             "code": 12593,
             "label": "ㄱㅋ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 49,
+                    "label": "1"
+                }
+            }
         },
         {
             "code": 12596,
             "label": "ㄴㄹ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 50,
+                    "label": "2"
+                }
+            }
         },
         {
             "code": 12599,
             "label": "ㄷㅌ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 51,
+                    "label": "3"
+                }
+            }
         },
         {
             "code": -232,
@@ -31,19 +49,37 @@
             "code": 12610,
             "label": "ㅂㅍ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 52,
+                    "label": "4"
+                }
+            }
         },
         {
             "code": 12613,
             "label": "ㅅㅎ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 53,
+                    "label": "5"
+                }
+            }
         },
         {
             "code": 12616,
             "label": "ㅈㅊ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 54,
+                    "label": "6"
+                }
+            }
         },
         {
             "code": -7,
@@ -58,25 +94,49 @@
             "code": 12615,
             "label": "ㅇㅁ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 55,
+                    "label": "7"
+                }
+            }
         },
         {
             "code": 12643,
             "label": "ㅣ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 56,
+                    "label": "8"
+                }
+            }
         },
         {
             "code": 12641,
             "label": "ㅡ",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 57,
+                    "label": "9"
+                }
+            }
         },
         {
             "code": 46,
             "label": "·",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "default": {
+                    "code": 48,
+                    "label": "0"
+                }
+            }
         }
     ],
     [

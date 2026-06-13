@@ -44,6 +44,7 @@ import dev.patrickgold.jetpref.datastore.ui.ColorPickerPreference
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.LocalTimePickerPreference
 import dev.patrickgold.jetpref.datastore.ui.Preference
+import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.isMaterialYou
 import org.florisboard.lib.color.ColorMappings
 import org.florisboard.lib.compose.stringRes
@@ -68,59 +69,71 @@ fun ThemeScreen() = FlorisScreen {
         val dayThemeId by prefs.theme.dayThemeId.collectAsState()
         val nightThemeId by prefs.theme.nightThemeId.collectAsState()
 
-        ListPreference(
-            prefs.theme.mode,
-            icon = Icons.Default.BrightnessAuto,
-            title = stringRes(R.string.pref__theme__mode__label),
-            entries = enumDisplayEntriesOf(ThemeMode::class),
-        )
-        Preference(
-            icon = Icons.Default.LightMode,
-            title = stringRes(R.string.pref__theme__day),
-            summary = themeManager.getThemeLabel(dayThemeId),
-            enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_NIGHT },
-            onClick = {
-                navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_DAY))
-            },
-        )
-        Preference(
-            icon = Icons.Default.DarkMode,
-            title = stringRes(R.string.pref__theme__night),
-            summary = themeManager.getThemeLabel(nightThemeId),
-            enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_DAY },
-            onClick = {
-                navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_NIGHT))
-            },
-        )
-        LocalTimePickerPreference(
-            pref = prefs.theme.sunriseTime,
-            title = stringRes(R.string.pref__theme__sunrise_time__label),
-            icon = Icons.Default.WbTwilight,
-            enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
-        )
-        LocalTimePickerPreference(
-            pref = prefs.theme.sunsetTime,
-            title = stringRes(R.string.pref__theme__sunset_time__label),
-            icon = Icons.Default.Brightness2,
-            enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
-        )
-        ColorPickerPreference(
-            pref = prefs.theme.accentColor,
-            title = stringRes(R.string.pref__theme__theme_accent_color__label),
-            defaultValueLabel = stringRes(R.string.action__default),
-            icon = Icons.Default.ColorLens,
-            defaultColors = ColorMappings.colors,
-            showAlphaSlider = false,
-            enableAdvancedLayout = true,
-            colorOverride = {
-                if (it.isMaterialYou(context)) {
-                    Color.Unspecified
-                } else {
-                    it
-                }
-            }
-        )
+        MalangPreferenceGroup(title = "1. 테마 (차후 업데이트 진행할꺼임)") {
+            Preference(
+                icon = Icons.Default.LightMode,
+                title = stringRes(R.string.pref__theme__day),
+                summary = themeManager.getThemeLabel(dayThemeId),
+                enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_NIGHT },
+                onClick = {
+                    navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_DAY))
+                },
+            )
+            Preference(
+                icon = Icons.Default.DarkMode,
+                title = stringRes(R.string.pref__theme__night),
+                summary = themeManager.getThemeLabel(nightThemeId),
+                enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_DAY },
+                onClick = {
+                    navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_NIGHT))
+                },
+            )
+            Preference(
+                title = "온라인 테마 마켓",
+                summary = "테마 다운로드 및 공유 기능이 추후 업데이트될 예정입니다.",
+                enabledIf = { false },
+            )
+            AddonManagementReferenceBox(type = ExtensionListScreenType.EXT_THEME)
+        }
 
-        AddonManagementReferenceBox(type = ExtensionListScreenType.EXT_THEME)
+        MalangPreferenceGroup(title = "2. 키보드 색상 설정") {
+            ColorPickerPreference(
+                pref = prefs.theme.accentColor,
+                title = stringRes(R.string.pref__theme__theme_accent_color__label),
+                defaultValueLabel = stringRes(R.string.action__default),
+                icon = Icons.Default.ColorLens,
+                defaultColors = ColorMappings.colors,
+                showAlphaSlider = false,
+                enableAdvancedLayout = true,
+                colorOverride = {
+                    if (it.isMaterialYou(context)) {
+                        Color.Unspecified
+                    } else {
+                        it
+                    }
+                }
+            )
+        }
+
+        MalangPreferenceGroup(title = "3. 감성 꾸미기") {
+            ListPreference(
+                prefs.theme.mode,
+                icon = Icons.Default.BrightnessAuto,
+                title = stringRes(R.string.pref__theme__mode__label),
+                entries = enumDisplayEntriesOf(ThemeMode::class),
+            )
+            LocalTimePickerPreference(
+                pref = prefs.theme.sunriseTime,
+                title = stringRes(R.string.pref__theme__sunrise_time__label),
+                icon = Icons.Default.WbTwilight,
+                enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
+            )
+            LocalTimePickerPreference(
+                pref = prefs.theme.sunsetTime,
+                title = stringRes(R.string.pref__theme__sunset_time__label),
+                icon = Icons.Default.Brightness2,
+                enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
+            )
+        }
     }
 }

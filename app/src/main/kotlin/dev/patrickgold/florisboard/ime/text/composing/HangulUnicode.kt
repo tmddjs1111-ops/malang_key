@@ -71,6 +71,8 @@ object HangulUnicode : Composer {
 
     private class EngineState(var cho: Int? = null, var jung: Int? = null, var jong: Int? = null) {
         val outNodes = mutableListOf<String>()
+        var extraDeleteCount = 0
+        var precedingText = ""
 
         fun commitPreedit() {
             if (cho != null || jung != null) {
@@ -124,6 +126,7 @@ object HangulUnicode : Composer {
         }
 
         val state = EngineState(cho, jung, jong)
+        state.precedingText = precedingText
         val lId = layoutId ?: "korean"
 
         when {
@@ -139,7 +142,7 @@ object HangulUnicode : Composer {
         lastInputKey = inputStr
         lastInputTime = now
 
-        return deleteCount to tempText
+        return (deleteCount + state.extraDeleteCount) to tempText
     }
 
     override fun getActionsForBackspace(precedingText: String, layoutId: String?): Pair<Int, String>? {
@@ -270,6 +273,114 @@ object HangulUnicode : Composer {
         }
     }
 
+    private fun tryMergeBack(state: EngineState, nextChoStr: String): Boolean {
+        if (state.outNodes.isNotEmpty()) {
+            val lastCommitted = state.outNodes.last()
+            if (lastCommitted.length == 1) {
+                val code = lastCommitted[0].code
+                if (code in 0xAC00..0xD7A3) {
+                    val parts = disassemble(lastCommitted[0])
+                    val prevCho = parts[0]
+                    val prevJung = parts[1]
+                    val prevJong = parts[2]
+                    if (prevJong > 0) {
+                        val prevJongStr = JONGSEONG[prevJong]
+                        val combined = prevJongStr + nextChoStr
+                        if (doubleJong.containsKey(combined)) {
+                            state.outNodes.removeAt(state.outNodes.size - 1)
+                            state.cho = prevCho
+                            state.jung = prevJung
+                            state.jong = jongMap[doubleJong[combined]]
+                            return true
+                        }
+                    } else {
+                        if (jongMap.containsKey(nextChoStr)) {
+                            state.outNodes.removeAt(state.outNodes.size - 1)
+                            state.cho = prevCho
+                            state.jung = prevJung
+                            state.jong = jongMap[nextChoStr]
+                            return true
+                        }
+                    }
+                }
+            }
+        } else {
+            val pt = state.precedingText
+            val targetIdx = pt.length - 2 - state.extraDeleteCount
+            if (targetIdx >= 0) {
+                val prevChar = pt[targetIdx]
+                val code = prevChar.code
+                if (code in 0xAC00..0xD7A3) {
+                    val parts = disassemble(prevChar)
+                    val prevCho = parts[0]
+                    val prevJung = parts[1]
+                    val prevJong = parts[2]
+                    if (prevJong > 0) {
+                        val prevJongStr = JONGSEONG[prevJong]
+                        val combined = prevJongStr + nextChoStr
+                        if (doubleJong.containsKey(combined)) {
+                            state.extraDeleteCount++
+                            state.cho = prevCho
+                            state.jung = prevJung
+                            state.jong = jongMap[doubleJong[combined]]
+                            return true
+                        }
+                    } else {
+                        if (jongMap.containsKey(nextChoStr)) {
+                            state.extraDeleteCount++
+                            state.cho = prevCho
+                            state.jung = prevJung
+                            state.jong = jongMap[nextChoStr]
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun cycleJongseong(state: EngineState, cycle: List<String>, isVowel: Boolean) {
+        val idx = cycle.indexOf(JONGSEONG[state.jong!!])
+        if (idx != -1) {
+            val nextCycleChar = cycle[(idx + 1) % cycle.size]
+            if (jongMap.containsKey(nextCycleChar)) {
+                state.jong = jongMap[nextCycleChar]
+            } else {
+                state.jong = null
+                state.commitPreedit()
+                state.cho = choseongMap[nextCycleChar]
+            }
+        } else {
+            val j = JONGSEONG[state.jong!!]
+            var origin = ""
+            for ((k, v) in doubleJong) {
+                if (v == j) origin = k
+            }
+            if (origin.isNotEmpty()) {
+                val secondJong = origin[1].toString()
+                val secondIdx = cycle.indexOf(secondJong)
+                if (secondIdx != -1) {
+                    val nextCycleChar = cycle[(secondIdx + 1) % cycle.size]
+                    val newCombined = origin[0].toString() + nextCycleChar
+                    if (doubleJong.containsKey(newCombined)) {
+                        state.jong = jongMap[doubleJong[newCombined]]
+                    } else {
+                        state.jong = jongMap[origin[0].toString()]
+                        state.commitPreedit()
+                        state.cho = choseongMap[nextCycleChar]
+                    }
+                } else {
+                    state.commitPreedit()
+                    if (isVowel) state.jung = jungMap[cycle[0]] else state.cho = choseongMap[cycle[0]]
+                }
+            } else {
+                state.commitPreedit()
+                if (isVowel) state.jung = jungMap[cycle[0]] else state.cho = choseongMap[cycle[0]]
+            }
+        }
+    }
+
     private fun handleSky(key: String, state: EngineState, now: Long) {
         val isSameCycle = lastInputKey == key
         val isWithinTime = (now - lastInputTime) < 800
@@ -286,13 +397,7 @@ object HangulUnicode : Composer {
 
             if (isSameCycle && isWithinTime) {
                 if (state.jong != null) {
-                    val idx = cycle.indexOf(JONGSEONG[state.jong!!])
-                    if (idx != -1) {
-                        state.jong = jongMap[cycle[(idx + 1) % cycle.size]]
-                    } else {
-                        state.commitPreedit()
-                        if (isVowel) state.jung = jungMap[cycle[0]] else state.cho = choseongMap[cycle[0]]
-                    }
+                    cycleJongseong(state, cycle, isVowel)
                 } else if (state.jung != null && state.cho != null) {
                     if (isVowel) {
                         val idx = cycle.indexOf(JUNGSEONG[state.jung!!])
@@ -316,7 +421,10 @@ object HangulUnicode : Composer {
                     } else {
                         val idx = cycle.indexOf(CHOSEONG[state.cho!!])
                         if (idx != -1) {
-                            state.cho = choseongMap[cycle[(idx + 1) % cycle.size]]
+                            val nextChoStr = cycle[(idx + 1) % cycle.size]
+                            if (!tryMergeBack(state, nextChoStr)) {
+                                state.cho = choseongMap[nextChoStr]
+                            }
                         } else {
                             state.commitPreedit()
                             state.cho = choseongMap[cycle[0]]
@@ -424,13 +532,7 @@ object HangulUnicode : Composer {
             // Identical to sky cycling logic for consonants
             if (isSameCycle && isWithinTime) {
                 if (state.jong != null) {
-                    val idx = cycle.indexOf(JONGSEONG[state.jong!!])
-                    if (idx != -1) {
-                        state.jong = jongMap[cycle[(idx + 1) % cycle.size]]
-                    } else {
-                        state.commitPreedit()
-                        state.cho = choseongMap[cycle[0]]
-                    }
+                    cycleJongseong(state, cycle, false)
                 } else if (state.jung != null && state.cho != null) {
                     if (jongMap.containsKey(cycle[0])) {
                         state.jong = jongMap[cycle[0]]
@@ -441,7 +543,10 @@ object HangulUnicode : Composer {
                 } else if (state.cho != null && state.jung == null) {
                     val idx = cycle.indexOf(CHOSEONG[state.cho!!])
                     if (idx != -1) {
-                        state.cho = choseongMap[cycle[(idx + 1) % cycle.size]]
+                        val nextChoStr = cycle[(idx + 1) % cycle.size]
+                        if (!tryMergeBack(state, nextChoStr)) {
+                            state.cho = choseongMap[nextChoStr]
+                        }
                     } else {
                         state.commitPreedit()
                         state.cho = choseongMap[cycle[0]]
@@ -546,7 +651,7 @@ object HangulUnicode : Composer {
             // we'll just fall back to normal `handleQwerty` for now.
             // Implementing proper backspace tracking inside Composer is complex without full buffer read.
             // As a fallback, we'll just type it as normal QWERTY.
-            handleQwerty(key, state)
+            handleQwerty(doubleChar, state)
         } else {
             handleQwerty(key, state)
         }

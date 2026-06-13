@@ -64,6 +64,8 @@ typealias FlorisScreenNavigationIcon = @Composable () -> Unit
 interface FlorisScreenScope {
     var title: String
 
+    var topBarVisible: Boolean
+
     var navigationIconVisible: Boolean
 
     var previewFieldVisible: Boolean
@@ -85,6 +87,7 @@ interface FlorisScreenScope {
 
 private class FlorisScreenScopeImpl : FlorisScreenScope {
     override var title: String by mutableStateOf("")
+    override var topBarVisible: Boolean by mutableStateOf(true)
     override var navigationIconVisible: Boolean by mutableStateOf(true)
     override var previewFieldVisible: Boolean by mutableStateOf(false)
     override var scrollable: Boolean by mutableStateOf(true)
@@ -146,7 +149,11 @@ private class FlorisScreenScopeImpl : FlorisScreenScope {
 
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = { FlorisAppBar(title, navigationIcon.takeIf { navigationIconVisible }, actions, scrollBehavior) },
+            topBar = { 
+                if (topBarVisible) {
+                    FlorisAppBar(title, navigationIcon.takeIf { navigationIconVisible }, actions, scrollBehavior)
+                }
+            },
             bottomBar = bottomBar,
             floatingActionButton = fab,
         ) { innerPadding ->

@@ -29,6 +29,7 @@ import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
 import org.florisboard.lib.android.vibrate
+import org.florisboard.lib.android.vibrateClick
 import dev.patrickgold.florisboard.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,16 +94,18 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     private fun performAudioFeedback(data: KeyData, factor: Double) {
         if (audioManager == null) return
-        if (!prefs.inputFeedback.audioEnabled.get()) return
-        if (prefs.inputFeedback.audioActivationMode.get() ==
+        if (!prefs.inputFeedback.audioEnabled.get() && !prefs.malang.malangSoundEnabled.get()) return
+        if (!prefs.malang.malangSoundEnabled.get() && prefs.inputFeedback.audioActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemAudioEnabled) return
 
         scope.launch {
-            val volume = (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
-            val effect = when (data.code) {
-                KeyCode.DELETE -> AudioManager.FX_KEYPRESS_DELETE
-                KeyCode.ENTER -> AudioManager.FX_KEYPRESS_RETURN
-                KeyCode.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+            val isMalang = prefs.malang.malangSoundEnabled.get()
+            val volume = if (isMalang) 0.5 else (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
+            val effect = when {
+                isMalang -> AudioManager.FX_FOCUS_NAVIGATION_UP // A softer, "pop" like system sound
+                data.code == KeyCode.DELETE -> AudioManager.FX_KEYPRESS_DELETE
+                data.code == KeyCode.ENTER -> AudioManager.FX_KEYPRESS_RETURN
+                data.code == KeyCode.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
                 else -> AudioManager.FX_KEYPRESS_STANDARD
             }
             if (volume in 0.01..1.00) {
@@ -113,32 +116,44 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
     }
 
     private fun performHapticFeedback(data: KeyData, factor: Double) {
-        if (vibrator == null) return
-        if (!prefs.inputFeedback.hapticEnabled.get()) return
-        if (prefs.inputFeedback.hapticActivationMode.get() ==
-            InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemHapticEnabled) return
+        if (vibrator == null) {
+            flogDebug { "Haptic skipped: vibrator is null" }
+            return
+        }
+        val isMalang = prefs.malang.malangSoundEnabled.get()
+        if (!prefs.inputFeedback.hapticEnabled.get() && !isMalang) {
+            flogDebug { "Haptic skipped: hapticEnabled is false" }
+            return
+        }
+        if (!isMalang && prefs.inputFeedback.hapticActivationMode.get() ==
+            InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemHapticEnabled) {
+            flogDebug { "Haptic skipped: respect system settings and system haptic is disabled" }
+            return
+        }
 
+        flogDebug { "Performing haptic feedback (factor=$factor)" }
         scope.launch {
-            if (prefs.inputFeedback.hapticVibrationMode.get() == HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE) {
-                val view = ims.window?.window?.decorView ?: return@launch
-                val hfc = if (factor < 1.0 && AndroidVersion.ATLEAST_API27_O_MR1) {
-                    HapticFeedbackConstants.TEXT_HANDLE_MOVE
+            try {
+                if (isMalang) {
+                    vibrator.vibrateClick(HapticFeedbackConstants.CLOCK_TICK, 0.3f * factor.toFloat())
+                } else if (prefs.inputFeedback.hapticVibrationMode.get() == HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE) {
+                    val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
+                    val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
+                    flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
+                    vibrator.vibrateClick(primitive.androidId, intensity)
                 } else {
-                    HapticFeedbackConstants.KEYBOARD_TAP
+                    val duration = prefs.inputFeedback.hapticVibrationDuration.get()
+                    val strength = prefs.inputFeedback.hapticVibrationStrength.get()
+                    flogDebug { "Using direct vibrator: duration=$duration, strength=$strength" }
+                    vibrator.vibrate(
+                        duration = duration,
+                        strength = strength,
+                        factor = factor,
+                    )
                 }
-                val didPerform = view.performHapticFeedback(hfc,
-                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or
-                        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-                )
-                if (didPerform) return@launch
-                // If not performed fall back to using the vibrator directly
+            } catch (e: Exception) {
+                flogDebug { "Haptic execution failed: ${e.message}" }
             }
-
-            vibrator.vibrate(
-                duration = prefs.inputFeedback.hapticVibrationDuration.get(),
-                strength = prefs.inputFeedback.hapticVibrationStrength.get(),
-                factor = factor,
-            )
         }
     }
 }

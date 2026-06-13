@@ -449,20 +449,15 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleEnter() {
         val info = editorInstance.activeInfo
         val isShiftPressed = inputEventDispatcher.isPressed(KeyCode.SHIFT)
-        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         if (editorInstance.tryPerformEnterCommitRaw()) {
             return
         }
-        if (info.imeOptions.flagNoEnterAction || (info.inputAttributes.flagTextMultiLine && isShiftPressed) || layoutId.contains("sky")) {
+        if (info.imeOptions.flagNoEnterAction || (info.inputAttributes.flagTextMultiLine && isShiftPressed)) {
             editorInstance.performEnter()
         } else {
             when (val action = info.imeOptions.action) {
-                ImeOptions.Action.DONE,
                 ImeOptions.Action.GO,
-                ImeOptions.Action.NEXT,
-                ImeOptions.Action.PREVIOUS,
-                ImeOptions.Action.SEARCH,
-                ImeOptions.Action.SEND -> {
+                ImeOptions.Action.SEARCH -> {
                     editorInstance.performEnterAction(action)
                 }
                 else -> editorInstance.performEnter()
@@ -612,12 +607,12 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             if (newState) {
                 appContext.showLongToast(
                     R.string.incognito_mode__toast_after_enabled,
-                    "app_name" to appContext.getString(R.string.floris_app_name),
+                    "app_name" to appContext.getString(R.string.malang_app_name),
                 )
             } else {
                 appContext.showLongToast(
                     R.string.incognito_mode__toast_after_disabled,
-                    "app_name" to appContext.getString(R.string.floris_app_name),
+                    "app_name" to appContext.getString(R.string.malang_app_name),
                 )
             }
         )

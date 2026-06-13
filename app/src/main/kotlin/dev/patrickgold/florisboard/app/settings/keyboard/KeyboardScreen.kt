@@ -34,7 +34,9 @@ import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.Preference
 import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
+import dev.patrickgold.jetpref.datastore.ui.listPrefEntries
 import org.florisboard.lib.compose.stringRes
+import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 
 @OptIn(ExperimentalJetPrefDatastoreUi::class)
 @Composable
@@ -45,115 +47,152 @@ fun KeyboardScreen() = FlorisScreen {
     val navController = LocalNavController.current
 
     content {
-        Preference(
-            title = stringRes(R.string.settings__keyboard_selection__title),
-            summary = stringRes(R.string.settings__keyboard_selection__description),
-            onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
-        )
-        SwitchPreference(
-            prefs.keyboard.numberRow,
-            title = stringRes(R.string.pref__keyboard__number_row__label),
-            summary = stringRes(R.string.pref__keyboard__number_row__summary),
-        )
-        ListPreference(
-            listPref = prefs.keyboard.hintedNumberRowMode,
-            switchPref = prefs.keyboard.hintedNumberRowEnabled,
-            title = stringRes(R.string.pref__keyboard__hinted_number_row_mode__label),
-            summarySwitchDisabled = stringRes(R.string.state__disabled),
-            entries = enumDisplayEntriesOf(KeyHintMode::class),
-            enabledIf = { prefs.keyboard.numberRow.isFalse() }
-        )
-        ListPreference(
-            listPref = prefs.keyboard.hintedSymbolsMode,
-            switchPref = prefs.keyboard.hintedSymbolsEnabled,
-            title = stringRes(R.string.pref__keyboard__hinted_symbols_mode__label),
-            summarySwitchDisabled = stringRes(R.string.state__disabled),
-            entries = enumDisplayEntriesOf(KeyHintMode::class),
-        )
-        SwitchPreference(
-            prefs.keyboard.utilityKeyEnabled,
-            title = stringRes(R.string.pref__keyboard__utility_key_enabled__label),
-            summary = stringRes(R.string.pref__keyboard__utility_key_enabled__summary),
-        )
-        ListPreference(
-            prefs.keyboard.utilityKeyAction,
-            title = stringRes(R.string.pref__keyboard__utility_key_action__label),
-            entries = enumDisplayEntriesOf(UtilityKeyAction::class),
-            visibleIf = { prefs.keyboard.utilityKeyEnabled isEqualTo true },
-        )
-        ListPreference(
-            prefs.keyboard.spaceBarMode,
-            title = stringRes(R.string.pref__keyboard__space_bar_mode__label),
-            entries = enumDisplayEntriesOf(SpaceBarMode::class),
-        )
-        ListPreference(
-            prefs.keyboard.capitalizationBehavior,
-            title = stringRes(R.string.pref__keyboard__capitalization_behavior__label),
-            entries = enumDisplayEntriesOf(CapitalizationBehavior::class),
-        )
-        DialogSliderPreference(
-            primaryPref = prefs.keyboard.fontSizeMultiplierPortrait,
-            secondaryPref = prefs.keyboard.fontSizeMultiplierLandscape,
-            title = stringRes(R.string.pref__keyboard__font_size_multiplier__label),
-            primaryLabel = stringRes(R.string.screen_orientation__portrait),
-            secondaryLabel = stringRes(R.string.screen_orientation__landscape),
-            valueLabel = { stringRes(R.string.unit__percent__symbol, "v" to it) },
-            min = 50,
-            max = 150,
-            stepIncrement = 5,
-        )
-        ListPreference(
-            listPref = prefs.keyboard.incognitoDisplayMode,
-            title = stringRes(R.string.pref__keyboard__incognito_indicator__label),
-            entries = enumDisplayEntriesOf(IncognitoDisplayMode::class),
-        )
-
-        PreferenceGroup(title = stringRes(R.string.pref__keyboard__group_layout__label)) {
-            ListPreference(
-                prefs.keyboard.landscapeInputUiMode,
-                title = stringRes(R.string.pref__keyboard__landscape_input_ui_mode__label),
-                entries = enumDisplayEntriesOf(LandscapeInputUiMode::class),
+        MalangPreferenceGroup {
+            Preference(
+                title = "키보드 언어 및 레이아웃",
+                summary = "시스템에 추가할 키보드 언어와 레이아웃을 선택합니다.",
+                onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
             )
+            SwitchPreference(
+                prefs.keyboard.numberRow,
+                title = "숫자 행 표시",
+                summary = "키보드 상단에 숫자 키 행을 항상 표시합니다.",
+            )
+            ListPreference(
+                listPref = prefs.keyboard.hintedNumberRowMode,
+                switchPref = prefs.keyboard.hintedNumberRowEnabled,
+                title = "힌트 숫자 행 모드",
+                summarySwitchDisabled = "비활성화됨",
+                entries = listPrefEntries {
+                    entry(KeyHintMode.DISABLED, "사용 안 함")
+                    entry(KeyHintMode.HINT_PRIORITY, "힌트 우선")
+                    entry(KeyHintMode.ACCENT_PRIORITY, "악센트 우선")
+                    entry(KeyHintMode.SMART_PRIORITY, "스마트 우선")
+                },
+                enabledIf = { prefs.keyboard.numberRow.isFalse() }
+            )
+            ListPreference(
+                listPref = prefs.keyboard.hintedSymbolsMode,
+                switchPref = prefs.keyboard.hintedSymbolsEnabled,
+                title = "힌트 기호 모드",
+                summarySwitchDisabled = "비활성화됨",
+                entries = listPrefEntries {
+                    entry(KeyHintMode.DISABLED, "사용 안 함")
+                    entry(KeyHintMode.HINT_PRIORITY, "힌트 우선")
+                    entry(KeyHintMode.ACCENT_PRIORITY, "악센트 우선")
+                    entry(KeyHintMode.SMART_PRIORITY, "스마트 우선")
+                },
+            )
+            SwitchPreference(
+                prefs.keyboard.utilityKeyEnabled,
+                title = "유틸리티 키 활성화",
+                summary = "언어 변경 또는 이모지 버튼을 표시합니다.",
+            )
+            ListPreference(
+                prefs.keyboard.utilityKeyAction,
+                title = "유틸리티 키 동작",
+                entries = listPrefEntries {
+                    entry(UtilityKeyAction.DISABLED, "사용 안 함")
+                    entry(UtilityKeyAction.SWITCH_LANGUAGE, "언어 변경")
+                    entry(UtilityKeyAction.SWITCH_KEYBOARD_APP, "키보드 앱 전환")
+                    entry(UtilityKeyAction.SWITCH_TO_EMOJIS, "이모지 전환")
+                    entry(UtilityKeyAction.DYNAMIC_SWITCH_LANGUAGE_EMOJIS, "동적 전환 (언어/이모지)")
+                },
+                visibleIf = { prefs.keyboard.utilityKeyEnabled isEqualTo true },
+            )
+            ListPreference(
+                prefs.keyboard.spaceBarMode,
+                title = "스페이스바 표시 모드",
+                entries = listPrefEntries {
+                    entry(SpaceBarMode.NOTHING, "빈 공간")
+                    entry(SpaceBarMode.CURRENT_LANGUAGE, "현재 언어 표시")
+                    entry(SpaceBarMode.SPACE_BAR_KEY, "스페이스바 텍스트 표시")
+                },
+            )
+            ListPreference(
+                prefs.keyboard.capitalizationBehavior,
+                title = "대문자 전환 동작",
+                entries = listPrefEntries {
+                    entry(CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP, "두 번 눌러 Caps Lock")
+                    entry(CapitalizationBehavior.CAPSLOCK_BY_CYCLE, "순환하여 Caps Lock")
+                },
+            )
+        }
+
+        MalangPreferenceGroup(title = "레이아웃 및 크기") {
             DialogSliderPreference(
-                primaryPref = prefs.keyboard.keySpacingVertical,
-                secondaryPref = prefs.keyboard.keySpacingHorizontal,
-                title = stringRes(R.string.pref__keyboard__key_spacing__label),
-                primaryLabel = stringRes(R.string.screen_orientation__vertical),
-                secondaryLabel = stringRes(R.string.screen_orientation__horizontal),
-                valueLabel = { stringRes(R.string.unit__percent__symbol, "v" to it) },
+                prefs.keyboard.heightFactorPortrait,
+                title = "키보드 높이 (세로 화면)",
+                valueLabel = { "$it%" },
                 min = 50,
                 max = 150,
+                stepIncrement = 1,
+            )
+            DialogSliderPreference(
+                prefs.keyboard.heightFactorLandscape,
+                title = "키보드 높이 (가로 화면)",
+                valueLabel = { "$it%" },
+                min = 50,
+                max = 150,
+                stepIncrement = 1,
+            )
+            DialogSliderPreference(
+                prefs.keyboard.fontSizeMultiplierPortrait,
+                title = "키 글자 크기 (세로 화면)",
+                valueLabel = { "$it%" },
+                min = 50,
+                max = 150,
+                stepIncrement = 1,
+            )
+            DialogSliderPreference(
+                prefs.keyboard.fontSizeMultiplierLandscape,
+                title = "키 글자 크기 (가로 화면)",
+                valueLabel = { "$it%" },
+                min = 50,
+                max = 150,
+                stepIncrement = 1,
+            )
+            DialogSliderPreference(
+                prefs.keyboard.keySpacingHorizontal,
+                title = "키 가로 간격",
+                valueLabel = { "$it%" },
+                min = 0,
+                max = 200,
+                stepIncrement = 5,
+            )
+            DialogSliderPreference(
+                prefs.keyboard.keySpacingVertical,
+                title = "키 세로 간격",
+                valueLabel = { "$it%" },
+                min = 0,
+                max = 200,
                 stepIncrement = 5,
             )
         }
 
-        PreferenceGroup(title = stringRes(R.string.pref__keyboard__group_keypress__label)) {
-            Preference(
-                title = stringRes(R.string.settings__input_feedback__title),
-                onClick = { navController.navigate(Routes.Settings.InputFeedback) },
-            )
+        MalangPreferenceGroup(title = "기타 설정") {
             SwitchPreference(
                 prefs.keyboard.popupEnabled,
-                title = stringRes(R.string.pref__keyboard__popup_enabled__label),
-                summary = stringRes(R.string.pref__keyboard__popup_enabled__summary),
+                title = "키 팝업 활성화",
+                summary = "키를 누를 때 팝업을 표시합니다.",
             )
             SwitchPreference(
                 prefs.keyboard.mergeHintPopupsEnabled,
-                title = stringRes(R.string.pref__keyboard__merge_hint_popups_enabled__label),
-                summary = stringRes(R.string.pref__keyboard__merge_hint_popups_enabled__summary),
+                title = "힌트 팝업 병합",
+                summary = "힌트와 키 팝업을 하나로 합칩니다.",
             )
             DialogSliderPreference(
                 prefs.keyboard.longPressDelay,
-                title = stringRes(R.string.pref__keyboard__long_press_delay__label),
-                valueLabel = { stringRes(R.string.unit__milliseconds__symbol, "v" to it) },
+                title = "길게 누르기 지연 시간",
+                valueLabel = { "${it}ms" },
                 min = 100,
                 max = 700,
                 stepIncrement = 10,
             )
             SwitchPreference(
                 prefs.keyboard.spaceBarSwitchesToCharacters,
-                title = stringRes(R.string.pref__keyboard__space_bar_switches_to_characters__label),
-                summary = stringRes(R.string.pref__keyboard__space_bar_switches_to_characters__summary),
+                title = "스페이스바 입력 후 문자 모드로 복귀",
+                summary = "기호 입력 후 스페이스바를 누르면 한글/영문 모드로 자동 복귀합니다.",
             )
         }
     }

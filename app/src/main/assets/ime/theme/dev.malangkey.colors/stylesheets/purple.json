@@ -1,0 +1,30 @@
+﻿{
+  "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
+  "@defines": {
+    "--bg": "#F3E5F5",
+    "--key-bg": "#E1BEE7",
+    "--key-fg": "#4A148C",
+    "--key-bg-pressed": "#CE93D8",
+    "--action-bg": "#8E24AA",
+    "--action-fg": "#FFFFFF",
+    "--action-bg-pressed": "#6A1B9A",
+    "--shape": "rounded-corner(12dp, 12dp, 12dp, 12dp)"
+  },
+  "window": { "background": "var(--bg)" },
+  "keyboard": { "background": "var(--bg)" },
+  "key": {
+    "background": "var(--key-bg)",
+    "foreground": "var(--key-fg)",
+    "font-size": "20sp",
+    "shape": "var(--shape)",
+    "shadow-elevation": "1dp",
+    "shadow-color": "rgba(0, 0, 0, 0.1)"
+  },
+  "key:pressed": { "background": "var(--key-bg-pressed)" },
+  "key[code=10]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=10]:pressed": { "background": "var(--action-bg-pressed)" },
+  "key[code=-1]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "smartbar": { "background": "var(--bg)" },
+  "smartbar-item": { "foreground": "var(--key-fg)" }
+}

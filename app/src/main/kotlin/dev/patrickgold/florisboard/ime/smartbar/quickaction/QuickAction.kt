@@ -25,6 +25,9 @@ import dev.patrickgold.florisboard.ime.keyboard.KeyData
 import dev.patrickgold.florisboard.ime.text.key.KeyCode
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.keyboardManager
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.florisboard.lib.compose.stringRes
@@ -47,10 +50,25 @@ sealed class QuickAction {
 
         override fun onPointerUp(context: Context) {
             val keyboardManager by context.keyboardManager()
-            keyboardManager.inputEventDispatcher.sendUp(data)
-            if (!keyboardManager.inputEventDispatcher.isRepeatable(data) &&
-                data.code != KeyCode.TOGGLE_ACTIONS_OVERFLOW && data.code != KeyCode.CLIPBOARD_SELECT_ALL) {
-                keyboardManager.activeState.isActionsOverflowVisible = false
+            val editorInstance by context.editorInstance()
+            val scope = (context as? androidx.lifecycle.LifecycleOwner)?.lifecycleScope 
+                ?: kotlinx.coroutines.GlobalScope
+
+            scope.launch {
+                // If Copy/Cut is pressed but no text is selected, select all first.
+                if (data.code == KeyCode.CLIPBOARD_COPY || data.code == KeyCode.CLIPBOARD_CUT) {
+                    if (!editorInstance.activeContent.selection.isSelectionMode) {
+                        editorInstance.performClipboardSelectAll()
+                        // Give the system a tiny bit of time to update the selection state
+                        kotlinx.coroutines.delay(50) 
+                    }
+                }
+
+                keyboardManager.inputEventDispatcher.sendUp(data)
+                if (!keyboardManager.inputEventDispatcher.isRepeatable(data) &&
+                    data.code != KeyCode.TOGGLE_ACTIONS_OVERFLOW && data.code != KeyCode.CLIPBOARD_SELECT_ALL) {
+                    keyboardManager.activeState.isActionsOverflowVisible = false
+                }
             }
         }
 
@@ -66,6 +84,15 @@ sealed class QuickAction {
         override fun onPointerUp(context: Context) {
             val editorInstance by context.editorInstance()
             editorInstance.commitText(data)
+        }
+    }
+
+    @Serializable
+    @SerialName("quick_phrase")
+    data class QuickPhrase(val text: String) : QuickAction() {
+        override fun onPointerUp(context: Context) {
+            val editorInstance by context.editorInstance()
+            editorInstance.commitText(text)
         }
     }
 }
@@ -112,6 +139,7 @@ fun QuickAction.computeDisplayName(evaluator: ComputingEvaluator): String {
             else -> R.string.general__invalid_fatal
         })
         is QuickAction.InsertText -> data
+        is QuickAction.QuickPhrase -> text.ifBlank { stringRes(R.string.quick_action__quick_phrase) }
     }
 }
 
@@ -152,5 +180,6 @@ fun QuickAction.computeTooltip(evaluator: ComputingEvaluator): String {
             else -> R.string.general__invalid_fatal
         })
         is QuickAction.InsertText -> "Insert text '$data'"
+        is QuickAction.QuickPhrase -> "Insert quick phrase '$text'"
     }
 }

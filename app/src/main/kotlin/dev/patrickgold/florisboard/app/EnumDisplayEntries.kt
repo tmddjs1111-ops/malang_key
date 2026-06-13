@@ -24,6 +24,7 @@ import dev.patrickgold.florisboard.ime.clipboard.ClipboardSyncBehavior
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
 import dev.patrickgold.florisboard.ime.input.CapitalizationBehavior
 import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
+import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.ime.input.InputShiftState
 import dev.patrickgold.florisboard.ime.keyboard.IncognitoMode
@@ -311,6 +312,42 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
             )
         }
     },
+    HapticVibrationPrimitive::class to DEFAULT to {
+        listPrefEntries {
+            entry(
+                key = HapticVibrationPrimitive.CLICK,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__click),
+            )
+            entry(
+                key = HapticVibrationPrimitive.THUD,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__thud),
+            )
+            entry(
+                key = HapticVibrationPrimitive.SPIN,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__spin),
+            )
+            entry(
+                key = HapticVibrationPrimitive.QUICK_CLICK,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__quick_click),
+            )
+            entry(
+                key = HapticVibrationPrimitive.SLOW_RISE,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__slow_rise),
+            )
+            entry(
+                key = HapticVibrationPrimitive.QUICK_RISE,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__quick_rise),
+            )
+            entry(
+                key = HapticVibrationPrimitive.TICK,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__tick),
+            )
+            entry(
+                key = HapticVibrationPrimitive.LOW_TICK,
+                label = stringRes(R.string.enum__haptic_vibration_primitive__low_tick),
+            )
+        }
+    },
     KeyHintMode::class to DEFAULT to {
         listPrefEntries {
             entry(
@@ -492,6 +529,11 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
                 key = SmartbarLayout.SUGGESTIONS_ACTIONS_EXTENDED,
                 label = stringRes(R.string.enum__smartbar_layout__suggestions_actions_extended),
                 description = stringRes(R.string.enum__smartbar_layout__suggestions_actions_extended__description),
+            )
+            entry(
+                key = SmartbarLayout.MALANG_SLOTS,
+                label = stringRes(R.string.enum__smartbar_layout__malang_slots),
+                description = stringRes(R.string.enum__smartbar_layout__malang_slots__description),
             )
         }
     },

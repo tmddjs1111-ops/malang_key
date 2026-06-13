@@ -37,8 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import dev.patrickgold.compose.tooltip.PlainTooltip
 import dev.patrickgold.florisboard.ime.input.LocalInputFeedbackController
 import dev.patrickgold.florisboard.ime.keyboard.ComputingEvaluator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import dev.patrickgold.florisboard.ime.keyboard.computeImageVector
 import dev.patrickgold.florisboard.ime.keyboard.computeLabel
+import dev.patrickgold.florisboard.ime.text.key.KeyCode
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import org.florisboard.lib.snygg.SnyggSelector
@@ -58,12 +61,16 @@ fun QuickActionButton(
     evaluator: ComputingEvaluator,
     modifier: Modifier = Modifier,
     type: QuickActionBarType = QuickActionBarType.INTERACTIVE_BUTTON,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val inputFeedbackController = LocalInputFeedbackController.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isEnabled = type == QuickActionBarType.EDITOR_TILE || evaluator.evaluateEnabled(action.keyData())
+    val isEnabled = type == QuickActionBarType.EDITOR_TILE || 
+        action.keyData().code == KeyCode.CLIPBOARD_COPY || 
+        action.keyData().code == KeyCode.CLIPBOARD_CUT || 
+        evaluator.evaluateEnabled(action.keyData())
     val elementName = when (type) {
         QuickActionBarType.INTERACTIVE_BUTTON -> FlorisImeUi.SmartbarActionKey
         QuickActionBarType.INTERACTIVE_TILE -> FlorisImeUi.SmartbarActionTile
@@ -95,7 +102,7 @@ fun QuickActionButton(
             clickAndSemanticsModifier = Modifier
                 .aspectRatio(1f)
                 .indication(interactionSource, LocalIndication.current)
-                .pointerInput(action, isEnabled) {
+                .pointerInput(action, isEnabled, onLongClick) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         down.consume()
@@ -104,14 +111,24 @@ fun QuickActionButton(
                             inputFeedbackController.keyPress(TextKeyData.UNSPECIFIED)
                             interactionSource.tryEmit(press)
                             action.onPointerDown(context)
-                            val up = waitForUpOrCancellation()
-                            if (up != null) {
-                                up.consume()
-                                interactionSource.tryEmit(PressInteraction.Release(press))
-                                action.onPointerUp(context)
-                            } else {
+                            var isLongClickTriggered = false
+                            val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                waitForUpOrCancellation()
+                            }
+                            if (up == null) {
+                                if (onLongClick != null) {
+                                    onLongClick()
+                                    isLongClickTriggered = true
+                                    inputFeedbackController.keyLongPress(TextKeyData.UNSPECIFIED)
+                                }
+                                waitForUpOrCancellation()
+                            }
+                            if (isLongClickTriggered) {
                                 interactionSource.tryEmit(PressInteraction.Cancel(press))
                                 action.onPointerCancel(context)
+                            } else {
+                                interactionSource.tryEmit(PressInteraction.Release(press))
+                                action.onPointerUp(context)
                             }
                         }
                     }
@@ -148,8 +165,18 @@ fun QuickActionButton(
                             elementName = "$elementName-text",
                             attributes = attributes,
                             selector = selector,
-                            text = action.data.firstOrNull().toString().ifBlank { "?" },
+                            text = action.data.let { if (it.length <= 3) it else it.take(2) + "…" }.ifBlank { "T" },
                         )
+                    }
+
+                    is QuickAction.QuickPhrase -> {
+                        SnyggBox(
+                            elementName = "$elementName-icon",
+                            attributes = attributes,
+                            selector = selector,
+                        ) {
+                            SnyggIcon(imageVector = Icons.Default.Bolt)
+                        }
                     }
                 }
 

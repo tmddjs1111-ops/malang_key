@@ -81,6 +81,9 @@ class PopupUiController(
     private var extRenderInfo by mutableStateOf<ExtRenderInfo?>(null)
 
     private var activeElementIndex by mutableIntStateOf(-1)
+    private var needsInitialTouch = false
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
     var evaluator: ComputingEvaluator = DefaultComputingEvaluator
     var keyHintConfiguration: KeyHintConfiguration = KeyHintConfiguration.HINTS_DISABLED
 
@@ -90,6 +93,8 @@ class PopupUiController(
     /** Is true if the extended popup is visible to the user, else false */
     val isShowingExtendedPopup: Boolean
         get() = extRenderInfo != null
+    val isClipboardPopupShowing: Boolean
+        get() = extRenderInfo?.isClipboard == true
 
     fun isSuitableForPopups(key: Key): Boolean {
         return isSuitableForBasicPopup(key) || isSuitableForExtendedPopup(key)
@@ -306,6 +311,65 @@ class PopupUiController(
         activeElementIndex = initUiIndex
     }
 
+    fun showClipboardPopup(key: Key, items: List<dev.patrickgold.florisboard.ime.clipboard.provider.ClipboardItem>, size: Size, maxRows: Int) {
+        val rowCount = 3
+        val colCount = maxRows
+        val n = rowCount * colCount
+        if (items.isEmpty()) return
+
+        val baseBounds = baseRenderInfo?.bounds ?: boundsProvider(key)
+        val keyPopupDiffX = (key.visibleBounds.width - baseBounds.width) / 2.0f
+
+        val elements = List(rowCount) { mutableListOf<Element>() }
+        for (i in 0 until n) {
+            val visualRowIndex = i / colCount
+            val elementsRowIndex = rowCount - 1 - visualRowIndex
+            val item = items.getOrNull(i)
+            val label = item?.text?.toString() ?: ""
+            val displayLabel = if (label.length > 5) label.take(4) + "…" else label
+            val keyData = TextKeyData(
+                code = KeyCode.MULTIPLE_CODE_POINTS,
+                label = label,
+                type = dev.patrickgold.florisboard.ime.text.key.KeyType.CHARACTER
+            )
+            elements[elementsRowIndex].add(Element(
+                data = keyData,
+                label = displayLabel,
+                icon = null,
+                orderedIndex = i,
+                adjustedIndex = i
+            ))
+        }
+
+        val extWidth = colCount * baseBounds.width
+        val extHeight = rowCount * baseBounds.height * 0.4f
+
+        var x = key.visibleBounds.right - extWidth
+        x = x.coerceIn(0f, size.width - extWidth)
+
+        val y = key.visibleBounds.top - extHeight - baseBounds.height * 0.1f
+
+        val extBounds = FlorisRect.new(
+            left = x, top = y, right = x + extWidth, bottom = y + extHeight,
+        )
+
+        extRenderInfo = ExtRenderInfo(
+            elements = elements,
+            baseBounds = baseBounds,
+            bounds = extBounds,
+            anchorLeft = false,
+            anchorRight = false,
+            anchorOffset = 0,
+            row0count = colCount,
+            row1count = (rowCount - 1) * colCount,
+            isClipboard = true,
+        )
+        activeElementIndex = -1
+        needsInitialTouch = true
+        initialTouchX = 0f
+        initialTouchY = 0f
+    }
+
     /**
      * Updates the current selected key in extended popup according to the passed [xEvent] and [yEvent].
      * This function does nothing if the extended popup is not showing and will return false.
@@ -327,6 +391,36 @@ class PopupUiController(
 
         val x = xEvent - key.visibleBounds.left
         val y = yEvent - key.visibleBounds.top
+
+        if (extRenderInfo.isClipboard) {
+            if (needsInitialTouch) {
+                initialTouchX = xEvent
+                initialTouchY = yEvent
+                needsInitialTouch = false
+            }
+
+            val dx = xEvent - initialTouchX
+            val dy = yEvent - initialTouchY
+            
+            val colCount = extRenderInfo.elements.firstOrNull()?.size ?: 1
+            
+            val colDiff = (dx / (baseBounds.width * 0.6f)).toInt()
+            val rowDiff = (dy / (baseBounds.height * 0.4f)).toInt()
+            
+            val targetCol = (colCount - 1 + colDiff).coerceIn(0, colCount - 1)
+            val targetRow = (2 + rowDiff).coerceIn(0, 2)
+            
+            val actualRow = 2 - targetRow
+            val element = extRenderInfo.elements.getOrNull(actualRow)?.getOrNull(targetCol)
+            
+            if (element != null && element.data.label.isNotEmpty()) {
+                activeElementIndex = element.orderedIndex
+            } else {
+                activeElementIndex = -1
+            }
+            return true
+        }
+
         val kX = x / baseBounds.width
 
         // Check if out of boundary on y-axis
@@ -395,9 +489,17 @@ class PopupUiController(
      */
     fun getActiveKeyData(key: Key): KeyData? {
         return if (key is TextKey) {
-            val extRenderInfo = extRenderInfo ?: return key.computedData
-            val element = getElementOrNull(extRenderInfo.elements, activeElementIndex)
-            element?.data ?: key.computedData
+            val extRenderInfo = extRenderInfo
+            if (extRenderInfo != null) {
+                val activeElement = extRenderInfo.elements.flatMap { it }.find { it.orderedIndex == activeElementIndex }
+                if (extRenderInfo.isClipboard) {
+                    activeElement?.data
+                } else {
+                    activeElement?.data ?: key.computedData
+                }
+            } else {
+                key.computedData
+            }
         } else {
             null
         }
@@ -480,6 +582,7 @@ class PopupUiController(
                 elemWidth = elemWidth.toDp(),
                 elemHeight = elemHeight.toDp(),
                 activeElementIndex = activeElementIndex,
+                isClipboard = renderInfo.isClipboard,
             )
         }
     }
@@ -499,6 +602,7 @@ class PopupUiController(
         val anchorOffset: Int,
         val row0count: Int,
         val row1count: Int,
+        val isClipboard: Boolean = false,
     )
 
     data class Element(

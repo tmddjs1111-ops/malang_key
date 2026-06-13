@@ -17,22 +17,31 @@
 package dev.patrickgold.florisboard.ime.smartbar.quickaction
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -43,7 +52,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -57,9 +69,8 @@ import dev.patrickgold.florisboard.ime.text.key.KeyCode
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import dev.patrickgold.florisboard.keyboardManager
-import dev.patrickgold.florisboard.lib.toIntOffset
-import org.florisboard.lib.compose.stringRes
 import kotlinx.coroutines.runBlocking
+import org.florisboard.lib.compose.stringRes
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggColumn
 import org.florisboard.lib.snygg.ui.SnyggIcon
@@ -67,189 +78,67 @@ import org.florisboard.lib.snygg.ui.SnyggIconButton
 import org.florisboard.lib.snygg.ui.SnyggRow
 import org.florisboard.lib.snygg.ui.SnyggText
 
-private const val ItemNotFound = -1
 private val NoopAction = QuickAction.InsertKey(TextKeyData(code = KeyCode.NOOP))
-private val DragMarkerAction = QuickAction.InsertKey(TextKeyData(code = KeyCode.DRAG_MARKER))
 
 @Composable
 fun QuickActionsEditorPanel() {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
-
-    // We get the current arrangement once and do not observe on purpose
-    val actionArrangement = remember { prefs.smartbar.actionArrangement.get() }
-    var stickyAction by remember(actionArrangement) {
-        mutableStateOf(actionArrangement.stickyAction ?: NoopAction)
-    }
-    val dynamicActions = remember(actionArrangement) {
-        actionArrangement.dynamicActions.ifEmpty { listOf(NoopAction) }.toMutableStateList()
-    }
-    val hiddenActions = remember(actionArrangement) {
-        actionArrangement.hiddenActions.ifEmpty { listOf(NoopAction) }.toMutableStateList()
-    }
-
     val evaluator by keyboardManager.activeSmartbarEvaluator.collectAsState()
-    val gridState = rememberLazyGridState()
+
+    var malangSlotsCount by remember { mutableStateOf(prefs.smartbar.malangSlotsCount.get().coerceIn(3, 6)) }
+    val malangSlots = remember {
+        val list = prefs.smartbar.malangSlots.get().toMutableStateList()
+        while (list.size < 6) list.add(NoopAction)
+        list as androidx.compose.runtime.snapshots.SnapshotStateList<QuickAction>
+    }
+
+    val availableActions = remember {
+        listOf(
+            QuickAction.InsertKey(TextKeyData.UNDO),
+            QuickAction.InsertKey(TextKeyData.REDO),
+            QuickAction.InsertKey(TextKeyData.SETTINGS),
+            QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
+            QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+            QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
+            QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),
+            QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
+            QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
+            QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
+            QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
+            QuickAction.InsertKey(TextKeyData.ARROW_RIGHT),
+            QuickAction.QuickPhrase(""), // Lightning bolt template
+        )
+    }
+
     var activeDragAction by remember { mutableStateOf<QuickAction?>(null) }
     var activeDragPosition by remember { mutableStateOf(IntOffset.Zero) }
     var activeDragSize by remember { mutableStateOf(IntSize.Zero) }
 
-    fun findItemForOffsetOrClosestInRow(offset: IntOffset): LazyGridItemInfo? {
-        var closestItemInRow: LazyGridItemInfo? = null
-        // Using manual for loop with indices instead of firstOrNull() because this method gets
-        // called a lot and firstOrNull allocates an iterator for each call
-        for (index in gridState.layoutInfo.visibleItemsInfo.indices) {
-            val item = gridState.layoutInfo.visibleItemsInfo[index]
-            if (offset.y in item.offset.y..(item.offset.y + item.size.height)) {
-                if (offset.x in item.offset.x..(item.offset.x + item.size.width)) {
-                    return item
-                }
-                closestItemInRow = item
-            }
-        }
-        return closestItemInRow
-    }
+    var phraseToEditIndex by remember { mutableStateOf<Int?>(null) }
+    var phraseText by remember { mutableStateOf("") }
 
-    fun indexOfStickyAction(item: LazyGridItemInfo): Int {
-        val i = item.index
-        return if (i == 1) 0 else ItemNotFound
-    }
-
-    fun indexOfDynamicAction(item: LazyGridItemInfo): Int {
-        val i = item.index
-        val base = 3
-        return if (i >= base && i < (dynamicActions.size + base)) i - base else ItemNotFound
-    }
-
-    fun indexOfHiddenAction(item: LazyGridItemInfo): Int {
-        val i = item.index
-        val base = dynamicActions.size + 4
-        return if (i >= base && i < (hiddenActions.size + base)) i - base else ItemNotFound
-    }
-
-    fun keyOf(action: QuickAction): Any? {
-        return if (action.keyData().code == KeyCode.NOOP) {
-            null
-        } else {
-            action.hashCode()
-        }
-    }
-
-    fun removeAllMarkers() {
-        if (stickyAction == DragMarkerAction) {
-            stickyAction = NoopAction
-        }
-        dynamicActions.remove(DragMarkerAction)
-        if (dynamicActions.isEmpty()) {
-            dynamicActions.add(NoopAction)
-        }
-        hiddenActions.remove(DragMarkerAction)
-        if (hiddenActions.isEmpty()) {
-            hiddenActions.add(NoopAction)
-        }
-    }
-
-    fun beginDragGesture(pos: IntOffset) {
-        val item = findItemForOffsetOrClosestInRow(pos) ?: return
-        val stickyActionIndex = indexOfStickyAction(item)
-        val dynamicActionIndex = indexOfDynamicAction(item)
-        val hiddenActionIndex = indexOfHiddenAction(item)
-        if (stickyActionIndex != ItemNotFound && stickyAction != NoopAction) {
-            activeDragAction = stickyAction
-            stickyAction = DragMarkerAction
-        } else if (dynamicActionIndex != ItemNotFound && dynamicActions[dynamicActionIndex] != NoopAction) {
-            activeDragAction = dynamicActions[dynamicActionIndex]
-            dynamicActions[dynamicActionIndex] = DragMarkerAction
-        } else if (hiddenActionIndex != ItemNotFound && hiddenActions[hiddenActionIndex] != NoopAction) {
-            activeDragAction = hiddenActions[hiddenActionIndex]
-            hiddenActions[hiddenActionIndex] = DragMarkerAction
-        } else {
-            return
-        }
-        activeDragPosition = pos
-        activeDragSize = item.size
-    }
-
-    fun handleDragGestureChange(posChange: IntOffset) {
-        if (activeDragAction == null) return
-        val pos = activeDragPosition + posChange
-        activeDragPosition = pos
-        val item = findItemForOffsetOrClosestInRow(pos) ?: return
-        val stickyActionIndex = indexOfStickyAction(item)
-        val dynamicActionIndex = indexOfDynamicAction(item)
-        val hiddenActionIndex = indexOfHiddenAction(item)
-        if (stickyActionIndex != ItemNotFound && stickyAction != DragMarkerAction) {
-            if (stickyAction != NoopAction) {
-                dynamicActions.add(0, stickyAction)
-            }
-            removeAllMarkers()
-            stickyAction = DragMarkerAction
-        } else if (dynamicActionIndex != ItemNotFound && dynamicActions[dynamicActionIndex] != DragMarkerAction) {
-            if (dynamicActions[dynamicActionIndex] == NoopAction) {
-                removeAllMarkers()
-                dynamicActions[dynamicActionIndex] = DragMarkerAction
-            } else {
-                removeAllMarkers()
-                dynamicActions.add(dynamicActionIndex, DragMarkerAction)
-            }
-        } else if (hiddenActionIndex != ItemNotFound && hiddenActions[hiddenActionIndex] != DragMarkerAction) {
-            if (hiddenActions[hiddenActionIndex] == NoopAction) {
-                removeAllMarkers()
-                hiddenActions[hiddenActionIndex] = DragMarkerAction
-            } else {
-                removeAllMarkers()
-                hiddenActions.add(hiddenActionIndex, DragMarkerAction)
-            }
-        }
-    }
-
-    fun completeDragGestureAndCleanUp() {
-        val action = activeDragAction
-        if (action != null) {
-            if (stickyAction == DragMarkerAction) {
-                stickyAction = action
-            } else {
-                val i = dynamicActions.indexOf(DragMarkerAction)
-                if (i >= 0) {
-                    dynamicActions[i] = action
-                } else {
-                    val j = hiddenActions.indexOf(DragMarkerAction)
-                    if (j >= 0) {
-                        hiddenActions[j] = action
-                    }
-                }
-            }
-        }
-        activeDragAction = null
-        activeDragPosition = IntOffset.Zero
-        activeDragSize = IntSize.Zero
-    }
+    val slotPositions = remember { mutableMapOf<Int, Offset>() }
+    var slotSize by remember { mutableStateOf(IntSize.Zero) }
+    val gridState = rememberLazyGridState()
 
     DisposableEffect(Unit) {
         onDispose {
-            completeDragGestureAndCleanUp()
-            val newActionArrangement = QuickActionArrangement(
-                if (stickyAction != NoopAction && stickyAction != DragMarkerAction) stickyAction else null,
-                dynamicActions.filter { it != NoopAction && it != DragMarkerAction },
-                hiddenActions.filter { it != NoopAction && it != DragMarkerAction },
-            )
             runBlocking {
-                prefs.smartbar.actionArrangement.set(newActionArrangement)
-            }
-            if (keyboardManager.activeState.isActionsEditorVisible) {
-                keyboardManager.activeState.isActionsEditorVisible = false
+                prefs.smartbar.malangSlots.set(malangSlots.toList())
+                prefs.smartbar.malangSlotsCount.set(malangSlotsCount)
             }
         }
     }
 
-    SnyggColumn(FlorisImeUi.SmartbarActionsEditor.elementName, modifier = Modifier.safeDrawingPadding()) {
+    SnyggColumn(FlorisImeUi.SmartbarActionsEditor.elementName, modifier = Modifier.safeDrawingPadding().fillMaxSize()) {
+        // Header
         SnyggRow(
             elementName = FlorisImeUi.SmartbarActionsEditorHeader.elementName,
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Extra box wrapper is needed to enforce size constraint but still allow for Snygg margin to be used
             Box(modifier = Modifier.size(48.dp)) {
                 SnyggIconButton(
                     elementName = FlorisImeUi.SmartbarActionsEditorHeaderButton.elementName,
@@ -258,87 +147,163 @@ fun QuickActionsEditorPanel() {
                         keyboardManager.activeState.isActionsEditorVisible = false
                     },
                 ) {
-                    SnyggIcon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    )
+                    SnyggIcon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft)
                 }
             }
             SnyggText(
                 modifier = Modifier.weight(1f),
-                text = stringRes(R.string.quick_actions_editor__header),
+                text = "상단바 편집 (말랑키 스타일)",
             )
-            Spacer(Modifier.size(48.dp))
-        }
-
-        SnyggBox(FlorisImeUi.SmartbarActionsEditorTileGrid.elementName) {
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = { beginDragGesture(it.toIntOffset()) },
-                            onDrag = { _, it -> handleDragGestureChange(it.toIntOffset()) },
-                            onDragEnd = { completeDragGestureAndCleanUp() },
-                            onDragCancel = { completeDragGestureAndCleanUp() },
-                        )
-                    },
-                columns = GridCells.Adaptive(FlorisImeSizing.smartbarHeight * 1.8f),
-                state = gridState,
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    val n = if (stickyAction != NoopAction) 1 else 0
-                    Subheader(
-                        text = stringRes(R.string.quick_actions_editor__subheader_sticky_action, "n" to n),
-                    )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SnyggIconButton(onClick = { if (malangSlotsCount > 3) malangSlotsCount-- }) {
+                    SnyggText(text = "-")
                 }
-                item(key = keyOf(stickyAction)) {
-                    QuickActionButton(
-                        modifier = Modifier.animateItem(),
-                        action = stickyAction,
-                        evaluator = evaluator,
-                        type = QuickActionBarType.EDITOR_TILE,
-                    )
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    val n = dynamicActions.count { it != NoopAction }
-                    Subheader(
-                        text = stringRes(R.string.quick_actions_editor__subheader_dynamic_actions, "n" to n),
-                    )
-                }
-                itemsIndexed(dynamicActions, key = { i, a -> keyOf(a) ?: i }) { _, action ->
-                    QuickActionButton(
-                        modifier = Modifier.animateItem(),
-                        action = action,
-                        evaluator = evaluator,
-                        type = QuickActionBarType.EDITOR_TILE,
-                    )
-                }
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    val n = hiddenActions.count { it != NoopAction }
-                    Subheader(
-                        text = stringRes(R.string.quick_actions_editor__subheader_hidden_actions, "n" to n),
-                    )
-                }
-                itemsIndexed(hiddenActions, key = { i, a -> keyOf(a) ?: i }) { _, action ->
-                    QuickActionButton(
-                        modifier = Modifier.animateItem(),
-                        action = action,
-                        evaluator = evaluator,
-                        type = QuickActionBarType.EDITOR_TILE,
-                    )
+                SnyggText(text = malangSlotsCount.toString())
+                SnyggIconButton(onClick = { if (malangSlotsCount < 6) malangSlotsCount++ }) {
+                    SnyggText(text = "+")
                 }
             }
-            if (activeDragAction != null) {
-                val size = with(LocalDensity.current) {
-                    remember(activeDragSize) { activeDragSize.toSize().toDpSize() }
+        }
+
+        // Preview Area (Drop Target)
+        SnyggBox(
+            elementName = FlorisImeUi.Smartbar.elementName,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(FlorisImeSizing.smartbarHeight)
+                .padding(horizontal = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                for (i in 0 until malangSlotsCount) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .onGloballyPositioned {
+                                slotPositions[i] = it.positionInRoot()
+                                slotSize = it.size
+                            }
+                            .pointerInput(i) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        activeDragAction = malangSlots[i]
+                                        malangSlots[i] = NoopAction
+                                        activeDragSize = slotSize
+                                        activeDragPosition = slotPositions[i]?.let { IntOffset(it.x.toInt(), it.y.toInt()) } ?: IntOffset.Zero
+                                    },
+                                    onTap = {
+                                        val action = malangSlots[i]
+                                        if (action is QuickAction.QuickPhrase) {
+                                            phraseToEditIndex = i
+                                            phraseText = action.text
+                                        }
+                                    }
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        QuickActionButton(malangSlots[i], evaluator, type = QuickActionBarType.EDITOR_TILE)
+                    }
                 }
-                QuickActionButton(
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Subheader(text = "사용 가능한 기능 (드래그하여 위로 올리세요)")
+
+        // Available Actions Area
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(FlorisImeSizing.smartbarHeight * 1.5f),
+            modifier = Modifier.weight(1f),
+            state = gridState,
+        ) {
+            itemsIndexed(availableActions) { index, action ->
+                Box(
                     modifier = Modifier
-                        .size(size)
-                        .offset { activeDragPosition }
-                        .offset(-size.width / 2, -size.height / 2),
+                        .pointerInput(action) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { offset ->
+                                    activeDragAction = action
+                                    activeDragPosition = gridState.layoutInfo.visibleItemsInfo.find { it.index == index }?.offset ?: IntOffset.Zero
+                                    activeDragSize = gridState.layoutInfo.visibleItemsInfo.find { it.index == index }?.size ?: IntSize.Zero
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    activeDragPosition += IntOffset(dragAmount.x.toInt(), dragAmount.y.toInt())
+                                },
+                                onDragEnd = {
+                                    // Check if dropped in a slot
+                                    var dropped = false
+                                    for (i in 0 until malangSlotsCount) {
+                                        val pos = slotPositions[i] ?: continue
+                                        val rectX = pos.x .. pos.x + slotSize.width
+                                        val rectY = pos.y .. pos.y + slotSize.height
+                                        if (activeDragPosition.x.toFloat() in rectX && activeDragPosition.y.toFloat() in rectY) {
+                                            malangSlots[i] = activeDragAction!!
+                                            if (activeDragAction is QuickAction.QuickPhrase) {
+                                                phraseToEditIndex = i
+                                                phraseText = ""
+                                            }
+                                            dropped = true
+                                            break
+                                        }
+                                    }
+                                    activeDragAction = null
+                                },
+                                onDragCancel = { activeDragAction = null }
+                            )
+                        }
+                ) {
+                    QuickActionButton(action, evaluator, type = QuickActionBarType.EDITOR_TILE)
+                }
+            }
+        }
+
+        // Phrase Edit Dialog
+        if (phraseToEditIndex != null) {
+            AlertDialog(
+                onDismissRequest = { phraseToEditIndex = null },
+                title = { Text("상용구 입력") },
+                text = {
+                    OutlinedTextField(
+                        value = phraseText,
+                        onValueChange = { phraseText = it },
+                        label = { Text("입력할 문구") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val i = phraseToEditIndex!!
+                        malangSlots[i] = QuickAction.QuickPhrase(phraseText)
+                        phraseToEditIndex = null
+                    }) {
+                        Text("저장")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { phraseToEditIndex = null }) {
+                        Text("취소")
+                    }
+                }
+            )
+        }
+
+        // Dragging Shadow
+        if (activeDragAction != null) {
+            val size = with(LocalDensity.current) {
+                activeDragSize.toSize().toDpSize()
+            }
+            Box(modifier = Modifier.offset { activeDragPosition }) {
+                QuickActionButton(
+                    modifier = Modifier.size(size),
                     action = activeDragAction!!,
                     evaluator = evaluator,
-                    type = QuickActionBarType.EDITOR_TILE,
+                    type = QuickActionBarType.EDITOR_TILE
                 )
             }
         }
@@ -346,13 +311,10 @@ fun QuickActionsEditorPanel() {
 }
 
 @Composable
-private fun Subheader(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
+private fun Subheader(text: String, modifier: Modifier = Modifier) {
     SnyggText(
         elementName = FlorisImeUi.SmartbarActionsEditorSubheader.elementName,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().padding(8.dp),
         text = text,
     )
 }

@@ -29,6 +29,7 @@ import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
 import dev.patrickgold.florisboard.ime.core.Subtype
 import dev.patrickgold.florisboard.ime.input.CapitalizationBehavior
 import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
+import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.ime.keyboard.IncognitoMode
 import dev.patrickgold.florisboard.ime.keyboard.SpaceBarMode
@@ -64,6 +65,7 @@ import dev.patrickgold.jetpref.datastore.model.PreferenceMigrationEntry
 import dev.patrickgold.jetpref.datastore.model.PreferenceModel
 import dev.patrickgold.jetpref.datastore.model.PreferenceType
 import dev.patrickgold.jetpref.material.ui.ColorRepresentation
+import dev.patrickgold.jetpref.datastore.model.PreferenceSerializer
 import kotlinx.serialization.json.Json
 import org.florisboard.lib.android.isOrientationPortrait
 
@@ -75,11 +77,28 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         const val NAME = "florisboard-app-prefs"
     }
 
+    val appFontFamily = string(
+        key = "app__font_family",
+        default = "system",
+    )
+
     val clipboard = Clipboard()
     inner class Clipboard {
         val useInternalClipboard = boolean(
             key = "clipboard__use_internal_clipboard",
             default = false,
+        )
+        val quickPhrasesGridRows = int(
+            key = "clipboard__quick_phrases_grid_rows",
+            default = 3,
+        )
+        val quickPhrases = string(
+            key = "clipboard__quick_phrases",
+            default = """["안녕하세요!", "감사합니다.", "지금 가고 있어요.", "네, 알겠습니다.", "조금 늦을 것 같아요.", "연락 드릴게요!", "", "", "", "", "", "", "", "", ""]"""
+        )
+        val quickPhraseTriggerKey = enum(
+            key = "clipboard__quick_phrase_trigger_key",
+            default = dev.patrickgold.florisboard.ime.clipboard.QuickPhraseTriggerKey.PERIOD,
         )
         val syncToFloris = enum(
             key = "clipboard__sync_to_floris",
@@ -149,6 +168,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val historyHideOnNextTextField = boolean(
             key = "clipboard__history_hide_on_next_text_field",
             default = true,
+        )
+        val advancedClipboardPopup = boolean(
+            key = "clipboard__advanced_clipboard_popup",
+            default = false,
         )
         val clearPrimaryClipAffectsHistoryIfUnpinned = boolean(
             key = "clipboard__clear_primary_clip_affects_history_if_unpinned",
@@ -406,7 +429,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticActivationMode = enum(
             key = "input_feedback__haptic_activation_mode",
-            default = InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS,
+            default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
         val hapticVibrationMode = enum(
             key = "input_feedback__haptic_vibration_mode",
@@ -419,6 +442,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val hapticVibrationStrength = int(
             key = "input_feedback__haptic_vibration_strength",
             default = 50,
+        )
+        val hapticVibrationPrimitive = enum(
+            key = "input_feedback__haptic_vibration_primitive",
+            default = HapticVibrationPrimitive.CLICK,
+        )
+        val hapticVibrationIntensity = int(
+            key = "input_feedback__haptic_vibration_intensity",
+            default = 100,
         )
         val hapticFeatKeyPress = boolean(
             key = "input_feedback__haptic_feat_key_press",
@@ -519,6 +550,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val fontSizeMultiplierLandscape = int(
             key = "keyboard__font_size_multiplier_landscape",
+            default = 100,
+        )
+        val heightFactorPortrait = int(
+            key = "keyboard__height_factor_portrait",
+            default = 100,
+        )
+        val heightFactorLandscape = int(
+            key = "keyboard__height_factor_landscape",
             default = 100,
         )
         val landscapeInputUiMode = enum(
@@ -626,7 +665,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val layout = enum(
             key = "smartbar__layout",
-            default = SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED,
+            default = SmartbarLayout.MALANG_SLOTS,
         )
         val actionArrangement = custom(
             key = "smartbar__action_arrangement",
@@ -657,6 +696,84 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val extendedActionsPlacement = enum(
             key = "smartbar__extended_actions_placement",
             default = ExtendedActionsPlacement.ABOVE_CANDIDATES,
+        )
+        val malangSlotsCount = int(
+            key = "smartbar__malang_slots_count",
+            default = 6,
+        )
+        val malangSlots = custom(
+            key = "smartbar__malang_slots",
+            default = listOf(
+                QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
+                QuickAction.InsertKey(TextKeyData.UNDO),
+                QuickAction.InsertKey(TextKeyData.REDO),
+                QuickAction.InsertKey(TextKeyData.SETTINGS),
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+            ),
+            serializer = object : PreferenceSerializer<List<QuickAction>> {
+                override fun serialize(value: List<QuickAction>): String? {
+                    return QuickActionJsonConfig.encodeToString(value)
+                }
+                override fun deserialize(value: String): List<QuickAction>? {
+                    return QuickActionJsonConfig.decodeFromString(value)
+                }
+            },
+        )
+    }
+
+    val malang = Malang()
+    inner class Malang {
+        val customKeyboardBgColor = custom(
+            key = "malang__custom_keyboard_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        val customKeyBgColor = custom(
+            key = "malang__custom_key_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        val customKeyTextColor = custom(
+            key = "malang__custom_key_text_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        val keyCornerRadius = int(
+            key = "malang__key_corner_radius",
+            default = 8,
+        )
+        val keyboardFontFamily = string(
+            key = "malang__keyboard_font_family",
+            default = "system",
+        )
+        val isGlassmorphismEnabled = boolean(
+            key = "malang__is_glassmorphism_enabled",
+            default = false,
+        )
+        val glassmorphismTransparency = float(
+            key = "malang__glassmorphism_transparency",
+            default = 0.3f,
+        )
+        val bgImageUri = string(
+            key = "malang__bg_image_uri",
+            default = "",
+        )
+        val bgDimmer = float(
+            key = "malang__bg_dimmer",
+            default = 0.5f,
+        )
+        val isNeumorphismEnabled = boolean(
+            key = "malang__is_neumorphism_enabled",
+            default = false,
+        )
+        val squircleShapeEnabled = boolean(
+            key = "malang__squircle_shape_enabled",
+            default = false,
+        )
+        val malangSoundEnabled = boolean(
+            key = "malang__sound_enabled",
+            default = false,
         )
     }
 
@@ -713,12 +830,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = extCoreTheme("floris_day"),
+            default = extCoreTheme("dev.malangkey.basic"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = extCoreTheme("floris_night"),
+            default = extCoreTheme("dev.malangkey.basic"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

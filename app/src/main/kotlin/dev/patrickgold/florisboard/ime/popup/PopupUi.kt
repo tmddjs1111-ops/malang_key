@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.scale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.runtime.Composable
@@ -95,6 +96,7 @@ fun PopupExtBox(
     elemWidth: Dp,
     elemHeight: Dp,
     activeElementIndex: Int,
+    isClipboard: Boolean = false,
 ): Unit = with(LocalDensity.current) {
     SnyggColumn(FlorisImeUi.KeyPopupBox.elementName, attributes, modifier = modifier) {
         for (row in elements.asReversed()) {
@@ -118,14 +120,16 @@ fun PopupExtBox(
                         modifier = Modifier.size(elemWidth, elemHeight),
                     ) {
                         element.label?.let { label ->
+                            val scaleModifier = if (isClipboard) Modifier.scale(0.66f) else Modifier
                             SnyggText(
-                                modifier = Modifier.align(Alignment.Center),
+                                modifier = Modifier.align(Alignment.Center).then(scaleModifier),
                                 text = label,
                             )
                         }
                         element.icon?.let { icon ->
+                            val scaleModifier = if (isClipboard) Modifier.scale(0.66f) else Modifier
                             SnyggIcon(
-                                modifier = Modifier.align(Alignment.Center),
+                                modifier = Modifier.align(Alignment.Center).then(scaleModifier),
                                 imageVector = icon,
                             )
                         }

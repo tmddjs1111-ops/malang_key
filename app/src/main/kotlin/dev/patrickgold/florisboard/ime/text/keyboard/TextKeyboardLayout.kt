@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.toSize
 import dev.patrickgold.florisboard.FlorisImeService
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
+import dev.patrickgold.florisboard.clipboardManager
 import dev.patrickgold.florisboard.editorInstance
 import dev.patrickgold.florisboard.glideTypingManager
 import dev.patrickgold.florisboard.ime.editor.OperationScope
@@ -87,7 +88,9 @@ import dev.patrickgold.florisboard.lib.PointerMap
 import dev.patrickgold.florisboard.lib.devtools.LogTopic
 import dev.patrickgold.florisboard.lib.devtools.flogDebug
 import dev.patrickgold.florisboard.lib.toIntOffset
+import dev.patrickgold.florisboard.lib.util.ViewUtils
 import dev.patrickgold.jetpref.datastore.model.collectAsState
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.isActive
@@ -98,8 +101,22 @@ import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggIcon
 import org.florisboard.lib.snygg.ui.SnyggText
 import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlin.math.abs
 import kotlin.math.sqrt
+import androidx.compose.foundation.layout.width
+import dev.patrickgold.florisboard.ime.core.Subtype
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalComposeUiApi::class)
@@ -304,8 +321,15 @@ fun TextKeyboardLayout(
             )
         }
 
+        if (popupUiController.isShowingExtendedPopup && popupUiController.isClipboardPopupShowing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+            )
+        }
         popupUiController.RenderPopups()
-        // LanguageHud()
+        LanguageHud(controller)
     }
 
     LaunchedEffect(Unit) {
@@ -337,13 +361,40 @@ private fun TextKeyButton(
     val size = remember(key, desiredKey) {
         key.visibleBounds.size.toDpSize()
     }
+    val malangConfig = dev.patrickgold.florisboard.ime.theme.LocalMalangConfig.current
+    var keyModifier = Modifier
+        .requiredSize(size)
+        .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() }
+        
+    if (malangConfig.isNeumorphismEnabled) {
+        val elevation = if (key.isPressed) (-2).dp else 4.dp
+        val lightShadow = Color.White.copy(alpha = 0.8f)
+        val darkShadow = Color.Black.copy(alpha = 0.15f)
+        // simple neumorphism simulation
+        keyModifier = keyModifier.shadow(
+            elevation = if (key.isPressed) 0.dp else 2.dp,
+            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp),
+            ambientColor = darkShadow,
+            spotColor = darkShadow
+        ).background(
+            color = Color.Unspecified, // rely on snygg for base
+            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp)
+        )
+    }
+
+    if (malangConfig.isGlassmorphismEnabled) {
+        keyModifier = keyModifier.border(
+            width = 1.dp,
+            color = Color.White.copy(alpha = 0.4f),
+            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp)
+        )
+    }
+
     SnyggBox(
         FlorisImeUi.Key.elementName,
         attributes = attributes,
         selector = selector,
-        modifier = Modifier
-            .requiredSize(size)
-            .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() },
+        modifier = keyModifier,
     ) {
         val isTelPadKey = key.computedData.type == KeyType.NUMERIC && evaluator.keyboard.mode == KeyboardMode.PHONE
         key.label?.let { label ->
@@ -399,7 +450,8 @@ private class TextKeyboardLayoutController(
 ) : SwipeGesture.Listener, GlideTypingGesture.Listener {
     private val prefs by FlorisPreferenceStore
     private val editorInstance by context.editorInstance()
-    private val keyboardManager by context.keyboardManager()
+    val keyboardManager by context.keyboardManager()
+    val clipboardManager by context.clipboardManager()
 
     private val inputEventDispatcher get() = keyboardManager.inputEventDispatcher
     private val inputFeedbackController get() = FlorisImeService.inputFeedbackController()
@@ -482,6 +534,7 @@ private class TextKeyboardLayoutController(
                     val pointer = pointerMap.findById(pointerId)
                     if (pointer != null) {
                         pointer.index = pointerIndex
+
                         val alwaysTriggerOnMove = (pointer.hasTriggeredGestureMove
                             && (pointer.initialKey?.computedData?.code == KeyCode.DELETE
                             && prefs.gestures.deleteKeySwipeLeft.get().let {
@@ -489,7 +542,9 @@ private class TextKeyboardLayoutController(
                             }
                             || pointer.initialKey?.computedData?.code == KeyCode.SPACE
                             || pointer.initialKey?.computedData?.code == KeyCode.CJK_SPACE))
-                        if (swipeGestureDetector.onTouchMove(event, pointer, alwaysTriggerOnMove) || pointer.hasTriggeredGestureMove) {
+                        
+                        val isSwipe = swipeGestureDetector.onTouchMove(event, pointer, alwaysTriggerOnMove)
+                        if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
                             pointer.hasTriggeredGestureMove = true
                             pointer.activeKey?.let { activeKey ->
                                 inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
@@ -506,7 +561,8 @@ private class TextKeyboardLayoutController(
                 val pointer = pointerMap.findById(pointerId)
                 if (pointer != null) {
                     pointer.index = pointerIndex
-                    if (swipeGestureDetector.onTouchUp(event, pointer) || pointer.hasTriggeredGestureMove) {
+                    val isSwipe = swipeGestureDetector.onTouchUp(event, pointer)
+                    if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
                         if (pointer.hasTriggeredGestureMove && pointer.initialKey?.computedData?.code == KeyCode.DELETE) {
                             val selection = editorInstance.activeContent.selection
                             if (selection.isSelectionMode) {
@@ -526,7 +582,8 @@ private class TextKeyboardLayoutController(
                 for (pointer in pointerMap) {
                     if (pointer.id == pointerId) {
                         pointer.index = pointerIndex
-                        if (swipeGestureDetector.onTouchUp(event, pointer) || pointer.hasTriggeredGestureMove) {
+                        val isSwipe = swipeGestureDetector.onTouchUp(event, pointer)
+                        if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
                             if (pointer.hasTriggeredGestureMove &&
                                 pointer.initialKey?.computedData?.code == KeyCode.DELETE &&
                                 prefs.gestures.deleteKeySwipeLeft.get() != SwipeAction.SELECT_CHARACTERS_PRECISELY &&
@@ -558,9 +615,9 @@ private class TextKeyboardLayoutController(
     }
 
     private fun onTouchDownInternal(event: MotionEvent, pointer: TouchPointer) {
-        flogDebug(LogTopic.TEXT_KEYBOARD_VIEW) { "pointer=$pointer" }
-
-        val key = keyboard.getKeyForPos(event.getX(pointer.index), event.getY(pointer.index))
+        val pointerIndex = event.findPointerIndex(pointer.id)
+        if (pointerIndex == -1) return
+        val key = keyboard.getKeyForPos(event.getX(pointerIndex), event.getY(pointerIndex))
         if (key != null && key.isEnabled) {
             key.computedDataOnDown = key.computedData
             pointer.pressedKeyInfo = inputEventDispatcher.sendDown(
@@ -569,14 +626,7 @@ private class TextKeyboardLayoutController(
                     pointer.hasTriggeredLongPress = true
                     when (key.computedData.code) {
                         KeyCode.SPACE, KeyCode.CJK_SPACE -> {
-                            when (prefs.gestures.spaceBarLongPress.get()) {
-                                SwipeAction.NO_ACTION,
-                                SwipeAction.INSERT_SPACE -> {
-                                }
-                                else -> {
-                                    keyboardManager.executeSwipeAction(prefs.gestures.spaceBarLongPress.get())
-                                }
-                            }
+                            // Long-press on spacebar is disabled as per user request
                             true
                         }
                         KeyCode.SHIFT -> {
@@ -592,7 +642,26 @@ private class TextKeyboardLayoutController(
                             true
                         }
                         else -> {
-                            if (popupUiController.isSuitableForPopups(key) && key.computedPopups.getPopupKeys(
+                            val triggerKeyPref = prefs.clipboard.quickPhraseTriggerKey.get()
+                            val isTriggerKey = when (triggerKeyPref) {
+                                dev.patrickgold.florisboard.ime.clipboard.QuickPhraseTriggerKey.PERIOD -> key.computedData.code == 46
+                                dev.patrickgold.florisboard.ime.clipboard.QuickPhraseTriggerKey.COMMA -> key.computedData.code == 44
+                                dev.patrickgold.florisboard.ime.clipboard.QuickPhraseTriggerKey.ENTER -> key.computedData.code == KeyCode.ENTER
+                            }
+
+                            if (isTriggerKey) {
+                                val quickPhrasesJson = prefs.clipboard.quickPhrases.get()
+                                val quickPhrasesGridRows = prefs.clipboard.quickPhrasesGridRows.get()
+                                val quickPhrases = try {
+                                    Json.decodeFromString<List<String>>(quickPhrasesJson)
+                                } catch (e: Exception) {
+                                    List(15) { "" }
+                                }
+                                val items = quickPhrases.map { dev.patrickgold.florisboard.ime.clipboard.provider.ClipboardItem.text(it) }
+                                popupUiController.showClipboardPopup(key, items, size, quickPhrasesGridRows)
+                                inputFeedbackController?.keyLongPress(key.computedData)
+                                true
+                            } else if (popupUiController.isSuitableForPopups(key) && key.computedPopups.getPopupKeys(
                                     keyHintConfiguration
                                 ).isNotEmpty()
                             ) {
@@ -698,7 +767,21 @@ private class TextKeyboardLayoutController(
     }
 
     private fun onTouchCancelInternal(event: MotionEvent, pointer: TouchPointer) {
-        flogDebug(LogTopic.TEXT_KEYBOARD_VIEW) { "pointer=$pointer" }
+        val isHudTriggered = keyboardManager.isLanguageHudVisible.value
+        val direction = keyboardManager.languageHudDirection.value
+
+        keyboardManager.isLanguageHudVisible.value = false
+        keyboardManager.languageHudProgress.value = 0.0f
+
+        if (isHudTriggered && direction != 0) {
+            val subtypeManager = context.subtypeManager().value
+            if (direction > 0) {
+                subtypeManager.switchToNextSubtype()
+            } else {
+                subtypeManager.switchToPrevSubtype()
+            }
+        }
+
         pointer.pressedKeyInfo?.cancelJobs()
         pointer.pressedKeyInfo = null
 
@@ -835,114 +918,28 @@ private class TextKeyboardLayoutController(
     }
 
     private fun handleSpaceSwipe(event: SwipeGesture.Event): Boolean {
-        val pointer = pointerMap.findById(event.pointerId) ?: return false
-
         return when (event.type) {
             SwipeGesture.Type.TOUCH_MOVE -> {
                 val absUnitX = abs(event.absUnitCountX)
                 val direction = if (event.absUnitCountX > 0) 1 else -1
 
-                // Update HUD state
                 if (absUnitX >= 1) {
                     keyboardManager.isLanguageHudVisible.value = true
                     keyboardManager.languageHudDirection.value = direction
+                    // Ensure progress stays between 0 and 1 for exactly one step
                     keyboardManager.languageHudProgress.value = (absUnitX / 8.0f).coerceIn(0.0f, 1.0f)
                 }
-
-                when (event.direction) {
-                    SwipeGesture.Direction.LEFT -> {
-                        val action = prefs.gestures.spaceBarSwipeLeft.get()
-                        if (action == SwipeAction.MOVE_CURSOR_LEFT) {
-                            abs(event.relUnitCountX).let {
-                                val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
-                                if (count > 0) {
-                                    inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
-                                    if (!pointer.hasTriggeredMassSelection) {
-                                        pointer.hasTriggeredMassSelection = true
-                                        editorInstance.massSelection.begin()
-                                    }
-                                    keyboardManager.handleArrow(KeyCode.ARROW_LEFT, count)
-                                }
-                            }
-                            true
-                        } else {
-                            action != SwipeAction.NO_ACTION
-                        }
-                    }
-                    SwipeGesture.Direction.RIGHT -> {
-                        val action = prefs.gestures.spaceBarSwipeRight.get()
-                        if (action == SwipeAction.MOVE_CURSOR_RIGHT) {
-                            abs(event.relUnitCountX).let {
-                                val count = if (!pointer.hasTriggeredGestureMove) it - 1 else it
-                                if (count > 0) {
-                                    inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
-                                    if (!pointer.hasTriggeredMassSelection) {
-                                        pointer.hasTriggeredMassSelection = true
-                                        editorInstance.massSelection.begin()
-                                    }
-                                    keyboardManager.handleArrow(KeyCode.ARROW_RIGHT, count)
-                                }
-                            }
-                            true
-                        } else {
-                            action != SwipeAction.NO_ACTION
-                        }
-                    }
-                    else -> false
-                }
+                true
             }
             SwipeGesture.Type.TOUCH_UP -> {
-                val absUnitX = abs(event.absUnitCountX)
-                val direction = if (event.absUnitCountX > 0) 1 else -1
                 val isHudTriggered = keyboardManager.isLanguageHudVisible.value
-
-                // Hide HUD
-                keyboardManager.isLanguageHudVisible.value = false
-                keyboardManager.languageHudProgress.value = 0.0f
-
-                if (isHudTriggered && absUnitX >= 4) {
-                    val subtypeManager = this@TextKeyboardLayoutController.context.subtypeManager().value
-                    if (direction > 0) {
-                        subtypeManager.switchToNextSubtype()
-                    } else {
-                        subtypeManager.switchToPrevSubtype()
-                    }
-                    true
-                } else {
-                    when (event.direction) {
-                        SwipeGesture.Direction.LEFT -> {
-                            prefs.gestures.spaceBarSwipeLeft.get().let {
-                                if (it != SwipeAction.NO_ACTION && it != SwipeAction.MOVE_CURSOR_LEFT) {
-                                    keyboardManager.executeSwipeAction(it)
-                                    true
-                                } else {
-                                    false
-                                }
-                            }
-                        }
-                        SwipeGesture.Direction.RIGHT -> {
-                            prefs.gestures.spaceBarSwipeRight.get().let {
-                                if (it != SwipeAction.NO_ACTION && it != SwipeAction.MOVE_CURSOR_RIGHT) {
-                                    keyboardManager.executeSwipeAction(it)
-                                    true
-                                } else {
-                                    false
-                                }
-                            }
-                        }
-                        else -> {
-                            if (event.absUnitCountY < -6) {
-                                keyboardManager.executeSwipeAction(prefs.gestures.spaceBarSwipeUp.get())
-                                true
-                            } else {
-                                false
-                            }
-                        }
-                    }
-                }
+                // The actual language switch is now handled in onTouchCancelInternal
+                // to ensure it triggers even on slow swipes.
+                isHudTriggered
             }
         }
     }
+
 
     override fun onGlideAddPoint(point: GlideTypingGesture.Detector.Position) {
         if (isGlideEnabled) {
@@ -1028,6 +1025,108 @@ private class TextKeyboardLayoutController(
 
         override fun toString(): String {
             return "${TouchPointer::class.simpleName} { id=$id, index=$index, initialKey=$initialKey, activeKey=$activeKey }"
+        }
+    }
+}
+
+@Composable
+private fun LanguageHud(
+    controller: TextKeyboardLayoutController,
+) {
+    val keyboardManager = controller.keyboardManager
+    val isVisible by keyboardManager.isLanguageHudVisible.collectAsState()
+    val progress by keyboardManager.languageHudProgress.collectAsState()
+    val direction by keyboardManager.languageHudDirection.collectAsState()
+    val subtypeManager = controller.context.subtypeManager().value
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    val subtypes by subtypeManager.subtypesFlow.collectAsState()
+
+    if (isVisible && subtypes.size > 1) {
+        val nextSubtype = remember(activeSubtype, subtypes) {
+            val index = subtypes.indexOfFirst { it.id == activeSubtype.id }
+            if (index != -1) {
+                subtypes[(index + 1) % subtypes.size]
+            } else {
+                subtypes.first()
+            }
+        }
+        val prevSubtype = remember(activeSubtype, subtypes) {
+            val index = subtypes.indexOfFirst { it.id == activeSubtype.id }
+            if (index != -1) {
+                subtypes[(index - 1 + subtypes.size) % subtypes.size]
+            } else {
+                subtypes.last()
+            }
+        }
+
+        fun Subtype.getLabel(): String {
+            val lang = primaryLocale.displayName()
+            val layout = layoutMap.characters.componentId.split("_").lastOrNull()?.replaceFirstChar { it.uppercase() } ?: ""
+            return if (layout.lowercase() == lang.lowercase() || layout.isEmpty()) lang else "$lang ($layout)"
+        }
+
+        val currentLabel = activeSubtype.getLabel()
+        val targetSubtype = if (direction > 0) nextSubtype else prevSubtype
+        val targetLabel = targetSubtype.getLabel()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color.Black.copy(alpha = 0.8f))
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "‹",
+                    color = Color.White.copy(alpha = if (direction < 0) 1.0f else 0.2f),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .width(160.dp), // Fixed width for stable animation
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // Current Label (Fading and sliding out)
+                    Text(
+                        modifier = Modifier
+                            .alpha((1f - progress * 1.5f).coerceIn(0f, 1f))
+                            .absoluteOffset(x = (direction * progress * -100).dp),
+                        text = currentLabel,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                    )
+
+                    // Target Label (Fading and sliding in)
+                    Text(
+                        modifier = Modifier
+                            .alpha((progress * 1.5f - 0.2f).coerceIn(0f, 1f))
+                            .absoluteOffset(x = (direction * (1f - progress) * 100).dp),
+                        text = targetLabel,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                    )
+                }
+
+                Text(
+                    text = "›",
+                    color = Color.White.copy(alpha = if (direction > 0) 1.0f else 0.2f),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }

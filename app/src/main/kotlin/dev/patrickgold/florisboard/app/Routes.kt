@@ -65,6 +65,7 @@ import dev.patrickgold.florisboard.app.settings.gestures.GesturesScreen
 import dev.patrickgold.florisboard.app.settings.keyboard.InputFeedbackScreen
 import dev.patrickgold.florisboard.app.settings.keyboard.KeyboardScreen
 import dev.patrickgold.florisboard.app.settings.keyboard.KeyboardSelectionScreen
+import dev.patrickgold.florisboard.app.settings.keyboard.LayoutScreen
 import dev.patrickgold.florisboard.app.settings.localization.LanguagePackManagerScreen
 import dev.patrickgold.florisboard.app.settings.localization.LanguagePackManagerScreenAction
 import dev.patrickgold.florisboard.app.settings.localization.LocalizationScreen
@@ -138,6 +139,10 @@ object Routes {
         data class ThemeManager(val action: ThemeManagerScreenAction)
 
         @Serializable
+        @Deeplink("settings/theme/advanced")
+        object AdvancedTheme
+
+        @Serializable
         @Deeplink("settings/keyboard")
         object Keyboard
 
@@ -148,6 +153,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/keyboard/input-feedback")
         object InputFeedback
+
+        @Serializable
+        @Deeplink("settings/keyboard/layout")
+        object Layout
 
         @Serializable
         @Deeplink("settings/smartbar")
@@ -295,6 +304,7 @@ object Routes {
             }
 
             composableWithDeepLink(Settings.Theme::class) { ThemeScreen() }
+            composableWithDeepLink(Settings.AdvancedTheme::class) { dev.patrickgold.florisboard.app.settings.theme.AdvancedThemeScreen() }
             composableWithDeepLink(Settings.ThemeManager::class) { navBackStack ->
                 val payload = navBackStack.toRoute<Settings.ThemeManager>()
                 ThemeManagerScreen(payload.action)
@@ -303,6 +313,7 @@ object Routes {
             composableWithDeepLink(Settings.Keyboard::class) { KeyboardScreen() }
             composableWithDeepLink(Settings.KeyboardSelection::class) { KeyboardSelectionScreen() }
             composableWithDeepLink(Settings.InputFeedback::class) { InputFeedbackScreen() }
+            composableWithDeepLink(Settings.Layout::class) { LayoutScreen() }
 
             composableWithDeepLink(Settings.Smartbar::class) { SmartbarScreen() }
 

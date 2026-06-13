@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Emoji categories -->
+    <string name="emoji__category__smileys_emotion">스마일 및 감정</string>
+    <string name="emoji__category__people_body">사람 및 신체</string>
+    <string name="emoji__category__animals_nature">동물 및 자연</string>
+    <string name="emoji__category__food_drink">음식 및 음료</string>
+    <string name="emoji__category__travel_places">여행 및 장소</string>
+    <string name="emoji__category__activities">활동</string>
+    <string name="emoji__category__objects">사물</string>
+    <string name="emoji__category__symbols">기호</string>
+    <string name="emoji__category__flags">국기</string>
+
+    <!-- Emoji history -->
+    <string name="emoji__history__empty_message">최근 사용한 이모지가 없습니다. 이모지를 입력하면 여기에 자동으로 표시됩니다.</string>
+    <string name="emoji__history__phone_locked_message">이모지 기록에 접근하려면 먼저 기기 잠금을 해제해주세요.</string>
+    <string name="emoji__history__usage_tip">팁: 이모지 기록의 이모지를 길게 누르면 고정하거나 삭제할 수 있습니다!</string>
+    <string name="emoji__history__removal_success_message">이모지 기록에서 {emoji}을(를) 삭제했습니다.</string>
+    <string name="emoji__history__pinned">고정됨</string>
+    <string name="emoji__history__recent">최근 사용</string>
+    
+    <!-- Quick actions -->
+    <string name="quick_action__ime_ui_mode_media">이모지</string>
+    <string name="quick_action__ime_ui_mode_media__tooltip">이모지 패널 열기</string>
+</resources>

@@ -45,8 +45,9 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
+import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
+import dev.patrickgold.jetpref.datastore.ui.listPrefEntries
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.compose.FlorisErrorCard
 import org.florisboard.lib.compose.stringRes
@@ -60,66 +61,52 @@ fun TypingScreen() = FlorisScreen {
     val navController = LocalNavController.current
 
     content {
-        // This card is temporary and is therefore not using a string resource (not so temporary as we thought...)
         FlorisErrorCard(
             modifier = Modifier.padding(8.dp),
-            text = """
-                Suggestions (except system autofill) and spell checking are not available in this release. All
-                preferences in the "Corrections" group are properly implemented though.
-            """.trimIndent().replace('\n', ' '),
+            text = "제안(시스템 자동 완성 제외) 및 맞춤법 검사는 이 릴리스에서 사용할 수 없습니다. '수정' 그룹의 설정은 제대로 구현되어 있습니다.",
         )
 
-        PreferenceGroup(title = stringRes(R.string.pref__suggestion__title)) {
+        MalangPreferenceGroup(title = "입력 제안") {
             SwitchPreference(
                 prefs.suggestion.enabled,
-                title = stringRes(R.string.pref__suggestion__enabled__label),
-                summary = stringRes(R.string.pref__suggestion__enabled__summary),
+                title = "입력 제안 활성화",
+                summary = "입력 중 단어 제안을 표시합니다.",
             )
             SwitchPreference(
                 prefs.suggestion.blockPossiblyOffensive,
-                title = stringRes(R.string.pref__suggestion__block_possibly_offensive__label),
-                summary = stringRes(R.string.pref__suggestion__block_possibly_offensive__summary),
+                title = "부적절한 단어 차단",
+                summary = "부적절할 수 있는 단어가 제안되지 않도록 합니다.",
                 enabledIf = { prefs.suggestion.enabled isEqualTo true },
             )
             SwitchPreference(
                 prefs.suggestion.api30InlineSuggestionsEnabled,
-                title = stringRes(R.string.pref__suggestion__api30_inline_suggestions_enabled__label),
-                summary = stringRes(R.string.pref__suggestion__api30_inline_suggestions_enabled__summary),
+                title = "인라인 제안 활성화",
+                summary = "지원되는 앱에서 인라인 제안을 표시합니다.",
                 visibleIf = { AndroidVersion.ATLEAST_API30_R },
-            )
-            ListPreference(
-                prefs.suggestion.incognitoMode,
-                icon = ImageVector.vectorResource(id = R.drawable.ic_incognito),
-                title = stringRes(R.string.pref__suggestion__incognito_mode__label),
-                entries = enumDisplayEntriesOf(IncognitoMode::class),
             )
         }
 
-        PreferenceGroup(title = stringRes(R.string.pref__correction__title)) {
+        MalangPreferenceGroup(title = "입력 수정") {
             SwitchPreference(
                 prefs.correction.autoCapitalization,
-                title = stringRes(R.string.pref__correction__auto_capitalization__label),
-                summary = stringRes(R.string.pref__correction__auto_capitalization__summary),
+                title = "자동 대문자 전환",
+                summary = "문장의 첫 단어를 자동으로 대문자로 바꿉니다.",
             )
             val isAutoSpacePunctuationEnabled by prefs.correction.autoSpacePunctuation.collectAsState()
             SwitchPreference(
                 prefs.correction.autoSpacePunctuation,
                 icon = Icons.Default.SpaceBar,
-                title = stringRes(R.string.pref__correction__auto_space_punctuation__label),
-                summary = stringRes(R.string.pref__correction__auto_space_punctuation__summary),
+                title = "문장 부호 뒤 자동 띄어쓰기",
+                summary = "마침표나 쉼표 뒤에 자동으로 공백을 추가합니다. (실험적 기능)",
             )
             if (isAutoSpacePunctuationEnabled) {
                 Card(modifier = Modifier.padding(8.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(
-                            text = """
-                                Auto-space after punctuation is an experimental feature which may break or behave
-                                unexpectedly. If you want, please give feedback about it in below linked feedback
-                                thread. This helps a lot in improving this feature. Thanks!
-                            """.trimIndent().replace('\n', ' '),
+                            text = "문장 부호 뒤 자동 띄어쓰기는 실험적 기능이며 예상치 못한 동작이 발생할 수 있습니다. 피드백을 주시면 기능 개선에 큰 도움이 됩니다.",
                         )
                         FlorisHyperlinkText(
-                            text = "Feedback thread (GitHub)",
+                            text = "피드백 스레드 (GitHub)",
                             url = "https://github.com/florisboard/florisboard/discussions/1935",
                         )
                     }
@@ -127,48 +114,35 @@ fun TypingScreen() = FlorisScreen {
             }
             SwitchPreference(
                 prefs.correction.rememberCapsLockState,
-                title = stringRes(R.string.pref__correction__remember_caps_lock_state__label),
-                summary = stringRes(R.string.pref__correction__remember_caps_lock_state__summary),
+                title = "Caps Lock 상태 기억",
+                summary = "키보드를 다시 열었을 때 Caps Lock 상태를 유지합니다.",
             )
             SwitchPreference(
                 prefs.correction.doubleSpacePeriod,
-                title = stringRes(R.string.pref__correction__double_space_period__label),
-                summary = stringRes(R.string.pref__correction__double_space_period__summary),
+                title = "스페이스바 두 번 눌러 마침표 입력",
+                summary = "스페이스바를 빠르게 두 번 누르면 마침표와 공백이 입력됩니다.",
             )
         }
 
-        PreferenceGroup(title = stringRes(R.string.pref__spelling__title)) {
+        MalangPreferenceGroup(title = "맞춤법 검사") {
             val florisSpellCheckerEnabled = remember { mutableStateOf(false) }
             SpellCheckerServiceSelector(florisSpellCheckerEnabled)
             ListPreference(
                 prefs.spelling.languageMode,
                 icon = Icons.Default.Language,
-                title = stringRes(R.string.pref__spelling__language_mode__label),
-                entries = enumDisplayEntriesOf(SpellingLanguageMode::class),
+                title = "맞춤법 검사 언어 모드",
+                entries = listPrefEntries {
+                    entry(SpellingLanguageMode.USE_KEYBOARD_SUBTYPES, "현재 입력 언어 따름")
+                    entry(SpellingLanguageMode.USE_SYSTEM_LANGUAGES, "시스템 언어 따름")
+                },
                 enabledIf = { florisSpellCheckerEnabled.value },
-            )
-            SwitchPreference(
-                prefs.spelling.useContacts,
-                icon = Icons.Default.Contacts,
-                title = stringRes(R.string.pref__spelling__use_contacts__label),
-                summary = stringRes(R.string.pref__spelling__use_contacts__summary),
-                enabledIf = { florisSpellCheckerEnabled.value },
-                visibleIf = { false }, // For now
-            )
-            SwitchPreference(
-                prefs.spelling.useUdmEntries,
-                icon = Icons.AutoMirrored.Filled.LibraryBooks,
-                title = stringRes(R.string.pref__spelling__use_udm_entries__label),
-                summary = stringRes(R.string.pref__spelling__use_udm_entries__summary),
-                enabledIf = { florisSpellCheckerEnabled.value },
-                visibleIf = { false }, // For now
             )
         }
 
-        PreferenceGroup(title = stringRes(R.string.settings__dictionary__title)) {
+        MalangPreferenceGroup(title = "사전 관리") {
             Preference(
                 icon = Icons.AutoMirrored.Filled.LibraryBooks,
-                title = stringRes(R.string.settings__dictionary__title),
+                title = "사용자 사전",
                 onClick = { navController.navigate(Routes.Settings.Dictionary) },
             )
         }

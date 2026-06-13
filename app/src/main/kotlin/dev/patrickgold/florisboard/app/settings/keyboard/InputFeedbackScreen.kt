@@ -21,15 +21,17 @@ import androidx.compose.ui.platform.LocalContext
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.enumDisplayEntriesOf
 import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
+import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
-import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
+import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
 import org.florisboard.lib.android.systemVibratorOrNull
 import org.florisboard.lib.android.vibrate
+import org.florisboard.lib.android.vibrateClick
 import org.florisboard.lib.compose.stringRes
 
 @OptIn(ExperimentalJetPrefDatastoreUi::class)
@@ -43,13 +45,10 @@ fun InputFeedbackScreen() = FlorisScreen {
     val vibrator = context.systemVibratorOrNull()
 
     content {
-        PreferenceGroup(title = stringRes(R.string.pref__input_feedback__group_audio__label)) {
-            ListPreference(
-                listPref = prefs.inputFeedback.audioActivationMode,
-                switchPref = prefs.inputFeedback.audioEnabled,
+        MalangPreferenceGroup(title = stringRes(R.string.pref__input_feedback__group_audio__label)) {
+            SwitchPreference(
+                prefs.inputFeedback.audioEnabled,
                 title = stringRes(R.string.pref__input_feedback__audio_enabled__label),
-                summarySwitchDisabled = stringRes(R.string.pref__input_feedback__audio_enabled__summary_disabled),
-                entries = enumDisplayEntriesOf(InputFeedbackActivationMode::class, "audio"),
             )
             DialogSliderPreference(
                 prefs.inputFeedback.audioVolume,
@@ -92,13 +91,10 @@ fun InputFeedbackScreen() = FlorisScreen {
             )
         }
 
-        PreferenceGroup(title = stringRes(R.string.pref__input_feedback__group_haptic__label)) {
-            ListPreference(
-                listPref = prefs.inputFeedback.hapticActivationMode,
-                switchPref = prefs.inputFeedback.hapticEnabled,
+        MalangPreferenceGroup(title = stringRes(R.string.pref__input_feedback__group_haptic__label)) {
+            SwitchPreference(
+                prefs.inputFeedback.hapticEnabled,
                 title = stringRes(R.string.pref__input_feedback__haptic_enabled__label),
-                summarySwitchDisabled = stringRes(R.string.pref__input_feedback__haptic_enabled__summary_disabled),
-                entries = enumDisplayEntriesOf(InputFeedbackActivationMode::class, "haptic")
             )
             ListPreference(
                 prefs.inputFeedback.hapticVibrationMode,
@@ -155,6 +151,31 @@ fun InputFeedbackScreen() = FlorisScreen {
                         prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_VIBRATOR_DIRECTLY &&
                         vibrator != null && vibrator.hasVibrator() &&
                         vibrator.hasAmplitudeControl()
+                },
+            )
+            ListPreference(
+                prefs.inputFeedback.hapticVibrationPrimitive,
+                title = stringRes(R.string.pref__input_feedback__haptic_vibration_primitive__label),
+                entries = enumDisplayEntriesOf(HapticVibrationPrimitive::class),
+                enabledIf = {
+                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
+                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE
+                },
+            )
+            DialogSliderPreference(
+                prefs.inputFeedback.hapticVibrationIntensity,
+                title = stringRes(R.string.pref__input_feedback__haptic_vibration_intensity__label),
+                valueLabel = { stringRes(R.string.unit__percent__symbol, "v" to it) },
+                min = 1,
+                max = 100,
+                stepIncrement = 1,
+                onPreviewSelectedValue = { intensity ->
+                    val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
+                    vibrator?.vibrateClick(primitive.androidId, intensity / 100f)
+                },
+                enabledIf = {
+                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
+                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE
                 },
             )
             SwitchPreference(

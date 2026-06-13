@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">FlorisBoard</string>
+    <string name="app_name">말랑키</string>
     <string name="key__phone_pause" comment="Label for the Pause key in the telephone keyboard layout">일시정지</string>
     <string name="key__phone_wait" comment="Label for the Wait key in the telephone keyboard layout">대기</string>
     <string name="key_popup__threedots_alt" comment="Content description for the three-dots icon in a key popup">삼점 아이콘입니다. 이 아이콘이 보인다면 길게 눌러서 더 많은 글자를 사용할 수 있습니다.</string>
@@ -102,8 +102,8 @@
     <string name="settings__default" comment="General string which is used when a preference has the default value set">기본값</string>
     <string name="settings__system_default" comment="General string which is used when a preference has the system default value set">시스템 기본값</string>
     <string name="settings__home__title" comment="Title of the Home screen">{app_name}</string>
-    <string name="settings__home__ime_not_enabled" comment="Error message shown in Home fragment when FlorisBoard is not enabled in the system">앱이 시스템 설정에서 켜져 있지 않아 입력 방법으로 선택할 수 없습니다. 여기를 눌러 문제를 해결할 수 있습니다.</string>
-    <string name="settings__home__ime_not_selected" comment="Warning message shown in Home fragment when FlorisBoard is not selected as the default keyboard">앱이 기본 입력 방법으로 선택되어 있지 않습니다. 여기를 눌러 문제를 해결할 수 있습니다.</string>
+    <string name="settings__home__ime_not_enabled" comment="Error message shown in Home fragment when 말랑키 is not enabled in the system">앱이 시스템 설정에서 켜져 있지 않아 입력 방법으로 선택할 수 없습니다. 여기를 눌러 문제를 해결할 수 있습니다.</string>
+    <string name="settings__home__ime_not_selected" comment="Warning message shown in Home fragment when 말랑키 is not selected as the default keyboard">앱이 기본 입력 방법으로 선택되어 있지 않습니다. 여기를 눌러 문제를 해결할 수 있습니다.</string>
     <string name="settings__localization__title" comment="Title of languages and Layout screen">언어 및 레이아웃</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">언어 표시 방식</string>
     <string name="settings__localization__group_subtypes__label" comment="Label of subtypes group">하위 유형</string>
@@ -218,6 +218,8 @@
     <string name="pref__input_feedback__haptic_vibration_mode__label" comment="Preference title">진동 모드</string>
     <string name="pref__input_feedback__haptic_vibration_duration__label" comment="Preference title">진동 길이</string>
     <string name="pref__input_feedback__haptic_vibration_strength__label" comment="Preference title">진동 세기</string>
+    <string name="pref__input_feedback__haptic_vibration_primitive__label">진동 종류 (고급 햅틱)</string>
+    <string name="pref__input_feedback__haptic_vibration_intensity__label">진동 강도 (고급 햅틱)</string>
     <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">예) 키, 버튼, 이모지 탭</string>
     <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">예) 팝업 메뉴</string>
     <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">예) 삭제 키</string>
@@ -419,7 +421,7 @@
     <string name="ext__export__failure">확장 기능을 내보낼 수 없습니다: {error_message}</string>
     <string name="ext__import__success">확장 기능을 잘 가져왔습니다!</string>
     <string name="ext__import__failure">확장 기능을 가져올 수 없습니다: {error_message}</string>
-    <string name="ext__import__ext_any" comment="Title of Importer screen for import of any supported FlorisBoard extension">확장 기능 가져오기</string>
+    <string name="ext__import__ext_any" comment="Title of Importer screen for import of any supported 말랑키 extension">확장 기능 가져오기</string>
     <string name="ext__import__ext_keyboard" comment="Title of Importer screen for keyboard extension import">키보드 확장 기능 가져오기</string>
     <string name="ext__import__ext_theme" comment="Title of Importer screen for theme extension import">테마 확장 기능 가져오기</string>
     <string name="ext__import__ext_languagepack" comment="Title of Importer screen for language pack extension import">언어 팩 확장 기능 가져오기</string>
@@ -493,8 +495,16 @@
     <string name="enum__emoji_hair_style__curly_hair" comment="Enum value label">{emoji} 펌</string>
     <string name="enum__emoji_hair_style__white_hair" comment="Enum value label">{emoji} 흰 머리</string>
     <string name="enum__emoji_hair_style__bald" comment="Enum value label">{emoji} 대머리</string>
-    <string name="enum__haptic_vibration_mode__use_vibrator_directly" comment="Enum value label">하드웨어 진동 직접 사용</string>
-    <string name="enum__haptic_vibration_mode__use_haptic_feedback_interface" comment="Enum value label">햅틱 반응 인터페이스 사용</string>
+    <string name="enum__haptic_vibration_mode__use_vibrator_directly" comment="Enum value label">일반 진동 (기존 방식)</string>
+    <string name="enum__haptic_vibration_mode__use_haptic_feedback_interface" comment="Enum value label">고급 햅틱 (추천)</string>
+    <string name="enum__haptic_vibration_primitive__click">클릭 (Click)</string>
+    <string name="enum__haptic_vibration_primitive__thud">쿵 (Thud)</string>
+    <string name="enum__haptic_vibration_primitive__spin">회전 (Spin)</string>
+    <string name="enum__haptic_vibration_primitive__quick_click">빠른 클릭 (Quick Click)</string>
+    <string name="enum__haptic_vibration_primitive__slow_rise">서서히 강해짐 (Slow Rise)</string>
+    <string name="enum__haptic_vibration_primitive__quick_rise">빠르게 강해짐 (Quick Rise)</string>
+    <string name="enum__haptic_vibration_primitive__tick">틱 (Tick)</string>
+    <string name="enum__haptic_vibration_primitive__low_tick">약한 틱 (Low Tick)</string>
     <string name="enum__incognito_mode__force_off" comment="Enum value label">항상 끄기</string>
     <string name="enum__incognito_mode__force_on" comment="Enum value label">항상 켜기</string>
     <string name="enum__input_feedback_activation_mode__audio_respect_system_settings" comment="Enum value label">입력 이벤트가 발생하면 시스템 설정에 따라 소리를 재생합니다.</string>

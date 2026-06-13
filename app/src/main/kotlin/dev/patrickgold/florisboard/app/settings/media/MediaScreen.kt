@@ -38,7 +38,7 @@ import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.patrickgold.jetpref.datastore.ui.ListPreference
 import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
+import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import kotlinx.coroutines.launch
@@ -58,13 +58,15 @@ fun MediaScreen() = FlorisScreen {
     val scope = rememberCoroutineScope()
 
     content {
-        ListPreference(
-            prefs.emoji.preferredSkinTone,
-            title = stringRes(R.string.prefs__media__emoji_preferred_skin_tone),
-            entries = enumDisplayEntriesOf(EmojiSkinTone::class),
-        )
+        MalangPreferenceGroup {
+            ListPreference(
+                prefs.emoji.preferredSkinTone,
+                title = stringRes(R.string.prefs__media__emoji_preferred_skin_tone),
+                entries = enumDisplayEntriesOf(EmojiSkinTone::class),
+            )
+        }
 
-        PreferenceGroup(title = stringRes(R.string.prefs__media__emoji_history__title)) {
+        MalangPreferenceGroup(title = stringRes(R.string.prefs__media__emoji_history__title)) {
             SwitchPreference(
                 prefs.emoji.historyEnabled,
                 icon = Icons.Outlined.Schedule,
@@ -118,7 +120,7 @@ fun MediaScreen() = FlorisScreen {
 
         }
 
-        PreferenceGroup(title = stringRes(R.string.prefs__media__emoji_suggestion__title)) {
+        MalangPreferenceGroup(title = stringRes(R.string.prefs__media__emoji_suggestion__title)) {
             SwitchPreference(
                 prefs.emoji.suggestionEnabled,
                 icon = Icons.Outlined.EmojiSymbols,

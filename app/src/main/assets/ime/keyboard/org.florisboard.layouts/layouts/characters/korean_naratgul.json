@@ -1,109 +1,30 @@
 [
   [
-    {
-      "code": -232,
-      "label": "⌨",
-      "type": "system_gui",
-      "weight": 0.8
-    },
-    {
-      "code": 12593,
-      "label": "ㄱ"
-    },
-    {
-      "code": 12596,
-      "label": "ㄴ"
-    },
-    {
-      "code": -9803,
-      "label": "ㅏ/ㅓ"
-    },
-    {
-      "code": -7,
-      "label": "⌫",
-      "type": "enter_editing",
-      "weight": 0.8
-    }
+    { "code": -232, "label": "⌨", "type": "system_gui", "weight": 0.9, "grow": 1.0 },
+    { "code": 12593, "label": "ㄱ", "weight": 1.15, "grow": 1.0 },
+    { "code": 12596, "label": "ㄴ", "weight": 1.15, "grow": 1.0 },
+    { "code": -9803, "label": "ㅏ/ㅓ", "weight": 1.15, "grow": 1.0 },
+    { "code": -7, "label": "⌫", "type": "enter_editing", "weight": 0.9, "grow": 1.0 }
   ],
   [
-    {
-      "code": 46,
-      "label": "·",
-      "weight": 0.8
-    },
-    {
-      "code": 12601,
-      "label": "ㄹ"
-    },
-    {
-      "code": 12609,
-      "label": "ㅁ"
-    },
-    {
-      "code": -9803,
-      "label": "ㅗ/ㅜ"
-    },
-    {
-      "code": 32,
-      "label": "SPACE",
-      "weight": 0.8,
-      "popup": {
-        "default": {
-          "code": -227,
-          "label": "🌐"
-        }
-      }
-    }
+    { "code": 46, "label": "·", "weight": 0.9, "grow": 1.0 },
+    { "code": 12601, "label": "ㄹ", "weight": 1.15, "grow": 1.0 },
+    { "code": 12609, "label": "ㅁ", "weight": 1.15, "grow": 1.0 },
+    { "code": -9803, "label": "ㅗ/ㅜ", "weight": 1.15, "grow": 1.0 },
+    { "code": 32, "label": "SPACE", "weight": 0.9, "grow": 1.0, "popup": { "default": { "code": -227, "label": "🌐" } } }
   ],
   [
-    {
-      "code": -204,
-      "label": "123",
-      "type": "system_gui",
-      "weight": 0.8
-    },
-    {
-      "code": 12613,
-      "label": "ㅅ"
-    },
-    {
-      "code": 12615,
-      "label": "ㅇ"
-    },
-    {
-      "code": -9803,
-      "label": "ㅣ/ㅡ"
-    },
-    {
-      "code": 10,
-      "label": "⏎",
-      "type": "enter_editing",
-      "weight": 0.8
-    }
+    { "code": -204, "label": "123", "type": "system_gui", "weight": 0.9, "grow": 1.0 },
+    { "code": 12613, "label": "ㅅ", "weight": 1.15, "grow": 1.0 },
+    { "code": 12615, "label": "ㅇ", "weight": 1.15, "grow": 1.0 },
+    { "code": -9803, "label": "ㅣ/ㅡ", "weight": 1.15, "grow": 1.0 },
+    { "code": 10, "label": "⏎", "type": "enter_editing", "weight": 0.9, "grow": 1.0 }
   ],
   [
-    {
-      "code": -202,
-      "label": "?123",
-      "type": "system_gui",
-      "weight": 0.8
-    },
-    {
-      "code": -9801,
-      "label": "획"
-    },
-    {
-      "code": -9802,
-      "label": "쌍"
-    },
-    {
-      "code": 12616,
-      "label": "ㅈ"
-    },
-    {
-      "code": 44,
-      "label": ",",
-      "weight": 0.8
-    }
+    { "code": -202, "label": "?123", "type": "system_gui", "weight": 0.9, "grow": 1.0 },
+    { "code": -9801, "label": "획", "weight": 1.15, "grow": 1.0 },
+    { "code": -9802, "label": "쌍", "weight": 1.15, "grow": 1.0 },
+    { "code": 12616, "label": "ㅈ", "weight": 1.15, "grow": 1.0 },
+    { "code": 44, "label": ",", "weight": 0.9, "grow": 1.0 }
   ]
 ]

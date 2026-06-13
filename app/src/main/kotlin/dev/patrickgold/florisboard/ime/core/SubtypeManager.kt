@@ -197,7 +197,7 @@ class SubtypeManager(context: Context) {
             if (triggerNextSubtype) {
                 triggerNextSubtype = false
                 newActiveSubtype = subtype
-            } else if (subtype == cachedActiveSubtype) {
+            } else if (subtype.id == cachedActiveSubtype.id) {
                 triggerNextSubtype = true
             }
         }
@@ -220,7 +220,7 @@ class SubtypeManager(context: Context) {
             if (triggerNextSubtype) {
                 triggerNextSubtype = false
                 newActiveSubtype = subtype
-            } else if (subtype == cachedActiveSubtype) {
+            } else if (subtype.id == cachedActiveSubtype.id) {
                 triggerNextSubtype = true
             }
         }

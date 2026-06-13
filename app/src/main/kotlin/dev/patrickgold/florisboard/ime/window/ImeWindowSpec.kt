@@ -84,7 +84,7 @@ sealed class ImeWindowSpec {
      * Calculates the row height for given baseline [keyboardHeight].
      */
     fun calcRowHeight(keyboardHeight: Dp): Dp {
-        return keyboardHeight / constraints.baselineRowCount
+        return (keyboardHeight / constraints.baselineRowCount) * userPreferredOptions.heightFactor
     }
 
     /**
@@ -289,6 +289,7 @@ sealed class ImeWindowSpec {
         val keySpacingFactorH: Float,
         val keySpacingFactorV: Float,
         val fontScale: Float,
+        val heightFactor: Float,
     )
 
     companion object {
@@ -309,6 +310,7 @@ sealed class ImeWindowSpec {
                 keySpacingFactorH = 1f,
                 keySpacingFactorV = 1f,
                 fontScale = 1f,
+                heightFactor = 1f,
             ),
             constraints = ImeWindowConstraints.Fixed.Normal(ImeInsets.Root.Zero),
         )

@@ -187,6 +187,54 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
         extendedPopups: PopupMapping?,
         extendedPopupsDefault: PopupMapping?
     ) {
+        if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY) {
+            if (computedNumberHint == null) {
+                val hintCode = when (keyCode) {
+                    12593 -> 49 // ㄱㅋ -> 1
+                    12643 -> 50 // ㅣㅡ -> 2
+                    12623 -> 51 // ㅏㅑ -> 3
+                    12599 -> 52 // ㄷㅌ -> 4
+                    12596 -> 53 // ㄴㄹ -> 5
+                    12627 -> 54 // ㅓㅕ -> 6
+                    12609 -> 55 // ㅁㅅ -> 7
+                    12610 -> 56 // ㅂㅍ -> 8
+                    12631 -> 57 // ㅗㅛ -> 9
+                    12616 -> 42 // ㅈㅊ -> *
+                    12615 -> 48 // ㅇㅎ -> 0
+                    12636 -> 35 // ㅜㅠ -> #
+                    else -> null
+                }
+                if (hintCode != null) {
+                    computedNumberHint = TextKeyData(
+                        code = hintCode,
+                        label = hintCode.toChar().toString(),
+                        type = KeyType.NUMERIC
+                    )
+                }
+            }
+            if (computedSymbolHint == null) {
+                val symbolHintCode = when (keyCode) {
+                    12593 -> 64 // ㄱㅋ -> @
+                    12643 -> 35 // ㅣㅡ -> #
+                    12623 -> 36 // ㅏㅑ -> $
+                    12599 -> 37 // ㄷㅌ -> %
+                    12596 -> 38 // ㄴㄹ -> &
+                    12627 -> 42 // ㅓㅕ -> *
+                    12609 -> 40 // ㅁㅅ -> (
+                    12610 -> 41 // ㅂㅍ -> )
+                    12631 -> 33 // ㅗㅛ -> !
+                    12615 -> 63 // ㅇㅎ -> ?
+                    else -> null
+                }
+                if (symbolHintCode != null) {
+                    computedSymbolHint = TextKeyData(
+                        code = symbolHintCode,
+                        label = symbolHintCode.toChar().toString(),
+                        type = KeyType.CHARACTER
+                    )
+                }
+            }
+        }
         val symbolHint = computedSymbolHint
         if (symbolHint != null) {
             val evaluatedSymbolHint = symbolHint.compute(evaluator)

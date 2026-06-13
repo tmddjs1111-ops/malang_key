@@ -125,7 +125,7 @@ private fun computeLanguageDisplayName(locale: FlorisLocale, displayLanguageName
     val displayName = when (displayLanguageNamesIn) {
         DisplayLanguageNamesIn.SYSTEM_LOCALE -> locale.displayName()
         DisplayLanguageNamesIn.NATIVE_LOCALE -> locale.displayName(locale)
-    }
+    }.substringBefore("(").trim()
     cachedDisplayNameState = Triple(locale, displayLanguageNamesIn, displayName)
     return displayName
 }
@@ -142,7 +142,8 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
             KeyCode.PHONE_WAIT -> evaluator.context()?.getString(R.string.key__phone_wait)
             KeyCode.SPACE, KeyCode.CJK_SPACE -> {
                 when (evaluator.keyboard.mode) {
-                    KeyboardMode.CHARACTERS -> evaluator.subtype.primaryLocale.let { locale ->
+                    KeyboardMode.CHARACTERS,
+                    KeyboardMode.GRID_16KEY -> evaluator.subtype.primaryLocale.let { locale ->
                         computeLanguageDisplayName(locale, evaluator.displayLanguageNamesIn())
                     }
                     else -> null
@@ -242,14 +243,9 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
                 Icons.AutoMirrored.Filled.KeyboardReturn
             } else {
                 when (imeOptions.action) {
-                    ImeOptions.Action.DONE -> Icons.Default.Done
                     ImeOptions.Action.GO -> Icons.AutoMirrored.Filled.ArrowRightAlt
-                    ImeOptions.Action.NEXT -> Icons.AutoMirrored.Filled.ArrowRightAlt
-                    ImeOptions.Action.NONE -> Icons.AutoMirrored.Filled.KeyboardReturn
-                    ImeOptions.Action.PREVIOUS -> Icons.AutoMirrored.Filled.ArrowRightAlt
                     ImeOptions.Action.SEARCH -> Icons.Default.Search
-                    ImeOptions.Action.SEND -> Icons.AutoMirrored.Filled.Send
-                    ImeOptions.Action.UNSPECIFIED -> Icons.AutoMirrored.Filled.KeyboardReturn
+                    else -> Icons.AutoMirrored.Filled.KeyboardReturn
                 }
             }
         }

@@ -43,7 +43,10 @@ fun FlorisAppBar(
             )
         },
         actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+        ),
         scrollBehavior = scrollBehavior
     )
 }

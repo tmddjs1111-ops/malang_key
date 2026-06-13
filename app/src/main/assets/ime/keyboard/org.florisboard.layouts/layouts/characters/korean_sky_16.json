@@ -85,7 +85,13 @@
             "label": "123",
             "type": "system_gui",
             "weight": 1.0,
-            "grow": 1.0
+            "grow": 1.0,
+            "popup": {
+                "main": {
+                    "code": -221,
+                    "label": "⌨️"
+                }
+            }
         },
         {
             "code": 32,
@@ -108,7 +114,7 @@
         {
             "code": 10,
             "label": "⏎",
-            "type": "character",
+            "type": "enter_editing",
             "weight": 1.0,
             "grow": 1.0
         }

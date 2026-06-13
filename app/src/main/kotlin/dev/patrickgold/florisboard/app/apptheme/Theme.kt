@@ -16,79 +16,64 @@
 
 package dev.patrickgold.florisboard.app.apptheme
 
-import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import dev.patrickgold.florisboard.app.AppTheme
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
-import dev.patrickgold.jetpref.datastore.model.collectAsState
-import org.florisboard.lib.color.neutralDynamicColorScheme
-import org.florisboard.lib.color.systemAccentOrDefault
+import dev.patrickgold.jetpref.datastore.model.observeAsState
 
+private val MalangColorScheme = lightColorScheme(
+    primary = MalangPrimary,
+    onPrimary = MalangBg,
+    primaryContainer = MalangTertiary,
+    onPrimaryContainer = MalangText,
+    secondary = MalangSecondary,
+    onSecondary = MalangBg,
+    secondaryContainer = MalangTertiary,
+    onSecondaryContainer = MalangText,
+    tertiary = MalangTertiary,
+    onTertiary = MalangText,
+    tertiaryContainer = MalangTertiary,
+    onTertiaryContainer = MalangText,
+    background = MalangBg,
+    onBackground = MalangText,
+    surface = MalangBg,
+    onSurface = MalangText,
+    surfaceVariant = MalangTertiary,
+    onSurfaceVariant = MalangText,
+    surfaceTint = MalangBg,
+)
 
-@Composable
-fun getColorScheme(
-    theme: AppTheme,
-): ColorScheme {
-    val prefs by FlorisPreferenceStore
-    val accentColor by prefs.other.accentColor.collectAsState()
-
-    val seedColor = systemAccentOrDefault(accentColor)
-
-    return when (theme) {
-        AppTheme.AUTO, AppTheme.AUTO_AMOLED -> {
-            neutralDynamicColorScheme(
-                primary = seedColor,
-                isDark = isSystemInDarkTheme(),
-                isAmoled = theme == AppTheme.AUTO_AMOLED,
-            )
-        }
-
-        AppTheme.DARK, AppTheme.LIGHT -> {
-            neutralDynamicColorScheme(primary = seedColor, isDark = theme == AppTheme.DARK)
-        }
-
-        AppTheme.AMOLED_DARK -> {
-            neutralDynamicColorScheme(primary = seedColor, isDark = true, isAmoled = true)
-        }
-    }
-}
-
-fun ColorScheme.amoled(): ColorScheme {
-    return this.copy(background = Color.Black, surface = Color.Black)
-}
+private val DarkMalangColorScheme = MalangColorScheme
 
 @Composable
 fun FlorisAppTheme(
-    theme: AppTheme,
-    content: @Composable () -> Unit,
+    theme: AppTheme = AppTheme.AUTO,
+    content: @Composable () -> Unit
 ) {
-    val colors = getColorScheme(theme = theme)
+    val prefs by FlorisPreferenceStore
+    // 타입을 명시적으로 지정하여 컴파일 오류 방지
+    val appFontFamilyId by prefs.appFontFamily.observeAsState()
 
-    val darkTheme =
-        theme == AppTheme.DARK
-            || theme == AppTheme.AMOLED_DARK
-            || (theme == AppTheme.AUTO && isSystemInDarkTheme())
-            || (theme == AppTheme.AUTO_AMOLED && isSystemInDarkTheme())
+    val isDark = when (theme) {
+        AppTheme.AUTO, AppTheme.AUTO_AMOLED -> isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK, AppTheme.AMOLED_DARK -> true
+    }
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
-        }
+    val colorScheme = if (isDark) {
+        DarkMalangColorScheme
+    } else {
+        MalangColorScheme
     }
 
     MaterialTheme(
-        colorScheme = colors,
-        typography = Typography,
-        content = content,
+        colorScheme = colorScheme,
+        typography = getTypographyFor(appFontFamilyId),
+        shapes = Shapes,
+        content = content
     )
 }

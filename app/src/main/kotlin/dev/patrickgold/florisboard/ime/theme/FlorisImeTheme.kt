@@ -31,8 +31,29 @@ import dev.patrickgold.florisboard.ime.window.LocalWindowController
 import dev.patrickgold.florisboard.keyboardManager
 import dev.patrickgold.florisboard.themeManager
 import dev.patrickgold.jetpref.datastore.model.collectAsState
+import org.florisboard.lib.snygg.SnyggRule
+import org.florisboard.lib.snygg.SnyggPropertySetEditor
+import org.florisboard.lib.snygg.SnyggSinglePropertySetEditor
 import org.florisboard.lib.snygg.ui.ProvideSnyggTheme
 import org.florisboard.lib.snygg.ui.rememberSnyggTheme
+import org.florisboard.lib.snygg.value.SnyggRoundedCornerDpShapeValue
+import org.florisboard.lib.snygg.value.SnyggStaticColorValue
+import androidx.compose.ui.unit.dp
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.compositionLocalOf
+import org.florisboard.lib.snygg.value.SnyggCustomFontFamilyValue
+import org.florisboard.lib.snygg.value.SnyggGenericFontFamilyValue
+
+data class MalangConfig(
+    val isGlassmorphismEnabled: Boolean = false,
+    val glassmorphismTransparency: Float = 0.3f,
+    val isNeumorphismEnabled: Boolean = false,
+    val squircleShapeEnabled: Boolean = false,
+    val malangSoundEnabled: Boolean = false,
+)
+
+val LocalMalangConfig = compositionLocalOf { MalangConfig() }
 
 @Composable
 fun FlorisImeTheme(content: @Composable () -> Unit) {
@@ -44,13 +65,103 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
 
     val prefs by FlorisPreferenceStore
     val accentColor by prefs.theme.accentColor.collectAsState()
+    val appFontFamily by prefs.appFontFamily.collectAsState()
 
     val activeThemeInfo by themeManager.activeThemeInfo.collectAsState()
+
+    val customKeyboardBgColor by prefs.malang.customKeyboardBgColor.collectAsState()
+    val customKeyBgColor by prefs.malang.customKeyBgColor.collectAsState()
+    val customKeyTextColor by prefs.malang.customKeyTextColor.collectAsState()
+    val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
+    
+    val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
+    val glassmorphismTransparency by prefs.malang.glassmorphismTransparency.collectAsState()
+    val isNeumorphismEnabled by prefs.malang.isNeumorphismEnabled.collectAsState()
+    val squircleShapeEnabled by prefs.malang.squircleShapeEnabled.collectAsState()
+    val malangSoundEnabled by prefs.malang.malangSoundEnabled.collectAsState()
+
+    val malangConfig = remember(isGlassmorphismEnabled, glassmorphismTransparency, isNeumorphismEnabled, squircleShapeEnabled, malangSoundEnabled) {
+        MalangConfig(
+            isGlassmorphismEnabled,
+            glassmorphismTransparency,
+            isNeumorphismEnabled,
+            squircleShapeEnabled,
+            malangSoundEnabled
+        )
+    }
 
     val assetResolver = remember(activeThemeInfo) {
         FlorisAssetResolver(context, activeThemeInfo)
     }
-    val snyggTheme = rememberSnyggTheme(activeThemeInfo.stylesheet, assetResolver)
+    
+    val stylesheet = remember(activeThemeInfo, customKeyboardBgColor, customKeyBgColor, customKeyTextColor, keyCornerRadius, appFontFamily) {
+        var baseStylesheet = activeThemeInfo.stylesheet
+        
+        val isKeyboardBgCustom = customKeyboardBgColor != Color.Unspecified
+        val isKeyBgCustom = customKeyBgColor != Color.Unspecified
+        val isKeyTextCustom = customKeyTextColor != Color.Unspecified
+        val isFontCustom = appFontFamily != "system"
+        
+        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || keyCornerRadius != 8 || isFontCustom || isGlassmorphismEnabled || isNeumorphismEnabled || squircleShapeEnabled) {
+            val editor = baseStylesheet.edit()
+            
+            val rootRule = SnyggRule.fromOrNull("root")
+            if (rootRule != null) {
+                val propEditor = editor.rules.getOrPut(rootRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyboardBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = glassmorphismTransparency))
+                }
+            }
+            
+            val smartbarRule = SnyggRule.fromOrNull("smartbar")
+            if (smartbarRule != null) {
+                val propEditor = editor.rules.getOrPut(smartbarRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyboardBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                }
+            }
+            
+            val keyRule = SnyggRule.fromOrNull("key")
+            if (keyRule != null) {
+                val propEditor = editor.rules.getOrPut(keyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
+                }
+                if (isKeyTextCustom) {
+                    propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                }
+                if (squircleShapeEnabled) {
+                    propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(16.dp, 16.dp, 16.dp, 16.dp)
+                } else if (keyCornerRadius != 8) {
+                    val radius = keyCornerRadius.toFloat().dp
+                    propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
+                }
+                if (isFontCustom) {
+                    val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(appFontFamily)
+                    val composeFontFamily = typo.bodyLarge.fontFamily
+                    if (composeFontFamily != null) {
+                        propEditor.properties["fontFamily"] = SnyggGenericFontFamilyValue(composeFontFamily)
+                    } else {
+                        propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(appFontFamily)
+                    }
+                }
+            }
+            
+            baseStylesheet = editor.build()
+        }
+        baseStylesheet
+    }
+
+    val snyggTheme = rememberSnyggTheme(stylesheet, assetResolver)
     val windowSpec by windowController.activeWindowSpec.collectAsState()
     val fontScale by remember { derivedStateOf { windowSpec.fontScale } }
 
@@ -63,6 +174,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     MaterialTheme {
         CompositionLocalProvider(
             LocalTextStyle provides TextStyle.Default,
+            LocalMalangConfig provides malangConfig,
         ) {
             ProvideSnyggTheme(
                 snyggTheme = snyggTheme,

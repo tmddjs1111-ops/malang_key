@@ -65,7 +65,23 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                     keyboardManager.resources.anyChangedVersion.value += 1
                 },
                 headlineContent = {
-                    Text(text = charactersLayout?.label ?: preset.locale.displayName())
+                    val localeName = preset.locale.displayName()
+                    val langOnly = preset.locale.displayLanguage()
+                    var layoutName = charactersLayout?.label ?: "Unknown"
+                    
+                    // Remove redundant language name from layout name if it exists
+                    if (layoutName.startsWith(localeName, ignoreCase = true)) {
+                        layoutName = layoutName.substring(localeName.length).trim().removePrefix("-").trim()
+                    } else if (layoutName.startsWith(langOnly, ignoreCase = true)) {
+                        layoutName = layoutName.substring(langOnly.length).trim().removePrefix("-").trim()
+                    }
+
+                    val finalLabel = if (layoutName.isEmpty() || layoutName.equals("Unknown", ignoreCase = true)) {
+                        localeName
+                    } else {
+                        "$localeName - $layoutName"
+                    }
+                    Text(text = finalLabel)
                 },
                 trailingContent = {
                     Checkbox(

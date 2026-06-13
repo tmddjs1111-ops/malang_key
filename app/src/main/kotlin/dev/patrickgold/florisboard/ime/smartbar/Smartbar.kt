@@ -23,6 +23,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -361,6 +362,47 @@ private fun SmartbarMainRow(modifier: Modifier = Modifier) {
                     CenterContent()
                     ExtendedActionsToggle()
                 }
+            }
+
+            SmartbarLayout.MALANG_SLOTS -> {
+                MalangSmartbarRow()
+            }
+        }
+    }
+}
+
+@Composable
+private fun MalangSmartbarRow(modifier: Modifier = Modifier) {
+    val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val keyboardManager by context.keyboardManager()
+    val evaluator by keyboardManager.activeSmartbarEvaluator.collectAsState()
+    val malangSlots by prefs.smartbar.malangSlots.collectAsState()
+    val malangSlotsCount by prefs.smartbar.malangSlotsCount.collectAsState()
+
+    SnyggRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(FlorisImeSizing.smartbarHeight),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val slotsToShow = malangSlots.take(malangSlotsCount)
+        for (action in slotsToShow) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(horizontal = 2.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                QuickActionButton(
+                    action = action,
+                    evaluator = evaluator,
+                    onLongClick = {
+                        keyboardManager.activeState.isActionsEditorVisible = true
+                    }
+                )
             }
         }
     }

@@ -62,6 +62,8 @@ import org.florisboard.lib.compose.FlorisStep
 import org.florisboard.lib.compose.FlorisStepLayout
 import org.florisboard.lib.compose.FlorisStepState
 import org.florisboard.lib.compose.stringRes
+import dev.patrickgold.florisboard.keyboardManager
+import dev.patrickgold.florisboard.subtypeManager
 
 @Composable
 fun SetupScreen() = FlorisScreen {
@@ -77,8 +79,6 @@ fun SetupScreen() = FlorisScreen {
 
     val isFlorisBoardEnabled by InputMethodUtils.observeIsFlorisboardEnabled(foregroundOnly = true)
     val isFlorisBoardSelected by InputMethodUtils.observeIsFlorisboardSelected(foregroundOnly = true)
-    val hasNotificationPermission by prefs.internal.notificationPermissionState.collectAsState()
-
     val requestNotification =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             scope.launch {
@@ -95,8 +95,6 @@ fun SetupScreen() = FlorisScreen {
         isFlorisBoardSelected,
         context,
         navController,
-        requestNotification,
-        hasNotificationPermission,
         scope,
     )
 }
@@ -107,8 +105,6 @@ private fun FlorisScreenScope.content(
     isFlorisBoardSelected: Boolean,
     context: Context,
     navController: NavController,
-    requestNotification: ManagedActivityResultLauncher<String, Boolean>,
-    hasNotificationPermission: NotificationPermissionState,
     scope: CoroutineScope,
 ) {
 
@@ -116,19 +112,17 @@ private fun FlorisScreenScope.content(
         val initStep = when {
             !isFlorisBoardEnabled -> Steps.EnableIme.id
             !isFlorisBoardSelected -> Steps.SelectIme.id
-            hasNotificationPermission == NotificationPermissionState.NOT_SET && AndroidVersion.ATLEAST_API33_T -> Steps.SelectNotification.id
             else -> Steps.FinishUp.id
         }
         FlorisStepState.new(init = initStep)
     }
 
     content {
-        LaunchedEffect(isFlorisBoardEnabled, isFlorisBoardSelected, hasNotificationPermission) {
+        LaunchedEffect(isFlorisBoardEnabled, isFlorisBoardSelected) {
             stepState.setCurrentAuto(
                 when {
                     !isFlorisBoardEnabled -> Steps.EnableIme.id
                     !isFlorisBoardSelected -> Steps.SelectIme.id
-                    hasNotificationPermission == NotificationPermissionState.NOT_SET && AndroidVersion.ATLEAST_API33_T -> Steps.SelectNotification.id
                     else -> Steps.FinishUp.id
                 }
             )
@@ -144,7 +138,6 @@ private fun FlorisScreenScope.content(
                     stepState.getCurrentManual().value == -1 &&
                     !isFlorisBoardEnabled &&
                     !isFlorisBoardSelected &&
-                    hasNotificationPermission == NotificationPermissionState.NOT_SET &&
                     isEnabled
                 ) {
                     context.launchActivity(FlorisAppActivity::class) {
@@ -165,7 +158,7 @@ private fun FlorisScreenScope.content(
                 Spacer(modifier = Modifier.height(16.dp))
             },
             steps = steps(
-                context, navController, requestNotification, scope
+                context, navController, scope
             ),
             footer = {
                 footer(context)
@@ -199,7 +192,6 @@ private fun footer(context: Context) {
 private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
     context: Context,
     navController: NavController,
-    requestNotification: ManagedActivityResultLauncher<String, Boolean>,
     scope: CoroutineScope,
 ): List<FlorisStep> {
 
@@ -222,17 +214,6 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
                 InputMethodUtils.showImePicker(context)
             }
         },
-        if (AndroidVersion.ATLEAST_API33_T) {
-            FlorisStep(
-                id = Steps.SelectNotification.id,
-                title = stringRes(R.string.setup__grant_notification_permission__title),
-            ) {
-                StepText(stringRes(R.string.setup__grant_notification_permission__description))
-                StepButton(stringRes(R.string.setup__grant_notification_permission__btn)) {
-                    requestNotification.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-        } else null,
         FlorisStep(
             id = Steps.FinishUp.id,
             title = stringRes(R.string.setup__finish_up__title),
@@ -240,6 +221,43 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
             StepText(stringRes(R.string.setup__finish_up__description_p1))
             StepText(stringRes(R.string.setup__finish_up__description_p2))
             StepButton(label = stringRes(R.string.setup__finish_up__finish_btn)) {
+                val subtypeManager = context.subtypeManager().value
+                if (subtypeManager.subtypes.isEmpty()) {
+                    val systemLocale = dev.patrickgold.florisboard.lib.FlorisLocale.default()
+                    
+                    val skySubtype = dev.patrickgold.florisboard.ime.core.Subtype(
+                        id = System.currentTimeMillis(),
+                        primaryLocale = dev.patrickgold.florisboard.lib.FlorisLocale.from("ko", "KR"),
+                        secondaryLocales = emptyList(),
+                        composer = dev.patrickgold.florisboard.ime.keyboard.extCoreComposer("hangul-unicode"),
+                        currencySet = dev.patrickgold.florisboard.ime.keyboard.extCoreCurrencySet("south_korean_won"),
+                        popupMapping = dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping("ko"),
+                        layoutMap = dev.patrickgold.florisboard.ime.core.SubtypeLayoutMap(
+                            characters = dev.patrickgold.florisboard.ime.keyboard.extCoreLayout("korean_sky_16")
+                        )
+                    )
+                    
+                    val enSubtype = dev.patrickgold.florisboard.ime.core.Subtype(
+                        id = System.currentTimeMillis() + 1,
+                        primaryLocale = dev.patrickgold.florisboard.lib.FlorisLocale.from("en", "US"),
+                        secondaryLocales = emptyList(),
+                        composer = dev.patrickgold.florisboard.ime.keyboard.extCoreComposer("appender"),
+                        currencySet = dev.patrickgold.florisboard.ime.keyboard.extCoreCurrencySet("dollar"),
+                        popupMapping = dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping("en"),
+                        layoutMap = dev.patrickgold.florisboard.ime.core.SubtypeLayoutMap(
+                            characters = dev.patrickgold.florisboard.ime.keyboard.extCoreLayout("qwerty")
+                        )
+                    )
+                    
+                    if (systemLocale.language == "ko") {
+                        subtypeManager.addSubtype(skySubtype)
+                        subtypeManager.addSubtype(enSubtype)
+                    } else {
+                        subtypeManager.addSubtype(enSubtype)
+                        subtypeManager.addSubtype(skySubtype)
+                    }
+                }
+                
                 scope.launch { this@steps.prefs.internal.isImeSetUp.set(true) }
                 navController.navigate(Routes.Settings.Home) {
                     popUpTo(Routes.Setup.Screen) {

@@ -936,7 +936,7 @@
       "currencySet": "org.florisboard.currencysets:south_korean_won",
       "popupMapping": "org.florisboard.localization:ko",
       "preferred": {
-        "characters": "org.florisboard.layouts:korean_sky_malang"
+        "characters": "org.florisboard.layouts:korean_cheonjiin_16"
       }
     },
     {

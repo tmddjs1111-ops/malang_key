@@ -6,7 +6,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 49,
                     "label": "1"
                 }
@@ -18,7 +18,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 50,
                     "label": "2"
                 }
@@ -30,7 +30,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 51,
                     "label": "3"
                 }
@@ -51,7 +51,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 52,
                     "label": "4"
                 }
@@ -63,7 +63,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 53,
                     "label": "5"
                 }
@@ -75,7 +75,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 54,
                     "label": "6"
                 }
@@ -96,7 +96,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 55,
                     "label": "7"
                 }
@@ -108,7 +108,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 56,
                     "label": "8"
                 }
@@ -120,7 +120,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 57,
                     "label": "9"
                 }
@@ -132,7 +132,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": 48,
                     "label": "0"
                 }
@@ -159,7 +159,7 @@
             "weight": 1.0,
             "grow": 1.0,
             "popup": {
-                "default": {
+                "main": {
                     "code": -227,
                     "label": "🌐"
                 }

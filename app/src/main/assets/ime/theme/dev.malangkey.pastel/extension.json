@@ -1,0 +1,14 @@
+{
+  "id": "dev.malangkey.pastel",
+  "version": "1.0.0",
+  "title": "말랑키 파스텔 테마",
+  "description": "말랑키의 귀여운 둥근 모서리와 파스텔 색상을 담은 테마 패키지입니다.",
+  "authors": ["Malang Key"],
+  "themes": [
+    { "id": "pink", "label": "파스텔 핑크", "isNight": false, "stylesheet": "stylesheets/pink.json" },
+    { "id": "mint", "label": "민트 그린", "isNight": false, "stylesheet": "stylesheets/mint.json" },
+    { "id": "yellow", "label": "바나나 옐로우", "isNight": false, "stylesheet": "stylesheets/yellow.json" },
+    { "id": "sky", "label": "스카이 블루", "isNight": false, "stylesheet": "stylesheets/sky.json" },
+    { "id": "chocolate", "label": "초콜릿 다크", "isNight": true, "stylesheet": "stylesheets/chocolate.json" }
+  ]
+}

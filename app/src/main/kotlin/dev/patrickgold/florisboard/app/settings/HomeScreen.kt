@@ -229,9 +229,9 @@ private fun SettingsTabContent(
             onClick = { navController.navigate(Routes.Settings.Keyboard) }
         )
         MalangMenuItem(
-            emoji = "📐",
-            title = "키보드 레이아웃",
-            onClick = { navController.navigate(Routes.Settings.Layout) }
+            emoji = "🪄",
+            title = "스마트바 설정(상단바)",
+            onClick = { navController.navigate(Routes.Settings.Smartbar) }
         )
         MalangMenuItem(
             iconId = R.drawable.ic_home_sound_vibration,
@@ -375,8 +375,8 @@ private fun ThemeTabContent(
                     prefs.malang.keyCornerRadius.set(8)
                     prefs.malang.isGlassmorphismEnabled.set(false)
                     prefs.malang.glassmorphismTransparency.set(0.3f)
-                    prefs.malang.isNeumorphismEnabled.set(false)
-                    prefs.malang.squircleShapeEnabled.set(false)
+                    prefs.malang.isNeumorphismEnabled.set(true)
+                    prefs.malang.squircleShapeEnabled.set(true)
                     prefs.malang.malangSoundEnabled.set(false)
                 }
             },

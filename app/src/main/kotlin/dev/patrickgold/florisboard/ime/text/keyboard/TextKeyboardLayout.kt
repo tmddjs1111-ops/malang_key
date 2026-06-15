@@ -422,7 +422,8 @@ private fun TextKeyButton(
                 selector = selector,
                 modifier = Modifier
                     .wrapContentSize()
-                    .align(if (isTelPadKey) BiasAlignment(0.5f, 0f) else Alignment.TopEnd),
+                    .align(if (isTelPadKey) BiasAlignment(0.5f, 0f) else Alignment.TopEnd)
+                    .padding(end = 6.dp, top = 4.dp),
                 text = hintedLabel,
             )
         }

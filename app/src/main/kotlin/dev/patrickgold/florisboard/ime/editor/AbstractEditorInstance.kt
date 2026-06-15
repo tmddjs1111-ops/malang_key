@@ -343,10 +343,7 @@ abstract class AbstractEditorInstance(context: Context) {
     ): Boolean {
         val content = activeContent
         val selection = content.selection
-        val isSingleChar = runBlocking {
-            breakIterators.measureUChars(char, 1, subtypeManager.activeSubtype.primaryLocale)
-        } == char.length
-        if (!isSingleChar || selection.isNotValid || selection.isSelectionMode || activeInfo.isRawInputEditor) {
+        if (selection.isNotValid || selection.isSelectionMode || activeInfo.isRawInputEditor) {
             return commitTextInternal(char)
         }
         val ic = currentInputConnection() ?: return false

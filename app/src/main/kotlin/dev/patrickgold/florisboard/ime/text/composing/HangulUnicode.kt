@@ -53,10 +53,31 @@ object HangulUnicode : Composer {
     )
 
     private val naratgulStroke = mapOf(
-        "ㄱ" to "ㅋ", "ㄴ" to "ㄷ", "ㄷ" to "ㅌ", "ㅁ" to "ㅂ", "ㅂ" to "ㅍ",
-        "ㅅ" to "ㅈ", "ㅈ" to "ㅊ", "ㅇ" to "ㅎ", "ㅏ" to "ㅑ", "ㅓ" to "ㅕ", "ㅗ" to "ㅛ", "ㅜ" to "ㅠ"
+        "ㄱ" to "ㅋ", "ㅋ" to "ㄱ",
+        "ㄴ" to "ㄷ", "ㄷ" to "ㅌ", "ㅌ" to "ㄴ",
+        "ㅁ" to "ㅂ", "ㅂ" to "ㅍ", "ㅍ" to "ㅁ",
+        "ㅅ" to "ㅈ", "ㅈ" to "ㅊ", "ㅊ" to "ㅅ",
+        "ㅇ" to "ㅎ", "ㅎ" to "ㅇ",
+        "ㅏ" to "ㅑ", "ㅑ" to "ㅏ",
+        "ㅓ" to "ㅕ", "ㅕ" to "ㅓ",
+        "ㅗ" to "ㅛ", "ㅛ" to "ㅗ",
+        "ㅜ" to "ㅠ", "ㅠ" to "ㅜ"
     )
-    private val naratgulDouble = mapOf("ㄱ" to "ㄲ", "ㄷ" to "ㄸ", "ㅂ" to "ㅃ", "ㅅ" to "ㅆ", "ㅈ" to "ㅉ")
+    private val naratgulDouble = mapOf(
+        "ㄱ" to "ㄲ", "ㄲ" to "ㄱ",
+        "ㄷ" to "ㄸ", "ㄸ" to "ㄷ",
+        "ㅂ" to "ㅃ", "ㅃ" to "ㅂ",
+        "ㅅ" to "ㅆ", "ㅆ" to "ㅅ",
+        "ㅈ" to "ㅉ", "ㅉ" to "ㅈ",
+        "ㅇ" to "ㅎ", "ㅎ" to "ㅇ"
+    )
+
+    private val qwertyEnglishToKoreanMap = mapOf(
+        "q" to "ㅂ", "w" to "ㅈ", "e" to "ㄷ", "r" to "ㄱ", "t" to "ㅅ", "y" to "ㅛ", "u" to "ㅕ", "i" to "ㅑ", "o" to "ㅐ", "p" to "ㅔ",
+        "a" to "ㅁ", "s" to "ㄴ", "d" to "ㅇ", "f" to "ㄹ", "g" to "ㅎ", "h" to "ㅗ", "j" to "ㅓ", "k" to "ㅏ", "l" to "ㅣ",
+        "z" to "ㅋ", "x" to "ㅌ", "c" to "ㅊ", "v" to "ㅍ", "b" to "ㅠ", "n" to "ㅜ", "m" to "ㅡ",
+        "Q" to "ㅃ", "W" to "ㅉ", "E" to "ㄸ", "R" to "ㄲ", "T" to "ㅆ", "O" to "ㅒ", "P" to "ㅖ"
+    )
 
     private var lastInputKey: String = ""
     private var lastInputTime: Long = 0L
@@ -86,7 +107,13 @@ object HangulUnicode : Composer {
         fun toPreedit(): String {
             if (cho == null && jung == null) return ""
             if (cho != null && jung == null) return CHOSEONG[cho!!]
-            if (cho == null && jung != null) return JUNGSEONG[jung!!]
+            if (cho == null && jung != null) {
+                if (jung == 100) return "·"
+                if (jung == 101) return "··"
+                return JUNGSEONG[jung!!]
+            }
+            if (jung == 100) return CHOSEONG[cho!!] + "·"
+            if (jung == 101) return CHOSEONG[cho!!] + "··"
             val sIndex = (cho!! * 21 + jung!!) * 28 + (jong ?: 0)
             return (0xAC00 + sIndex).toChar().toString()
         }
@@ -94,8 +121,8 @@ object HangulUnicode : Composer {
 
     override fun getActions(precedingText: String, toInsert: String, layoutId: String?): Pair<Int, String> {
         val now = SystemClock.uptimeMillis()
-        val c = toInsert.firstOrNull() ?: return 0 to toInsert
-        val inputStr = c.toString()
+        if (toInsert.isEmpty()) return 0 to toInsert
+        val inputStr = toInsert
 
         var cho: Int? = null
         var jung: Int? = null
@@ -122,19 +149,46 @@ object HangulUnicode : Composer {
                 deleteCount = 1
             } else if (lastChar == '·') {
                 deleteCount = 1
+                if (precedingText.length > 1) {
+                    val prevPrev = precedingText[precedingText.length - 2]
+                    if (prevPrev == '·') {
+                        deleteCount = 2
+                        if (precedingText.length > 2) {
+                            val p3 = precedingText[precedingText.length - 3]
+                            if (p3.code in 0x3131..0x314E) {
+                                cho = choseongMap[p3.toString()]
+                                deleteCount = 3
+                            }
+                        }
+                        jung = 101
+                    } else if (prevPrev.code in 0x3131..0x314E) {
+                        cho = choseongMap[prevPrev.toString()]
+                        deleteCount = 2
+                        jung = 100
+                    } else {
+                        jung = 100
+                    }
+                } else {
+                    jung = 100
+                }
             }
         }
 
         val state = EngineState(cho, jung, jong)
         state.precedingText = precedingText
         val lId = layoutId ?: "korean"
+        
+        var mappedInputStr = inputStr
+        if (lId == "korean" || lId.startsWith("korean_qwerty")) {
+            mappedInputStr = qwertyEnglishToKoreanMap[inputStr] ?: inputStr
+        }
 
         when {
-            lId.startsWith("korean_sky") -> handleSky(inputStr, state, now)
-            lId.startsWith("korean_cheonjiin") -> handleCheonjiin(inputStr, state, now)
-            lId.startsWith("korean_danmoeum") -> handleDanmoeum(inputStr, state, now)
-            lId.startsWith("korean_naratgul") -> handleNaratgul(inputStr, state, now)
-            else -> handleQwerty(inputStr, state)
+            lId.startsWith("korean_sky") -> handleSky(mappedInputStr, state, now)
+            lId.startsWith("korean_cheonjiin") -> handleCheonjiin(mappedInputStr, state, now)
+            lId.startsWith("korean_danmoeum") -> handleDanmoeum(mappedInputStr, state, now)
+            lId.startsWith("korean_naratgul") -> handleNaratgul(mappedInputStr, state, now)
+            else -> handleQwerty(mappedInputStr, state)
         }
 
         val tempText = state.outNodes.joinToString("") + state.toPreedit()
@@ -529,7 +583,6 @@ object HangulUnicode : Composer {
 
         if (cheonjiinCycleStr.containsKey(key)) {
             val cycle = cheonjiinCycleStr[key]!!
-            // Identical to sky cycling logic for consonants
             if (isSameCycle && isWithinTime) {
                 if (state.jong != null) {
                     cycleJongseong(state, cycle, false)
@@ -597,32 +650,31 @@ object HangulUnicode : Composer {
             if (state.jung == null) {
                 if (key == "ㅣ") state.jung = jungMap["ㅣ"]
                 else if (key == "ㅡ") state.jung = jungMap["ㅡ"]
-                else if (key == "·") state.jung = jungMap["ㅏ"] // simplified
+                else if (key == "·") state.jung = 100 // 1 dot
             } else {
-                val curr = JUNGSEONG[state.jung!!]
+                val curr = if (state.jung == 100) "·" else if (state.jung == 101) "··" else JUNGSEONG[state.jung!!]
                 var next = ""
                 when (curr) {
                     "ㅣ" -> if (key == "·") next = "ㅏ"
                     "ㅏ" -> if (key == "·") next = "ㅑ" else if (key == "ㅣ") next = "ㅐ"
                     "ㅑ" -> if (key == "ㅣ") next = "ㅒ"
-                    "ㅡ" -> if (key == "·") next = "ㅜ" else if (key == "ㅣ") next = "ㅢ"
-                    "ㅜ" -> if (key == "·") next = "ㅠ" else if (key == "ㅓ") next = "ㅝ" else if (key == "ㅣ") next = "ㅟ"
+                    "ㅡ" -> if (key == "·") next = "ㅜ"
+                    "ㅜ" -> if (key == "·") next = "ㅠ" else if (key == "ㅣ") next = "ㅟ"
+                    "ㅟ" -> if (key == "·") next = "ㅝ"
+                    "ㅠ" -> if (key == "ㅣ") next = "ㅝ"
+                    "·" -> if (key == "ㅣ") next = "ㅓ" else if (key == "ㅡ") next = "ㅗ" else if (key == "·") next = "··"
+                    "··" -> if (key == "ㅣ") next = "ㅕ" else if (key == "ㅡ") next = "ㅛ"
                     "ㅓ" -> if (key == "·") next = "ㅕ" else if (key == "ㅣ") next = "ㅔ"
                     "ㅕ" -> if (key == "ㅣ") next = "ㅖ"
-                    "ㅗ" -> if (key == "ㅏ") next = "ㅘ" else if (key == "ㅣ") next = "ㅚ"
-                    "ㅘ" -> if (key == "ㅣ") next = "ㅙ"
-                    "ㅝ" -> if (key == "ㅣ") next = "ㅞ"
+                    "ㅗ" -> if (key == "·") next = "ㅛ" else if (key == "ㅣ") next = "ㅚ"
+                    "ㅚ" -> if (key == "·") next = "ㅘ"
                 }
 
-                // If dot pressed on something else
-                if (key == "·" && next.isEmpty()) {
-                    if (curr == "ㅏ") next = "ㅑ"
-                    else if (curr == "ㅓ") next = "ㅕ"
-                    else if (curr == "ㅗ") next = "ㅛ"
-                    else if (curr == "ㅜ") next = "ㅠ"
-                }
-
-                if (next.isNotEmpty()) {
+                if (next == "·") {
+                    state.jung = 100
+                } else if (next == "··") {
+                    state.jung = 101
+                } else if (next.isNotEmpty()) {
                     state.jung = jungMap[next]
                 } else {
                     state.commitPreedit()
@@ -640,17 +692,7 @@ object HangulUnicode : Composer {
         val isWithinTime = (now - lastInputTime) < 800
 
         if (isSameCycle && isWithinTime && danmoeumDouble.containsKey(key)) {
-            // Delete previous insertion logic
-            // Since we know the previous char was inserted by handleQwerty,
-            // we can pop the last state out nodes, or reconstruct from state.
-            // Simplified: we will just overwrite it as if we pressed doubleChar via handleQwerty
             val doubleChar = danmoeumDouble[key]!!
-            
-            // To simulate backspace and QWERTY inside here, we need to undo the last `key`.
-            // Instead of simulating backspace, because we only have current `state`,
-            // we'll just fall back to normal `handleQwerty` for now.
-            // Implementing proper backspace tracking inside Composer is complex without full buffer read.
-            // As a fallback, we'll just type it as normal QWERTY.
             handleQwerty(doubleChar, state)
         } else {
             handleQwerty(key, state)
@@ -658,7 +700,109 @@ object HangulUnicode : Composer {
     }
 
     private fun handleNaratgul(key: String, state: EngineState, now: Long) {
-        // Not fully mapped out yet without keyboard sub-keys
-        handleQwerty(key, state)
+        val isSameCycle = lastInputKey == key
+        val isWithinTime = (now - lastInputTime) < 800
+
+        when (key) {
+            "ㅏ/ㅓ" -> {
+                if (isSameCycle && isWithinTime && state.jung == jungMap["ㅏ"]) {
+                    state.jung = jungMap["ㅓ"]
+                } else if (isSameCycle && isWithinTime && state.jung == jungMap["ㅓ"]) {
+                    state.jung = jungMap["ㅏ"]
+                } else {
+                    handleQwerty("ㅏ", state)
+                }
+            }
+            "ㅗ/ㅜ" -> {
+                if (isSameCycle && isWithinTime && state.jung == jungMap["ㅗ"]) {
+                    state.jung = jungMap["ㅜ"]
+                } else if (isSameCycle && isWithinTime && state.jung == jungMap["ㅜ"]) {
+                    state.jung = jungMap["ㅗ"]
+                } else {
+                    handleQwerty("ㅗ", state)
+                }
+            }
+            "ㅣ/ㅡ" -> {
+                if (isSameCycle && isWithinTime && state.jung == jungMap["ㅣ"]) {
+                    state.jung = jungMap["ㅡ"]
+                } else if (isSameCycle && isWithinTime && state.jung == jungMap["ㅡ"]) {
+                    state.jung = jungMap["ㅣ"]
+                } else {
+                    handleQwerty("ㅣ", state)
+                }
+            }
+            "획추가", "획" -> {
+                if (state.jong != null) {
+                    val currentJong = JONGSEONG[state.jong!!]
+                    var origin = ""
+                    for ((k, v) in doubleJong) {
+                        if (v == currentJong) origin = k
+                    }
+                    if (origin.isNotEmpty()) {
+                        val p2 = origin[1].toString()
+                        if (naratgulStroke.containsKey(p2)) {
+                            val nextJong = origin[0].toString() + naratgulStroke[p2]!!
+                            if (doubleJong.containsKey(nextJong)) {
+                                state.jong = jongMap[doubleJong[nextJong]!!]
+                            }
+                        }
+                    } else if (naratgulStroke.containsKey(currentJong)) {
+                        state.jong = jongMap[naratgulStroke[currentJong]!!]
+                    }
+                } else if (state.jung != null) {
+                    val currentJung = JUNGSEONG[state.jung!!]
+                    if (naratgulStroke.containsKey(currentJung)) {
+                        state.jung = jungMap[naratgulStroke[currentJung]!!]
+                    }
+                } else if (state.cho != null) {
+                    val currentCho = CHOSEONG[state.cho!!]
+                    if (naratgulStroke.containsKey(currentCho)) {
+                        val nextCho = naratgulStroke[currentCho]!!
+                        if (state.jung == null) {
+                            if (!tryMergeBack(state, nextCho)) {
+                                state.cho = choseongMap[nextCho]
+                            }
+                        } else {
+                            state.cho = choseongMap[nextCho]
+                        }
+                    }
+                }
+            }
+            "쌍자음", "쌍" -> {
+                if (state.jong != null) {
+                    val currentJong = JONGSEONG[state.jong!!]
+                    var origin = ""
+                    for ((k, v) in doubleJong) {
+                        if (v == currentJong) origin = k
+                    }
+                    if (origin.isNotEmpty()) {
+                        val p2 = origin[1].toString()
+                        if (naratgulDouble.containsKey(p2)) {
+                            val nextJong = origin[0].toString() + naratgulDouble[p2]!!
+                            if (doubleJong.containsKey(nextJong)) {
+                                state.jong = jongMap[doubleJong[nextJong]!!]
+                            }
+                        }
+                    } else if (naratgulDouble.containsKey(currentJong)) {
+                        state.jong = jongMap[naratgulDouble[currentJong]!!]
+                    }
+                } else if (state.cho != null && state.jung == null) {
+                    val currentCho = CHOSEONG[state.cho!!]
+                    if (naratgulDouble.containsKey(currentCho)) {
+                        val nextCho = naratgulDouble[currentCho]!!
+                        if (!tryMergeBack(state, nextCho)) {
+                            state.cho = choseongMap[nextCho]
+                        }
+                    }
+                }
+            }
+            else -> {
+                if (key != " ") {
+                    handleQwerty(key, state)
+                } else {
+                    state.commitPreedit()
+                }
+            }
+        }
     }
 }

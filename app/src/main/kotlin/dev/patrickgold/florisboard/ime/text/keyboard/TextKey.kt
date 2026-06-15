@@ -307,6 +307,14 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                     computedHintData = TextKeyData.UNSPECIFIED
                 }
             }
+            if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY && data.type == KeyType.CHARACTER) {
+                val numHint = computedPopups.main?.asString(isForDisplay = true)?.takeIf { it.length == 1 && it[0].isDigit() }
+                    ?: computedPopups.relevant.find { it.asString(isForDisplay = true).length == 1 && it.asString(isForDisplay = true)[0].isDigit() }?.asString(isForDisplay = true)
+                    ?: computedNumberHint?.asString(isForDisplay = true)
+                if (numHint != null) {
+                    hintedLabel = numHint
+                }
+            }
         }
     }
 

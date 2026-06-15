@@ -16,124 +16,171 @@
 
 package dev.patrickgold.florisboard.app.settings.theme
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brightness2
-import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.WbTwilight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.LocalNavController
-import dev.patrickgold.florisboard.app.Routes
-import dev.patrickgold.florisboard.app.enumDisplayEntriesOf
-import dev.patrickgold.florisboard.app.ext.AddonManagementReferenceBox
-import dev.patrickgold.florisboard.app.ext.ExtensionListScreenType
 import dev.patrickgold.florisboard.ime.theme.ThemeManager
 import dev.patrickgold.florisboard.ime.theme.ThemeMode
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
 import dev.patrickgold.florisboard.lib.ext.ExtensionComponentName
 import dev.patrickgold.florisboard.themeManager
 import dev.patrickgold.jetpref.datastore.model.collectAsState
-import dev.patrickgold.jetpref.datastore.ui.ColorPickerPreference
-import dev.patrickgold.jetpref.datastore.ui.ListPreference
-import dev.patrickgold.jetpref.datastore.ui.LocalTimePickerPreference
-import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
-import dev.patrickgold.jetpref.datastore.ui.isMaterialYou
-import org.florisboard.lib.color.ColorMappings
-import org.florisboard.lib.compose.stringRes
+import kotlinx.coroutines.launch
+
+data class MalangThemeInfo(
+    val extId: String,
+    val compId: String,
+    val name: String,
+    val displayColor: Color,
+    val isNight: Boolean = false
+)
+
+val malangThemes = listOf(
+    MalangThemeInfo("dev.malangkey.pastel", "pink", "파스텔 핑크", Color(0xFFFFD1DC)),
+    MalangThemeInfo("dev.malangkey.pastel", "mint", "민트 그린", Color(0xFFC1F0D4)),
+    MalangThemeInfo("dev.malangkey.pastel", "yellow", "바나나 옐로우", Color(0xFFFFF59D)),
+    MalangThemeInfo("dev.malangkey.pastel", "sky", "스카이 블루", Color(0xFFBCE3FA)),
+    MalangThemeInfo("dev.malangkey.pastel", "chocolate", "다크 초콜릿", Color(0xFF4E342E), true),
+    MalangThemeInfo("dev.malangkey.colors", "black", "기본 블랙", Color(0xFF212121), true),
+    MalangThemeInfo("dev.malangkey.colors", "white", "기본 화이트", Color(0xFFFAFAFA))
+)
+
+val ColorCreamBeige = Color(0xFFFFF5ED)
+val ColorDarkChocolate = Color(0xFF4E342E)
 
 @Composable
 fun ThemeScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__theme__title)
+    title = "키보드 테마 선택"
     previewFieldVisible = true
 
-    val context = LocalContext.current
-    val navController = LocalNavController.current
-    val themeManager by context.themeManager()
-
-    @Composable
-    fun ThemeManager.getThemeLabel(id: ExtensionComponentName): String {
-        val configs by indexedThemeConfigs.collectAsState()
-        configs.first[id]?.let { return it.label }
-        return id.toString()
-    }
-
     content {
-        val dayThemeId by prefs.theme.dayThemeId.collectAsState()
-        val nightThemeId by prefs.theme.nightThemeId.collectAsState()
+        val florisPrefs = prefs
+        val dayThemeId by florisPrefs.theme.dayThemeId.collectAsState()
+        val nightThemeId by florisPrefs.theme.nightThemeId.collectAsState()
+        val currentMode by florisPrefs.theme.mode.collectAsState()
+        val coroutineScope = rememberCoroutineScope()
 
-        MalangPreferenceGroup(title = "1. 테마 (차후 업데이트 진행할꺼임)") {
-            Preference(
-                icon = Icons.Default.LightMode,
-                title = stringRes(R.string.pref__theme__day),
-                summary = themeManager.getThemeLabel(dayThemeId),
-                enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_NIGHT },
-                onClick = {
-                    navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_DAY))
-                },
-            )
-            Preference(
-                icon = Icons.Default.DarkMode,
-                title = stringRes(R.string.pref__theme__night),
-                summary = themeManager.getThemeLabel(nightThemeId),
-                enabledIf = { prefs.theme.mode isNotEqualTo ThemeMode.ALWAYS_DAY },
-                onClick = {
-                    navController.navigate(Routes.Settings.ThemeManager(ThemeManagerScreenAction.SELECT_NIGHT))
-                },
-            )
-            Preference(
-                title = "온라인 테마 마켓",
-                summary = "테마 다운로드 및 공유 기능이 추후 업데이트될 예정입니다.",
-                enabledIf = { false },
-            )
-            AddonManagementReferenceBox(type = ExtensionListScreenType.EXT_THEME)
-        }
+        // 덮어쓰는 전체 배경 (Cream Beige)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = ColorCreamBeige
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
+            ) {
+                Text(
+                    text = "원하는 디자인을 선택하세요! 🎨",
+                    color = ColorDarkChocolate,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
+                )
 
-        MalangPreferenceGroup(title = "2. 키보드 색상 설정") {
-            ColorPickerPreference(
-                pref = prefs.theme.accentColor,
-                title = stringRes(R.string.pref__theme__theme_accent_color__label),
-                defaultValueLabel = stringRes(R.string.action__default),
-                icon = Icons.Default.ColorLens,
-                defaultColors = ColorMappings.colors,
-                showAlphaSlider = false,
-                enableAdvancedLayout = true,
-                colorOverride = {
-                    if (it.isMaterialYou(context)) {
-                        Color.Unspecified
-                    } else {
-                        it
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(malangThemes) { themeInfo ->
+                        val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
+                        // 테마 모드에 따라 선택된 테마 판별
+                        val isSelected = if (themeInfo.isNight) {
+                            (currentMode == ThemeMode.ALWAYS_NIGHT || currentMode == ThemeMode.FOLLOW_SYSTEM) && nightThemeId == themeCompName
+                        } else {
+                            (currentMode == ThemeMode.ALWAYS_DAY || currentMode == ThemeMode.FOLLOW_SYSTEM) && dayThemeId == themeCompName
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(30.dp))
+                                .background(if (isSelected) ColorDarkChocolate else Color.White)
+                                .clickable {
+                                    coroutineScope.launch {
+                                        // 테마를 클릭하면 해당 테마 모드(주간/야간)로 확실하게 강제 고정
+                                        if (themeInfo.isNight) {
+                                            florisPrefs.theme.mode.set(ThemeMode.ALWAYS_NIGHT)
+                                            florisPrefs.theme.nightThemeId.set(themeCompName)
+                                        } else {
+                                            florisPrefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
+                                            florisPrefs.theme.dayThemeId.set(themeCompName)
+                                        }
+                                    }
+                                }
+                                .border(
+                                    width = if (isSelected) 3.dp else 2.dp,
+                                    color = if (isSelected) ColorDarkChocolate else ColorDarkChocolate.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(30.dp)
+                                )
+                                .padding(vertical = 24.dp, horizontal = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(themeInfo.displayColor)
+                                    .border(1.dp, ColorDarkChocolate.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = if (themeInfo.displayColor.red * 0.299 + themeInfo.displayColor.green * 0.587 + themeInfo.displayColor.blue * 0.114 > 0.5) ColorDarkChocolate else Color.White,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = themeInfo.name,
+                                style = androidx.compose.material3.MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                fontSize = 16.sp,
+                                color = if (isSelected) Color.White else ColorDarkChocolate
+                            )
+                        }
                     }
                 }
-            )
-        }
-
-        MalangPreferenceGroup(title = "3. 감성 꾸미기") {
-            ListPreference(
-                prefs.theme.mode,
-                icon = Icons.Default.BrightnessAuto,
-                title = stringRes(R.string.pref__theme__mode__label),
-                entries = enumDisplayEntriesOf(ThemeMode::class),
-            )
-            LocalTimePickerPreference(
-                pref = prefs.theme.sunriseTime,
-                title = stringRes(R.string.pref__theme__sunrise_time__label),
-                icon = Icons.Default.WbTwilight,
-                enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
-            )
-            LocalTimePickerPreference(
-                pref = prefs.theme.sunsetTime,
-                title = stringRes(R.string.pref__theme__sunset_time__label),
-                icon = Icons.Default.Brightness2,
-                enabledIf = { prefs.theme.mode isEqualTo ThemeMode.FOLLOW_TIME },
-            )
+            }
         }
     }
 }

@@ -402,7 +402,7 @@
       },
       {
         "id": "korean_sky_malang",
-        "label": "한국어 - 천지인",
+        "label": "한국어 - 스카이 (말랑)",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -423,6 +423,26 @@
       {
         "id": "korean_sky_16",
         "label": "한국어 - 스카이 (16키)",
+        "authors": [
+          "patrickgold",
+          "MalangKey"
+        ],
+        "direction": "ltr",
+        "modifier": null
+      },
+      {
+        "id": "korean_cheonjiin_16",
+        "label": "한국어 - 천지인",
+        "authors": [
+          "patrickgold",
+          "MalangKey"
+        ],
+        "direction": "ltr",
+        "modifier": null
+      },
+      {
+        "id": "korean_naratgul_16",
+        "label": "한국어 - 나랏글 (16키)",
         "authors": [
           "patrickgold",
           "MalangKey"

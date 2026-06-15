@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
+  "@defines": {
+    "--bg": "#F0F8FF",
+    "--key-bg": "#BCE3FA",
+    "--key-fg": "#2D4B63",
+    "--key-bg-pressed": "#96D2F5",
+    "--action-bg": "#6ABBEB",
+    "--action-fg": "#FFFFFF",
+    "--action-bg-pressed": "#49A6E0",
+    "--shape": "rounded-corner(20dp, 20dp, 20dp, 20dp)"
+  },
+  "window": { "background": "var(--bg)" },
+  "keyboard": { "background": "var(--bg)" },
+  "key": {
+    "background": "var(--key-bg)",
+    "foreground": "var(--key-fg)",
+    "font-size": "20sp",
+    "shape": "var(--shape)",
+    "shadow-elevation": "0dp"
+  },
+  "key:pressed": { "background": "var(--key-bg-pressed)" },
+  "key[code=12643]": { "background": "#FFFFFF", "foreground": "var(--action-bg)", "font-size": "26sp" },
+  "key[code=183]": { "background": "#FFFFFF", "foreground": "var(--action-bg)", "font-size": "32sp" },
+  "key[code=12641]": { "background": "#FFFFFF", "foreground": "var(--action-bg)", "font-size": "26sp" },
+  "key[code=32]": { "background": "var(--bg)", "foreground": "var(--action-bg)" },
+  "key[code=10]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=10]:pressed": { "background": "var(--action-bg-pressed)" },
+  "key[code=-1]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "smartbar": { "background": "var(--bg)" },
+  "smartbar-item": { "foreground": "var(--key-fg)" }
+}

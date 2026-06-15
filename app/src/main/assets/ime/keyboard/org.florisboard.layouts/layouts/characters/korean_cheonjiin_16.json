@@ -1,0 +1,30 @@
+[
+    [
+        { "code": -232, "label": "⌨", "type": "system_gui", "weight": 0.8 },
+        { "code": 12643, "label": "ㅣ", "weight": 1.2 },
+        { "code": 183, "label": "·", "weight": 1.2 },
+        { "code": 12641, "label": "ㅡ", "weight": 1.2 },
+        { "code": -7, "label": "⌫", "type": "enter_editing", "weight": 1.2 }
+    ],
+    [
+        { "code": 44, "label": ",", "weight": 0.8 },
+        { "code": 12593, "label": "ㄱㅋ", "weight": 1.2 },
+        { "code": 12596, "label": "ㄴㄹ", "weight": 1.2 },
+        { "code": 12599, "label": "ㄷㅌ", "weight": 1.2 },
+        { "code": -211, "label": "🌐", "type": "system_gui", "weight": 1.2 }
+    ],
+    [
+        { "code": -204, "label": "123", "type": "system_gui", "weight": 0.8 },
+        { "code": 12610, "label": "ㅂㅍ", "weight": 1.2 },
+        { "code": 12613, "label": "ㅅㅎ", "weight": 1.2 },
+        { "code": 12616, "label": "ㅈㅊ", "weight": 1.2 },
+        { "code": 10, "label": "⏎", "type": "enter_editing", "weight": 1.2 }
+    ],
+    [
+        { "code": -204, "label": "?123", "type": "system_gui", "weight": 0.8 },
+        { "code": 63, "label": "?", "weight": 0.8 },
+        { "code": 12615, "label": "ㅇㅁ", "weight": 1.2 },
+        { "code": 32, "label": "SPACE", "weight": 2.0 },
+        { "code": 46, "label": ".", "weight": 0.8 }
+    ]
+]

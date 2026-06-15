@@ -91,7 +91,7 @@ private class FlorisScreenScopeImpl : FlorisScreenScope {
     override var navigationIconVisible: Boolean by mutableStateOf(true)
     override var previewFieldVisible: Boolean by mutableStateOf(false)
     override var scrollable: Boolean by mutableStateOf(true)
-    override var iconSpaceReserved: Boolean by mutableStateOf(true)
+    override var iconSpaceReserved: Boolean by mutableStateOf(false)
 
     private var actions: FlorisScreenActions = @Composable { }
     private var bottomBar: FlorisScreenBottomBar = @Composable { }

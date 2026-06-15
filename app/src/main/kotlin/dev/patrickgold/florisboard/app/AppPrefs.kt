@@ -433,7 +433,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticVibrationMode = enum(
             key = "input_feedback__haptic_vibration_mode",
-            default = HapticVibrationMode.USE_VIBRATOR_DIRECTLY,
+            default = HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE,
         )
         val hapticVibrationDuration = int(
             key = "input_feedback__haptic_vibration_duration",
@@ -445,7 +445,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticVibrationPrimitive = enum(
             key = "input_feedback__haptic_vibration_primitive",
-            default = HapticVibrationPrimitive.CLICK,
+            default = HapticVibrationPrimitive.TICK,
         )
         val hapticVibrationIntensity = int(
             key = "input_feedback__haptic_vibration_intensity",
@@ -765,11 +765,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val isNeumorphismEnabled = boolean(
             key = "malang__is_neumorphism_enabled",
-            default = false,
+            default = true,
         )
         val squircleShapeEnabled = boolean(
             key = "malang__squircle_shape_enabled",
-            default = false,
+            default = true,
         )
         val malangSoundEnabled = boolean(
             key = "malang__sound_enabled",

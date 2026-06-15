@@ -1,0 +1,26 @@
+[
+    [
+        { "code": 12593, "label": "ㄱ", "weight": 1.0, "grow": 1.0 },
+        { "code": 12596, "label": "ㄴ", "weight": 1.0, "grow": 1.0 },
+        { "code": -9803, "label": "ㅏ/ㅓ", "weight": 1.0, "grow": 1.0 },
+        { "code": -7, "label": "⌫", "type": "enter_editing", "weight": 1.0, "grow": 1.0 }
+    ],
+    [
+        { "code": 12601, "label": "ㄹ", "weight": 1.0, "grow": 1.0 },
+        { "code": 12609, "label": "ㅁ", "weight": 1.0, "grow": 1.0 },
+        { "code": -9803, "label": "ㅗ/ㅜ", "weight": 1.0, "grow": 1.0 },
+        { "code": 10, "label": "⏎", "type": "enter_editing", "weight": 1.0, "grow": 1.0 }
+    ],
+    [
+        { "code": 12613, "label": "ㅅ", "weight": 1.0, "grow": 1.0 },
+        { "code": 12615, "label": "ㅇ", "weight": 1.0, "grow": 1.0 },
+        { "code": 12643, "label": "ㅣ", "weight": 1.0, "grow": 1.0 },
+        { "code": -204, "label": "123", "type": "system_gui", "weight": 1.0, "grow": 1.0 }
+    ],
+    [
+        { "code": -9801, "label": "획추가", "weight": 1.0, "grow": 1.0 },
+        { "code": 12641, "label": "ㅡ", "weight": 1.0, "grow": 1.0 },
+        { "code": -9802, "label": "쌍자음", "weight": 1.0, "grow": 1.0 },
+        { "code": 32, "label": "SPACE", "weight": 1.0, "grow": 1.0 }
+    ]
+]

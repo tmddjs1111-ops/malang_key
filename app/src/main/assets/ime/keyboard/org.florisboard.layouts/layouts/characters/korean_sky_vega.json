@@ -1,213 +1,373 @@
 [
-    [
-        {
-            "code": -232,
-            "label": "⌨",
-            "type": "system_gui",
-            "weight": 0.9,
-            "grow": 1
+  [
+    {
+      "code": -232,
+      "label": "⌨",
+      "type": "system_gui",
+      "weight": 0.9,
+      "grow": 1
+    },
+    {
+      "code": 12593,
+      "label": "ㄱㅋ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 49,
+          "label": "1"
         },
-        {
-            "code": 12593,
-            "label": "ㄱㅋ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 49,
-                    "label": "1"
-                }
-            }
+        "relevant": [
+          {
+            "code": 38,
+            "label": "&"
+          },
+          {
+            "code": 35,
+            "label": "#"
+          },
+          {
+            "code": 37,
+            "label": "%"
+          },
+          {
+            "code": 36,
+            "label": "$"
+          },
+          {
+            "code": 92,
+            "label": "\\"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12643,
+      "label": "ㅣㅡ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 50,
+          "label": "2"
         },
-        {
-            "code": 12643,
-            "label": "ㅣㅡ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 50,
-                    "label": "2"
-                }
-            }
+        "relevant": [
+          {
+            "code": 126,
+            "label": "~"
+          },
+          {
+            "code": 45,
+            "label": "-"
+          },
+          {
+            "code": 95,
+            "label": "_"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12623,
+      "label": "ㅏㅑ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 51,
+          "label": "3"
         },
-        {
-            "code": 12623,
-            "label": "ㅏㅑ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 51,
-                    "label": "3"
-                }
-            }
+        "relevant": [
+          {
+            "code": 47,
+            "label": "/"
+          },
+          {
+            "code": 64,
+            "label": "@"
+          }
+        ]
+      }
+    },
+    {
+      "code": -7,
+      "label": "⌫",
+      "type": "enter_editing",
+      "weight": 0.9,
+      "grow": 1
+    }
+  ],
+  [
+    {
+      "code": 44,
+      "label": ",",
+      "weight": 0.9,
+      "grow": 1
+    },
+    {
+      "code": 12599,
+      "label": "ㄷㅌ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 52,
+          "label": "4"
         },
-        {
-            "code": -7,
-            "label": "⌫",
-            "type": "enter_editing",
-            "weight": 0.9,
-            "grow": 1
+        "relevant": [
+          {
+            "code": 34,
+            "label": "\""
+          },
+          {
+            "code": 39,
+            "label": "'"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12596,
+      "label": "ㄴㄹ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 53,
+          "label": "5"
+        },
+        "relevant": [
+          {
+            "code": 9734,
+            "label": "☆"
+          },
+          {
+            "code": 9733,
+            "label": "★"
+          },
+          {
+            "code": 9825,
+            "label": "♡"
+          },
+          {
+            "code": 9829,
+            "label": "♥"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12627,
+      "label": "ㅓㅕ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 54,
+          "label": "6"
+        },
+        "relevant": [
+          {
+            "code": 94,
+            "label": "^"
+          }
+        ]
+      }
+    },
+    {
+      "code": 32,
+      "label": " ",
+      "weight": 0.9,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": -227,
+          "label": "🌐"
         }
-    ],
-    [
-        {
-            "code": 44,
-            "label": ",",
-            "weight": 0.9,
-            "grow": 1
+      }
+    }
+  ],
+  [
+    {
+      "code": -204,
+      "label": "123",
+      "type": "system_gui",
+      "weight": 0.9,
+      "grow": 1
+    },
+    {
+      "code": 12609,
+      "label": "ㅁㅅ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 55,
+          "label": "7"
         },
-        {
-            "code": 12599,
-            "label": "ㄷㅌ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 52,
-                    "label": "4"
-                }
-            }
+        "relevant": [
+          {
+            "code": 40,
+            "label": "("
+          },
+          {
+            "code": 123,
+            "label": "{"
+          },
+          {
+            "code": 91,
+            "label": "["
+          },
+          {
+            "code": 60,
+            "label": "<"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12610,
+      "label": "ㅂㅍ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 56,
+          "label": "8"
         },
-        {
-            "code": 12596,
-            "label": "ㄴㄹ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 53,
-                    "label": "5"
-                }
-            }
+        "relevant": [
+          {
+            "code": 41,
+            "label": ")"
+          },
+          {
+            "code": 125,
+            "label": "}"
+          },
+          {
+            "code": 93,
+            "label": "]"
+          },
+          {
+            "code": 62,
+            "label": ">"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12631,
+      "label": "ㅗㅛ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 57,
+          "label": "9"
         },
-        {
-            "code": 12627,
-            "label": "ㅓㅕ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 54,
-                    "label": "6"
-                }
-            }
+        "relevant": [
+          {
+            "code": 42,
+            "label": "*"
+          }
+        ]
+      }
+    },
+    {
+      "code": 10,
+      "label": "⏎",
+      "type": "enter_editing",
+      "weight": 0.9,
+      "grow": 1
+    }
+  ],
+  [
+    {
+      "code": -202,
+      "label": "?123",
+      "type": "system_gui",
+      "weight": 0.9,
+      "grow": 1
+    },
+    {
+      "code": 12616,
+      "label": "ㅈㅊ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 61,
+          "label": "="
         },
-        {
-            "code": 32,
-            "label": " ",
-            "weight": 0.9,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": -227,
-                    "label": "🌐"
-                }
-            }
-        }
-    ],
-    [
-        {
-            "code": -204,
-            "label": "123",
-            "type": "system_gui",
-            "weight": 0.9,
-            "grow": 1
+        "relevant": [
+          {
+            "code": 65291,
+            "label": "＋"
+          },
+          {
+            "code": 65293,
+            "label": "－"
+          },
+          {
+            "code": 177,
+            "label": "±"
+          },
+          {
+            "code": 215,
+            "label": "×"
+          },
+          {
+            "code": 247,
+            "label": "÷"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12615,
+      "label": "ㅇㅎ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 48,
+          "label": "0"
         },
-        {
-            "code": 12609,
-            "label": "ㅁㅅ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 55,
-                    "label": "7"
-                }
-            }
+        "relevant": [
+          {
+            "code": 59,
+            "label": ";"
+          },
+          {
+            "code": 58,
+            "label": ":"
+          }
+        ]
+      }
+    },
+    {
+      "code": 12636,
+      "label": "ㅜㅠ",
+      "weight": 1.15,
+      "grow": 1,
+      "popup": {
+        "main": {
+          "code": 63,
+          "label": "?"
         },
-        {
-            "code": 12610,
-            "label": "ㅂㅍ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 56,
-                    "label": "8"
-                }
-            }
-        },
-        {
-            "code": 12631,
-            "label": "ㅗㅛ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 57,
-                    "label": "9"
-                }
-            }
-        },
-        {
-            "code": 10,
-            "label": "⏎",
-            "type": "enter_editing",
-            "weight": 0.9,
-            "grow": 1
-        }
-    ],
-    [
-        {
-            "code": -202,
-            "label": "?123",
-            "type": "system_gui",
-            "weight": 0.9,
-            "grow": 1
-        },
-        {
-            "code": 12616,
-            "label": "ㅈㅊ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 61,
-                    "label": "="
-                }
-            }
-        },
-        {
-            "code": 12615,
-            "label": "ㅇㅎ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 48,
-                    "label": "0"
-                }
-            }
-        },
-        {
-            "code": 12636,
-            "label": "ㅜㅠ",
-            "weight": 1.15,
-            "grow": 1,
-            "popup": {
-                "main": {
-                    "code": 63,
-                    "label": "?"
-                }
-            }
-        },
-        {
-            "code": 46,
-            "label": "·",
-            "weight": 0.9,
-            "grow": 1
-        }
-    ]
+        "relevant": [
+          {
+            "code": 33,
+            "label": "!"
+          }
+        ]
+      }
+    },
+    {
+      "code": 46,
+      "label": "·",
+      "weight": 0.9,
+      "grow": 1
+    }
+  ]
 ]

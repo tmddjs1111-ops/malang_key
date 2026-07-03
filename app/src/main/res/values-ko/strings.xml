@@ -22,4 +22,56 @@
     <!-- Quick actions -->
     <string name="quick_action__ime_ui_mode_media">이모지</string>
     <string name="quick_action__ime_ui_mode_media__tooltip">이모지 패널 열기</string>
+    <!-- Sound & Vibration -->
+    <string name="settings__input_feedback__title">소리 및 진동</string>
+    <string name="pref__input_feedback__group_audio__label">오디오 피드백 / 소리</string>
+    <string name="pref__input_feedback__audio_enabled__summary_disabled">시스템 설정과 무관하게 입력 소리를 재생하지 않습니다.</string>
+    <string name="pref__input_feedback__audio_volume__label">키보드 소리 크기</string>
+    <string name="pref__input_feedback__audio_feat_key_press__label">키 누를 때 소리</string>
+    <string name="pref__input_feedback__audio_feat_key_long_press__label">키 길게 누를 때 소리</string>
+    <string name="pref__input_feedback__audio_feat_key_repeated_action__label">키 반복 동작 시 소리</string>
+    <string name="pref__input_feedback__audio_feat_gesture_swipe__label">제스처 스와이프 시 소리</string>
+    <string name="pref__input_feedback__audio_feat_gesture_moving_swipe__label">제스처 연속 스와이프 시 소리</string>
+
+    <string name="pref__input_feedback__group_haptic__label">햅틱 피드백 / 진동</string>
+    <string name="pref__input_feedback__haptic_vibration_mode__label">진동 모드</string>
+    <string name="pref__input_feedback__haptic_vibration_duration__label">진동 길이</string>
+    <string name="pref__input_feedback__haptic_vibration_strength__label">진동 세기</string>
+    <string name="pref__input_feedback__haptic_vibration_strength__summary_no_vibrator">하드웨어 진동 모터가 필요하지만, 이 기기에는 없는 것 같습니다.</string>
+    <string name="pref__input_feedback__haptic_vibration_strength__summary_no_amplitude_ctrl">하드웨어 진폭 제어 기능이 필요하지만, 이 기기에서는 지원하지 않습니다.</string>
+    <string name="pref__input_feedback__haptic_feat_key_press__label">키 누를 때 진동</string>
+    <string name="pref__input_feedback__haptic_feat_key_long_press__label">키 길게 누를 때 진동</string>
+    <string name="pref__input_feedback__haptic_feat_key_repeated_action__label">키 반복 동작 시 진동</string>
+    <string name="pref__input_feedback__haptic_feat_gesture_swipe__label">제스처 스와이프 시 진동</string>
+    <string name="pref__input_feedback__haptic_feat_gesture_moving_swipe__label">제스처 연속 스와이프 시 진동</string>
+    <string name="pref__input_feedback__haptic_vibration_primitive__label">진동 패턴</string>
+    <string name="pref__input_feedback__haptic_vibration_intensity__label">진동 강도</string>
+
+    <string name="enum__haptic_vibration_mode__use_vibrator_directly">진동 모터 직접 사용</string>
+    <string name="enum__haptic_vibration_mode__use_haptic_feedback_interface">햅틱 피드백 인터페이스 사용</string>
+    <string name="enum__input_feedback_activation_mode__audio_respect_system_settings">시스템 설정에 따라 동적으로 소리 재생</string>
+    <string name="enum__input_feedback_activation_mode__audio_ignore_system_settings">시스템 설정과 무관하게 항상 소리 재생</string>
+    
+    <string name="enum__haptic_vibration_primitive__click">클릭</string>
+    <string name="enum__haptic_vibration_primitive__thud">둔탁한 소리 (Thud)</string>
+    <string name="enum__haptic_vibration_primitive__spin">회전 (Spin)</string>
+    <string name="enum__haptic_vibration_primitive__quick_click">빠른 클릭</string>
+    <string name="enum__haptic_vibration_primitive__slow_rise">천천히 증가</string>
+    <string name="enum__haptic_vibration_primitive__quick_rise">빠르게 증가</string>
+    <string name="enum__haptic_vibration_primitive__tick">틱</string>
+    <string name="enum__haptic_vibration_primitive__low_tick">낮은 틱</string>
+
+    <!-- Media Tab -->
+    <string name="media__tab__emojis">이모지</string>
+    <string name="media__tab__emoticons">이모티콘</string>
+    <string name="media__tab__kaomoji">카오모지</string>
+    <!-- Sound & Vibration Missing strings -->
+    <string name="pref__input_feedback__audio_enabled__label">키 입력 시 소리 사용</string>
+    <string name="pref__input_feedback__haptic_enabled__label">키 입력 시 진동 사용</string>
+    <string name="pref__input_feedback__haptic_enabled__summary_disabled">시스템 설정과 무관하게 입력 진동을 사용하지 않습니다.</string>
+    <string name="pref__input_feedback__any_feat_key_press__summary">예: 일반 키, 버튼, 이모지 탭 누르기</string>
+    <string name="pref__input_feedback__any_feat_key_long_press__summary">예: 팝업 메뉴 호출 등</string>
+    <string name="pref__input_feedback__any_feat_key_repeated_action__summary">예: 지우기 키 꾹 누르기</string>
+    <string name="pref__input_feedback__any_feat_gesture_swipe__summary">지원 예정</string>
+    <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary">예: 스페이스바 커서 이동</string>
 </resources>

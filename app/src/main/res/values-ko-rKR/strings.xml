@@ -212,19 +212,19 @@
     <string name="snygg__property_value__percentage_size">크기(%)</string>
     <string name="settings__input_feedback__title" comment="Title of Input Feedback screen">소리 및 진동</string>
     <string name="pref__input_feedback__group_audio__label" comment="Preference group title">오디오 피드백 / 소리</string>
-    <string name="pref__input_feedback__audio_enabled__label" comment="Preference title">오디오 피드백 사용</string>
-    <string name="pref__input_feedback__group_haptic__label" comment="Preference group title">햅틱 반응 / 진동</string>
-    <string name="pref__input_feedback__haptic_enabled__label" comment="Preference title">햅틱 반응 사용</string>
+    <string name="pref__input_feedback__audio_enabled__label" comment="Preference title">키 입력 시 소리 사용</string>
+    <string name="pref__input_feedback__group_haptic__label" comment="Preference group title">햅틱 피드백 / 진동</string>
+    <string name="pref__input_feedback__haptic_enabled__label" comment="Preference title">키 입력 시 진동 사용</string>
     <string name="pref__input_feedback__haptic_vibration_mode__label" comment="Preference title">진동 모드</string>
     <string name="pref__input_feedback__haptic_vibration_duration__label" comment="Preference title">진동 길이</string>
     <string name="pref__input_feedback__haptic_vibration_strength__label" comment="Preference title">진동 세기</string>
-    <string name="pref__input_feedback__haptic_vibration_primitive__label">진동 종류 (고급 햅틱)</string>
-    <string name="pref__input_feedback__haptic_vibration_intensity__label">진동 강도 (고급 햅틱)</string>
-    <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">예) 키, 버튼, 이모지 탭</string>
-    <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">예) 팝업 메뉴</string>
-    <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">예) 삭제 키</string>
-    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">구현되지 않음</string>
-    <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary" comment="Preference summary">예) 커서 제어 스와이프</string>
+    <string name="pref__input_feedback__haptic_vibration_primitive__label">진동 패턴</string>
+    <string name="pref__input_feedback__haptic_vibration_intensity__label">진동 강도</string>
+    <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">예: 일반 키, 버튼, 이모지 탭 누르기</string>
+    <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">예: 팝업 메뉴 호출 등</string>
+    <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">예: 지우기 키 꾹 누르기</string>
+    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">지원 예정</string>
+    <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary" comment="Preference summary">예: 스페이스바 커서 이동</string>
     <string name="settings__keyboard__title" comment="Title of Keyboard preferences screen">키보드</string>
     <string name="pref__keyboard__number_row__label" comment="Preference title">숫자 행</string>
     <string name="pref__keyboard__number_row__summary" comment="Preference summary">문자 레이아웃 위에 숫자 행 표시</string>
@@ -495,20 +495,20 @@
     <string name="enum__emoji_hair_style__curly_hair" comment="Enum value label">{emoji} 펌</string>
     <string name="enum__emoji_hair_style__white_hair" comment="Enum value label">{emoji} 흰 머리</string>
     <string name="enum__emoji_hair_style__bald" comment="Enum value label">{emoji} 대머리</string>
-    <string name="enum__haptic_vibration_mode__use_vibrator_directly" comment="Enum value label">일반 진동 (기존 방식)</string>
-    <string name="enum__haptic_vibration_mode__use_haptic_feedback_interface" comment="Enum value label">고급 햅틱 (추천)</string>
-    <string name="enum__haptic_vibration_primitive__click">클릭 (Click)</string>
-    <string name="enum__haptic_vibration_primitive__thud">쿵 (Thud)</string>
+    <string name="enum__haptic_vibration_mode__use_vibrator_directly" comment="Enum value label">진동 모터 직접 사용</string>
+    <string name="enum__haptic_vibration_mode__use_haptic_feedback_interface" comment="Enum value label">햅틱 피드백 인터페이스 사용</string>
+    <string name="enum__haptic_vibration_primitive__click">클릭</string>
+    <string name="enum__haptic_vibration_primitive__thud">둔탁한 소리 (Thud)</string>
     <string name="enum__haptic_vibration_primitive__spin">회전 (Spin)</string>
-    <string name="enum__haptic_vibration_primitive__quick_click">빠른 클릭 (Quick Click)</string>
-    <string name="enum__haptic_vibration_primitive__slow_rise">서서히 강해짐 (Slow Rise)</string>
-    <string name="enum__haptic_vibration_primitive__quick_rise">빠르게 강해짐 (Quick Rise)</string>
-    <string name="enum__haptic_vibration_primitive__tick">틱 (Tick)</string>
-    <string name="enum__haptic_vibration_primitive__low_tick">약한 틱 (Low Tick)</string>
+    <string name="enum__haptic_vibration_primitive__quick_click">빠른 클릭</string>
+    <string name="enum__haptic_vibration_primitive__slow_rise">천천히 증가</string>
+    <string name="enum__haptic_vibration_primitive__quick_rise">빠르게 증가</string>
+    <string name="enum__haptic_vibration_primitive__tick">틱</string>
+    <string name="enum__haptic_vibration_primitive__low_tick">낮은 틱</string>
     <string name="enum__incognito_mode__force_off" comment="Enum value label">항상 끄기</string>
     <string name="enum__incognito_mode__force_on" comment="Enum value label">항상 켜기</string>
-    <string name="enum__input_feedback_activation_mode__audio_respect_system_settings" comment="Enum value label">입력 이벤트가 발생하면 시스템 설정에 따라 소리를 재생합니다.</string>
-    <string name="enum__input_feedback_activation_mode__audio_ignore_system_settings" comment="Enum value label">입력 이벤트가 발생하면 시스템 설정에 관계없이 항상 소리를 재생합니다.</string>
+    <string name="enum__input_feedback_activation_mode__audio_respect_system_settings" comment="Enum value label">시스템 설정에 따라 동적으로 소리 재생</string>
+    <string name="enum__input_feedback_activation_mode__audio_ignore_system_settings" comment="Enum value label">시스템 설정과 무관하게 항상 소리 재생</string>
     <string name="enum__input_feedback_activation_mode__haptic_respect_system_settings" comment="Enum value label">입력 이벤트가 발생하면 시스템 설정에 따라 진동합니다.</string>
     <string name="enum__input_feedback_activation_mode__haptic_ignore_system_settings" comment="Enum value label">입력 이벤트가 발생하면 시스템 설정에 관계없이 항상 진동합니다.</string>
     <string name="enum__input_shift_state__caps_lock" comment="Enum value label">캡스락</string>
@@ -569,6 +569,24 @@
         <item quantity="other">{v}초</item>
     </plurals>
     <plurals name="unit__items__written">
-        <item quantity="other">{v} 항목</item>
+        <item quantity="other">{v} 개</item>
     </plurals>
+    <string name="pref__input_feedback__audio_enabled__summary_disabled">시스템 설정과 무관하게 입력 소리를 재생하지 않습니다.</string>
+    <string name="pref__input_feedback__audio_volume__label">키보드 소리 크기</string>
+    <string name="pref__input_feedback__audio_feat_key_press__label">키 누를 때 소리</string>
+    <string name="pref__input_feedback__audio_feat_key_long_press__label">키 길게 누를 때 소리</string>
+    <string name="pref__input_feedback__audio_feat_key_repeated_action__label">키 반복 동작 시 소리</string>
+    <string name="pref__input_feedback__audio_feat_gesture_swipe__label">제스처 스와이프 시 소리</string>
+    <string name="pref__input_feedback__audio_feat_gesture_moving_swipe__label">제스처 연속 스와이프 시 소리</string>
+    <string name="pref__input_feedback__haptic_enabled__summary_disabled">시스템 설정과 무관하게 입력 진동을 사용하지 않습니다.</string>
+    <string name="pref__input_feedback__haptic_vibration_strength__summary_no_vibrator">하드웨어 진동 모터가 필요하지만, 이 기기에는 없는 것 같습니다.</string>
+    <string name="pref__input_feedback__haptic_vibration_strength__summary_no_amplitude_ctrl">하드웨어 진폭 제어 기능이 필요하지만, 이 기기에서는 지원하지 않습니다.</string>
+    <string name="pref__input_feedback__haptic_feat_key_press__label">키 누를 때 진동</string>
+    <string name="pref__input_feedback__haptic_feat_key_long_press__label">키 길게 누를 때 진동</string>
+    <string name="pref__input_feedback__haptic_feat_key_repeated_action__label">키 반복 동작 시 진동</string>
+    <string name="pref__input_feedback__haptic_feat_gesture_swipe__label">제스처 스와이프 시 진동</string>
+    <string name="pref__input_feedback__haptic_feat_gesture_moving_swipe__label">제스처 연속 스와이프 시 진동</string>
+    <string name="prefs__media__emoji_history_pinned_update_strategy">업데이트 방식 (고정됨)</string>
+    <string name="prefs__media__emoji_history_recent_update_strategy">업데이트 방식 (최근 사용)</string>
+    <string name="prefs__media__emoji_suggestion_type">트리거 방식</string>
 </resources>

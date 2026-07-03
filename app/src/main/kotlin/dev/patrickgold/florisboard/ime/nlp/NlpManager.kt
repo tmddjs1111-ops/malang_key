@@ -66,6 +66,7 @@ class NlpManager(context: Context) {
         mapOf(
             LatinLanguageProvider.ProviderId to ProviderInstanceWrapper(LatinLanguageProvider(context)),
             HanShapeBasedLanguageProvider.ProviderId to ProviderInstanceWrapper(HanShapeBasedLanguageProvider(context)),
+            dev.patrickgold.florisboard.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId to ProviderInstanceWrapper(dev.patrickgold.florisboard.ime.nlp.japanese.JapaneseLanguageProvider(context)),
         )
     }
     // lock unnecessary because values constant

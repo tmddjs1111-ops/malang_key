@@ -65,13 +65,17 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
 
     val prefs by FlorisPreferenceStore
     val accentColor by prefs.theme.accentColor.collectAsState()
-    val appFontFamily by prefs.appFontFamily.collectAsState()
+    val keyboardFontFamily by prefs.malang.keyboardFontFamily.collectAsState()
 
     val activeThemeInfo by themeManager.activeThemeInfo.collectAsState()
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val themeMode by prefs.theme.mode.collectAsState()
 
     val customKeyboardBgColor by prefs.malang.customKeyboardBgColor.collectAsState()
     val customKeyBgColor by prefs.malang.customKeyBgColor.collectAsState()
     val customKeyTextColor by prefs.malang.customKeyTextColor.collectAsState()
+    val customEnterKeyBgColor by prefs.malang.customEnterKeyBgColor.collectAsState()
+    val customEnterKeyTextColor by prefs.malang.customEnterKeyTextColor.collectAsState()
     val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
     
     val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
@@ -94,15 +98,33 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         FlorisAssetResolver(context, activeThemeInfo)
     }
     
-    val stylesheet = remember(activeThemeInfo, customKeyboardBgColor, customKeyBgColor, customKeyTextColor, keyCornerRadius, appFontFamily) {
+    val stylesheet = remember(
+        activeThemeInfo,
+        customKeyboardBgColor,
+        customKeyBgColor,
+        customKeyTextColor,
+        customEnterKeyBgColor,
+        customEnterKeyTextColor,
+        keyCornerRadius,
+        keyboardFontFamily,
+        isGlassmorphismEnabled,
+        glassmorphismTransparency,
+        isNeumorphismEnabled,
+        squircleShapeEnabled,
+        dayThemeId,
+        themeMode
+    ) {
         var baseStylesheet = activeThemeInfo.stylesheet
+        val isCustomThemeSelected = dayThemeId.componentId == "custom" && (themeMode == ThemeMode.ALWAYS_DAY || themeMode == ThemeMode.FOLLOW_SYSTEM)
         
-        val isKeyboardBgCustom = customKeyboardBgColor != Color.Unspecified
-        val isKeyBgCustom = customKeyBgColor != Color.Unspecified
-        val isKeyTextCustom = customKeyTextColor != Color.Unspecified
-        val isFontCustom = appFontFamily != "system"
+        val isKeyboardBgCustom = isCustomThemeSelected && customKeyboardBgColor != Color.Unspecified
+        val isKeyBgCustom = isCustomThemeSelected && customKeyBgColor != Color.Unspecified
+        val isKeyTextCustom = isCustomThemeSelected && customKeyTextColor != Color.Unspecified
+        val isEnterKeyBgCustom = isCustomThemeSelected && customEnterKeyBgColor != Color.Unspecified
+        val isEnterKeyTextCustom = isCustomThemeSelected && customEnterKeyTextColor != Color.Unspecified
+        val isFontCustom = keyboardFontFamily != "system"
         
-        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || keyCornerRadius != 8 || isFontCustom || isGlassmorphismEnabled || isNeumorphismEnabled || squircleShapeEnabled) {
+        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
             val editor = baseStylesheet.edit()
             
             val rootRule = SnyggRule.fromOrNull("root")
@@ -116,6 +138,31 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
             }
             
+            val keyboardRule = SnyggRule.fromOrNull("keyboard")
+            if (keyboardRule != null) {
+                val propEditor = editor.rules.getOrPut(keyboardRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyboardBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = glassmorphismTransparency))
+                }
+            }
+            
+            val windowRule = SnyggRule.fromOrNull("window")
+            if (windowRule != null) {
+                val propEditor = editor.rules.getOrPut(windowRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyboardBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                }
+                if (isKeyTextCustom) {
+                    propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                }
+            }
+            
             val smartbarRule = SnyggRule.fromOrNull("smartbar")
             if (smartbarRule != null) {
                 val propEditor = editor.rules.getOrPut(smartbarRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
@@ -124,6 +171,9 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     propEditor.properties["background"] = SnyggStaticColorValue(bg)
                 } else if (isGlassmorphismEnabled) {
                     propEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                }
+                if (isKeyTextCustom) {
+                    propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
                 }
             }
             
@@ -141,18 +191,69 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
                 if (squircleShapeEnabled) {
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(16.dp, 16.dp, 16.dp, 16.dp)
-                } else if (keyCornerRadius != 8) {
+                } else if (keyCornerRadius != 6) {
                     val radius = keyCornerRadius.toFloat().dp
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
                 }
                 if (isFontCustom) {
-                    val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(appFontFamily)
+                    val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(keyboardFontFamily)
                     val composeFontFamily = typo.bodyLarge.fontFamily
                     if (composeFontFamily != null) {
                         propEditor.properties["fontFamily"] = SnyggGenericFontFamilyValue(composeFontFamily)
                     } else {
-                        propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(appFontFamily)
+                        propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(keyboardFontFamily)
                     }
+                }
+            }
+            
+            if (isKeyTextCustom) {
+                val smartbarElements = listOf(
+                    "smartbar-action-key",
+                    "smartbar-action-key:disabled",
+                    "smartbar-action-key:pressed",
+                    "smartbar-action-tile",
+                    "smartbar-action-tile:disabled",
+                    "smartbar-action-tile-icon",
+                    "smartbar-action-tile-text",
+                    "smartbar-shared-actions-toggle",
+                    "smartbar-shared-actions-toggle:disabled",
+                    "smartbar-shared-actions-toggle:pressed",
+                    "smartbar-extended-actions-toggle",
+                    "smartbar-extended-actions-toggle:disabled",
+                    "smartbar-extended-actions-toggle:pressed"
+                )
+                for (element in smartbarElements) {
+                    val elementRule = SnyggRule.fromOrNull(element)
+                    if (elementRule != null) {
+                        val elementPropEditor = editor.rules.getOrPut(elementRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                        elementPropEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                    }
+                }
+            }
+
+
+            val enterKeyRule = SnyggRule.fromOrNull("key[code=10]")
+            if (enterKeyRule != null) {
+                val propEditor = editor.rules.getOrPut(enterKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isEnterKeyBgCustom) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
+                }
+                if (isEnterKeyTextCustom) {
+                    propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
+                }
+            }
+
+            val spaceKeyRule = SnyggRule.fromOrNull("key[code=32]")
+            if (spaceKeyRule != null) {
+                val propEditor = editor.rules.getOrPut(spaceKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                if (isKeyBgCustom) {
+                    val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
+                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
+                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
+                }
+                if (isKeyTextCustom) {
+                    propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
                 }
             }
             

@@ -366,6 +366,15 @@
         "modifier": "org.florisboard.layouts:jis"
       },
       {
+        "id": "japanese_flick_12key",
+        "label": "日本語 (フリック)",
+        "authors": [
+          "MalangKey"
+        ],
+        "direction": "ltr",
+        "modifier": null
+      },
+      {
         "id": "korean",
         "label": "한국어 - 쿼티",
         "authors": [

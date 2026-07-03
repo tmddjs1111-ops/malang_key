@@ -214,6 +214,12 @@
       ]
     },
     {
+      "id": "ja",
+      "authors": [
+        "MalangKey"
+      ]
+    },
+    {
       "id": "ja-JP-jis",
       "authors": [
         "waelwindows"
@@ -958,12 +964,48 @@
       }
     },
     {
+      "languageTag": "ja-JP",
+      "nlpProviders": {
+        "spelling": "org.florisboard.nlp.providers.japanese",
+        "suggestion": "org.florisboard.nlp.providers.japanese"
+      },
+      "composer": "org.florisboard.composers:kana-unicode",
+      "currencySet": "org.florisboard.currencysets:yen",
+      "popupMapping": "org.florisboard.localization:ja-JP-jis",
+      "preferred": {
+        "characters": "org.florisboard.layouts:japanese_flick_12key",
+        "symbols": "org.florisboard.layouts:cjk",
+        "symbols2": "org.florisboard.layouts:cjk",
+        "numericRow": "org.florisboard.layouts:cjk"
+      }
+    },
+    {
       "languageTag": "ja-JP-jis",
+      "nlpProviders": {
+        "spelling": "org.florisboard.nlp.providers.japanese",
+        "suggestion": "org.florisboard.nlp.providers.japanese"
+      },
       "composer": "org.florisboard.composers:kana-unicode",
       "currencySet": "org.florisboard.currencysets:yen",
       "popupMapping": "org.florisboard.localization:ja-JP-jis",
       "preferred": {
         "characters": "org.florisboard.layouts:jis",
+        "symbols": "org.florisboard.layouts:cjk",
+        "symbols2": "org.florisboard.layouts:cjk",
+        "numericRow": "org.florisboard.layouts:cjk"
+      }
+    },
+    {
+      "languageTag": "ja-JP-romaji",
+      "nlpProviders": {
+        "spelling": "org.florisboard.nlp.providers.japanese",
+        "suggestion": "org.florisboard.nlp.providers.japanese"
+      },
+      "composer": "org.florisboard.composers:romaji",
+      "currencySet": "org.florisboard.currencysets:yen",
+      "popupMapping": "org.florisboard.localization:ja-JP-jis",
+      "preferred": {
+        "characters": "org.florisboard.layouts:qwerty",
         "symbols": "org.florisboard.layouts:cjk",
         "symbols2": "org.florisboard.layouts:cjk",
         "numericRow": "org.florisboard.layouts:cjk"

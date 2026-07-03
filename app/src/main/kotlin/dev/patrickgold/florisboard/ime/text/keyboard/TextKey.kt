@@ -187,22 +187,38 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
         extendedPopups: PopupMapping?,
         extendedPopupsDefault: PopupMapping?
     ) {
-        if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY) {
+        if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY || evaluator.keyboard.mode == KeyboardMode.CHARACTERS) {
             if (computedNumberHint == null) {
-                val hintCode = when (keyCode) {
-                    12593 -> 49 // ㄱㅋ -> 1
-                    12643 -> 50 // ㅣㅡ -> 2
-                    12623 -> 51 // ㅏㅑ -> 3
-                    12599 -> 52 // ㄷㅌ -> 4
-                    12596 -> 53 // ㄴㄹ -> 5
-                    12627 -> 54 // ㅓㅕ -> 6
-                    12609 -> 55 // ㅁㅅ -> 7
-                    12610 -> 56 // ㅂㅍ -> 8
-                    12631 -> 57 // ㅗㅛ -> 9
-                    12616 -> 42 // ㅈㅊ -> *
-                    12615 -> 48 // ㅇㅎ -> 0
-                    12636 -> 35 // ㅜㅠ -> #
-                    else -> null
+                val hintCode = if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY) {
+                    when (keyCode) {
+                        12593 -> 49 // ㄱㅋ -> 1
+                        12643 -> 50 // ㅣㅡ -> 2
+                        12623 -> 51 // ㅏㅑ -> 3
+                        12599 -> 52 // ㄷㅌ -> 4
+                        12596 -> 53 // ㄴㄹ -> 5
+                        12627 -> 54 // ㅓㅕ -> 6
+                        12609 -> 55 // ㅁㅅ -> 7
+                        12610 -> 56 // ㅂㅍ -> 8
+                        12631 -> 57 // ㅗㅛ -> 9
+                        12616 -> 61 // ㅈㅊ -> =
+                        12615 -> 48 // ㅇㅎ -> 0
+                        12636 -> 63 // ㅜㅠ -> ?
+                        else -> null
+                    }
+                } else {
+                    when (keyCode) {
+                        12610 -> 49 // ㅂ -> 1
+                        12616 -> 50 // ㅈ -> 2
+                        12599 -> 51 // ㄷ -> 3
+                        12593 -> 52 // ㄱ -> 4
+                        12613 -> 53 // ㅅ -> 5
+                        12635 -> 54 // ㅛ -> 6
+                        12629 -> 55 // ㅕ -> 7
+                        12625 -> 56 // ㅑ -> 8
+                        12624 -> 57 // ㅐ -> 9
+                        12626 -> 48 // ㅔ -> 0
+                        else -> null
+                    }
                 }
                 if (hintCode != null) {
                     computedNumberHint = TextKeyData(
@@ -213,18 +229,34 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                 }
             }
             if (computedSymbolHint == null) {
-                val symbolHintCode = when (keyCode) {
-                    12593 -> 64 // ㄱㅋ -> @
-                    12643 -> 35 // ㅣㅡ -> #
-                    12623 -> 36 // ㅏㅑ -> $
-                    12599 -> 37 // ㄷㅌ -> %
-                    12596 -> 38 // ㄴㄹ -> &
-                    12627 -> 42 // ㅓㅕ -> *
-                    12609 -> 40 // ㅁㅅ -> (
-                    12610 -> 41 // ㅂㅍ -> )
-                    12631 -> 33 // ㅗㅛ -> !
-                    12615 -> 63 // ㅇㅎ -> ?
-                    else -> null
+                val symbolHintCode = if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY) {
+                    when (keyCode) {
+                        12593 -> 64 // ㄱㅋ -> @
+                        12643 -> 35 // ㅣㅡ -> #
+                        12623 -> 36 // ㅏㅑ -> $
+                        12599 -> 37 // ㄷㅌ -> %
+                        12596 -> 38 // ㄴㄹ -> &
+                        12627 -> 42 // ㅓㅕ -> *
+                        12609 -> 40 // ㅁㅅ -> (
+                        12610 -> 41 // ㅂㅍ -> )
+                        12631 -> 33 // ㅗㅛ -> !
+                        12615 -> 63 // ㅇㅎ -> ?
+                        else -> null
+                    }
+                } else {
+                    when (keyCode) {
+                        12610 -> 33 // ㅂ -> !
+                        12616 -> 64 // ㅈ -> @
+                        12599 -> 35 // ㄷ -> #
+                        12593 -> 36 // ㄱ -> $
+                        12613 -> 37 // ㅅ -> %
+                        12635 -> 94 // ㅛ -> ^
+                        12629 -> 38 // ㅕ -> &
+                        12625 -> 42 // ㅑ -> *
+                        12624 -> 40 // ㅐ -> (
+                        12626 -> 41 // ㅔ -> )
+                        else -> null
+                    }
                 }
                 if (symbolHintCode != null) {
                     computedSymbolHint = TextKeyData(
@@ -308,8 +340,8 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                 }
             }
             if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY && data.type == KeyType.CHARACTER) {
-                val numHint = computedPopups.main?.asString(isForDisplay = true)?.takeIf { it.length == 1 && it[0].isDigit() }
-                    ?: computedPopups.relevant.find { it.asString(isForDisplay = true).length == 1 && it.asString(isForDisplay = true)[0].isDigit() }?.asString(isForDisplay = true)
+                val numHint = computedPopups.main?.asString(isForDisplay = true)?.takeIf { it.length == 1 && (it[0].isDigit() || "=*#?".contains(it[0])) }
+                    ?: computedPopups.relevant.find { it.asString(isForDisplay = true).length == 1 && (it.asString(isForDisplay = true)[0].isDigit() || "=*#?".contains(it.asString(isForDisplay = true)[0])) }?.asString(isForDisplay = true)
                     ?: computedNumberHint?.asString(isForDisplay = true)
                 if (numHint != null) {
                     hintedLabel = numHint

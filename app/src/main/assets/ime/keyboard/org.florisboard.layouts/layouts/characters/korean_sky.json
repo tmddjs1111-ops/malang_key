@@ -16,7 +16,29 @@
         "main": {
           "code": 49,
           "label": "1"
-        }
+        },
+        "relevant": [
+          {
+            "code": 38,
+            "label": "&"
+          },
+          {
+            "code": 35,
+            "label": "#"
+          },
+          {
+            "code": 37,
+            "label": "%"
+          },
+          {
+            "code": 36,
+            "label": "$"
+          },
+          {
+            "code": 92,
+            "label": "\\"
+          }
+        ]
       }
     },
     {
@@ -28,7 +50,21 @@
         "main": {
           "code": 50,
           "label": "2"
-        }
+        },
+        "relevant": [
+          {
+            "code": 126,
+            "label": "~"
+          },
+          {
+            "code": 45,
+            "label": "-"
+          },
+          {
+            "code": 95,
+            "label": "_"
+          }
+        ]
       }
     },
     {
@@ -40,7 +76,17 @@
         "main": {
           "code": 51,
           "label": "3"
-        }
+        },
+        "relevant": [
+          {
+            "code": 47,
+            "label": "/"
+          },
+          {
+            "code": 64,
+            "label": "@"
+          }
+        ]
       }
     },
     {
@@ -67,7 +113,17 @@
         "main": {
           "code": 52,
           "label": "4"
-        }
+        },
+        "relevant": [
+          {
+            "code": 34,
+            "label": "\""
+          },
+          {
+            "code": 39,
+            "label": "'"
+          }
+        ]
       }
     },
     {
@@ -79,7 +135,25 @@
         "main": {
           "code": 53,
           "label": "5"
-        }
+        },
+        "relevant": [
+          {
+            "code": 9734,
+            "label": "☆"
+          },
+          {
+            "code": 9733,
+            "label": "★"
+          },
+          {
+            "code": 9825,
+            "label": "♡"
+          },
+          {
+            "code": 9829,
+            "label": "♥"
+          }
+        ]
       }
     },
     {
@@ -91,7 +165,13 @@
         "main": {
           "code": 54,
           "label": "6"
-        }
+        },
+        "relevant": [
+          {
+            "code": 94,
+            "label": "^"
+          }
+        ]
       }
     },
     {
@@ -124,7 +204,25 @@
         "main": {
           "code": 55,
           "label": "7"
-        }
+        },
+        "relevant": [
+          {
+            "code": 40,
+            "label": "("
+          },
+          {
+            "code": 123,
+            "label": "{"
+          },
+          {
+            "code": 91,
+            "label": "["
+          },
+          {
+            "code": 60,
+            "label": "<"
+          }
+        ]
       }
     },
     {
@@ -136,7 +234,25 @@
         "main": {
           "code": 56,
           "label": "8"
-        }
+        },
+        "relevant": [
+          {
+            "code": 41,
+            "label": ")"
+          },
+          {
+            "code": 125,
+            "label": "}"
+          },
+          {
+            "code": 93,
+            "label": "]"
+          },
+          {
+            "code": 62,
+            "label": ">"
+          }
+        ]
       }
     },
     {
@@ -148,7 +264,13 @@
         "main": {
           "code": 57,
           "label": "9"
-        }
+        },
+        "relevant": [
+          {
+            "code": 42,
+            "label": "*"
+          }
+        ]
       }
     },
     {
@@ -176,7 +298,29 @@
         "main": {
           "code": 61,
           "label": "="
-        }
+        },
+        "relevant": [
+          {
+            "code": 65291,
+            "label": "＋"
+          },
+          {
+            "code": 65293,
+            "label": "－"
+          },
+          {
+            "code": 177,
+            "label": "±"
+          },
+          {
+            "code": 215,
+            "label": "×"
+          },
+          {
+            "code": 247,
+            "label": "÷"
+          }
+        ]
       }
     },
     {
@@ -188,7 +332,17 @@
         "main": {
           "code": 48,
           "label": "0"
-        }
+        },
+        "relevant": [
+          {
+            "code": 59,
+            "label": ";"
+          },
+          {
+            "code": 58,
+            "label": ":"
+          }
+        ]
       }
     },
     {
@@ -200,7 +354,13 @@
         "main": {
           "code": 63,
           "label": "?"
-        }
+        },
+        "relevant": [
+          {
+            "code": 33,
+            "label": "!"
+          }
+        ]
       }
     },
     {

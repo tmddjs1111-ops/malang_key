@@ -221,43 +221,6 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
             StepText(stringRes(R.string.setup__finish_up__description_p1))
             StepText(stringRes(R.string.setup__finish_up__description_p2))
             StepButton(label = stringRes(R.string.setup__finish_up__finish_btn)) {
-                val subtypeManager = context.subtypeManager().value
-                if (subtypeManager.subtypes.isEmpty()) {
-                    val systemLocale = dev.patrickgold.florisboard.lib.FlorisLocale.default()
-                    
-                    val skySubtype = dev.patrickgold.florisboard.ime.core.Subtype(
-                        id = System.currentTimeMillis(),
-                        primaryLocale = dev.patrickgold.florisboard.lib.FlorisLocale.from("ko", "KR"),
-                        secondaryLocales = emptyList(),
-                        composer = dev.patrickgold.florisboard.ime.keyboard.extCoreComposer("hangul-unicode"),
-                        currencySet = dev.patrickgold.florisboard.ime.keyboard.extCoreCurrencySet("south_korean_won"),
-                        popupMapping = dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping("ko"),
-                        layoutMap = dev.patrickgold.florisboard.ime.core.SubtypeLayoutMap(
-                            characters = dev.patrickgold.florisboard.ime.keyboard.extCoreLayout("korean_sky_16")
-                        )
-                    )
-                    
-                    val enSubtype = dev.patrickgold.florisboard.ime.core.Subtype(
-                        id = System.currentTimeMillis() + 1,
-                        primaryLocale = dev.patrickgold.florisboard.lib.FlorisLocale.from("en", "US"),
-                        secondaryLocales = emptyList(),
-                        composer = dev.patrickgold.florisboard.ime.keyboard.extCoreComposer("appender"),
-                        currencySet = dev.patrickgold.florisboard.ime.keyboard.extCoreCurrencySet("dollar"),
-                        popupMapping = dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping("en"),
-                        layoutMap = dev.patrickgold.florisboard.ime.core.SubtypeLayoutMap(
-                            characters = dev.patrickgold.florisboard.ime.keyboard.extCoreLayout("qwerty")
-                        )
-                    )
-                    
-                    if (systemLocale.language == "ko") {
-                        subtypeManager.addSubtype(skySubtype)
-                        subtypeManager.addSubtype(enSubtype)
-                    } else {
-                        subtypeManager.addSubtype(enSubtype)
-                        subtypeManager.addSubtype(skySubtype)
-                    }
-                }
-                
                 scope.launch { this@steps.prefs.internal.isImeSetUp.set(true) }
                 navController.navigate(Routes.Settings.Home) {
                     popUpTo(Routes.Setup.Screen) {

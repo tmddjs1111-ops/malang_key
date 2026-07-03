@@ -194,9 +194,6 @@ fun ImeSystemUiFloating() {
                     FlorisIconButton(
                         onClick = {
                             FlorisImeService.switchToNextInputMethod()
-                        },
-                        onLongClick = {
-                            FlorisImeService.showImePicker()
                         }
                     ) {
                         Icon(imageVector = Icons.Default.Language, null)

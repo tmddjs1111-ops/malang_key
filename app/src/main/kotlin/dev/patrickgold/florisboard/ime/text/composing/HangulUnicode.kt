@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 object HangulUnicode : Composer {
     override val id: String = "hangul-unicode"
     override val label: String = "Hangul Unicode"
-    override val toRead: Int = 1
+    override val toRead: Int = 3
 
     private val CHOSEONG = listOf("ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ")
     private val JUNGSEONG = listOf("ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ", "ㅣ")
@@ -566,14 +566,15 @@ object HangulUnicode : Composer {
                 }
             }
         } else {
-            state.commitPreedit()
             if (key == "·") {
                 // handle dot if it isn't part of sky cycle
+                state.commitPreedit()
                 state.outNodes.add("·")
             } else if (key != " ") {
-                state.outNodes.add(key)
+                handleQwerty(key, state)
+            } else {
+                state.commitPreedit()
             }
-            // if space, we just exit, committing preedit
         }
     }
 
@@ -682,8 +683,11 @@ object HangulUnicode : Composer {
                 }
             }
         } else {
-            state.commitPreedit()
-            if (key != " ") state.outNodes.add(key)
+            if (key != " ") {
+                handleQwerty(key, state)
+            } else {
+                state.commitPreedit()
+            }
         }
     }
 

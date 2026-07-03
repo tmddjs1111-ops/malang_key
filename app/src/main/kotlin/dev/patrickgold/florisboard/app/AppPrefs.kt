@@ -699,17 +699,16 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
-            default = 6,
+            default = 5,
         )
         val malangSlots = custom(
             key = "smartbar__malang_slots",
             default = listOf(
-                QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
-                QuickAction.InsertKey(TextKeyData.UNDO),
-                QuickAction.InsertKey(TextKeyData.REDO),
-                QuickAction.InsertKey(TextKeyData.SETTINGS),
-                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
-                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
+                QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
+                QuickAction.InsertKey(TextKeyData.ARROW_RIGHT),
             ),
             serializer = object : PreferenceSerializer<List<QuickAction>> {
                 override fun serialize(value: List<QuickAction>): String? {
@@ -739,9 +738,19 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
+        val customEnterKeyBgColor = custom(
+            key = "malang__custom_enter_key_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        val customEnterKeyTextColor = custom(
+            key = "malang__custom_enter_key_text_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
         val keyCornerRadius = int(
             key = "malang__key_corner_radius",
-            default = 8,
+            default = 6,
         )
         val keyboardFontFamily = string(
             key = "malang__keyboard_font_family",
@@ -765,11 +774,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val isNeumorphismEnabled = boolean(
             key = "malang__is_neumorphism_enabled",
-            default = true,
+            default = false,
         )
         val squircleShapeEnabled = boolean(
             key = "malang__squircle_shape_enabled",
-            default = true,
+            default = false,
         )
         val malangSoundEnabled = boolean(
             key = "malang__sound_enabled",
@@ -830,12 +839,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = extCoreTheme("dev.malangkey.basic"),
+            default = ExtensionComponentName("dev.malangkey.colors", "white"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = extCoreTheme("dev.malangkey.basic"),
+            default = ExtensionComponentName("dev.malangkey.colors", "black"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

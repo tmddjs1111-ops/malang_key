@@ -1,13 +1,13 @@
-﻿{
+{
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
-    "--bg": "#FFFFFF",
-    "--key-bg": "#F5F5F5",
-    "--key-fg": "#212121",
-    "--key-bg-pressed": "#E0E0E0",
-    "--action-bg": "#E0E0E0",
-    "--action-fg": "#212121",
-    "--action-bg-pressed": "#BDBDBD",
+    "--bg": "#FDF8ED",
+    "--key-bg": "#212121",
+    "--key-fg": "#FFFFFF",
+    "--key-bg-pressed": "#424242",
+    "--action-bg": "#333333",
+    "--action-fg": "#FFFFFF",
+    "--action-bg-pressed": "#505050",
     "--shape": "rounded-corner(12dp, 12dp, 12dp, 12dp)"
   },
   "window": { "background": "var(--bg)" },
@@ -18,13 +18,13 @@
     "font-size": "20sp",
     "shape": "var(--shape)",
     "shadow-elevation": "1dp",
-    "shadow-color": "rgba(0, 0, 0, 0.1)"
+    "shadow-color": "rgba(0, 0, 0, 0.15)"
   },
   "key:pressed": { "background": "var(--key-bg-pressed)" },
-  "key[code=10]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
-  "key[code=10]:pressed": { "background": "var(--action-bg-pressed)" },
-  "key[code=-1]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
-  "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "key[code=10]": { "background": "#5D4037", "foreground": "#FFFFFF" },
+  "key[code=10]:pressed": { "background": "#8D6E63" },
+  "key[code=-1]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=-5]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "smartbar": { "background": "var(--bg)" },
-  "smartbar-item": { "foreground": "var(--key-fg)" }
+  "smartbar-item": { "foreground": "#5D4037" }
 }

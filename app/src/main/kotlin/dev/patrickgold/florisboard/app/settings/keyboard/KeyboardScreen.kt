@@ -83,23 +83,7 @@ fun KeyboardScreen() = FlorisScreen {
                     entry(KeyHintMode.SMART_PRIORITY, "스마트 우선")
                 },
             )
-            SwitchPreference(
-                prefs.keyboard.utilityKeyEnabled,
-                title = "유틸리티 키 활성화",
-                summary = "언어 변경 또는 이모지 버튼을 표시합니다.",
-            )
-            ListPreference(
-                prefs.keyboard.utilityKeyAction,
-                title = "유틸리티 키 동작",
-                entries = listPrefEntries {
-                    entry(UtilityKeyAction.DISABLED, "사용 안 함")
-                    entry(UtilityKeyAction.SWITCH_LANGUAGE, "언어 변경")
-                    entry(UtilityKeyAction.SWITCH_KEYBOARD_APP, "키보드 앱 전환")
-                    entry(UtilityKeyAction.SWITCH_TO_EMOJIS, "이모지 전환")
-                    entry(UtilityKeyAction.DYNAMIC_SWITCH_LANGUAGE_EMOJIS, "동적 전환 (언어/이모지)")
-                },
-                visibleIf = { prefs.keyboard.utilityKeyEnabled isEqualTo true },
-            )
+
             ListPreference(
                 prefs.keyboard.spaceBarMode,
                 title = "스페이스바 표시 모드",
@@ -109,14 +93,7 @@ fun KeyboardScreen() = FlorisScreen {
                     entry(SpaceBarMode.SPACE_BAR_KEY, "스페이스바 텍스트 표시")
                 },
             )
-            ListPreference(
-                prefs.keyboard.capitalizationBehavior,
-                title = "대문자 전환 동작",
-                entries = listPrefEntries {
-                    entry(CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP, "두 번 눌러 Caps Lock")
-                    entry(CapitalizationBehavior.CAPSLOCK_BY_CYCLE, "순환하여 Caps Lock")
-                },
-            )
+
         }
 
         MalangPreferenceGroup(title = "레이아웃 및 크기") {
@@ -189,11 +166,7 @@ fun KeyboardScreen() = FlorisScreen {
                 max = 700,
                 stepIncrement = 10,
             )
-            SwitchPreference(
-                prefs.keyboard.spaceBarSwitchesToCharacters,
-                title = "스페이스바 입력 후 문자 모드로 복귀",
-                summary = "기호 입력 후 스페이스바를 누르면 한글/영문 모드로 자동 복귀합니다.",
-            )
+
         }
     }
 }

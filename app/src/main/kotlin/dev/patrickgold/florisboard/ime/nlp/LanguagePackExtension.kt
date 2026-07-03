@@ -54,6 +54,7 @@ class LanguagePackExtension( // FIXME: how to make this support multiple types o
     override val dependencies: List<String>? = null,
     val items: List<LanguagePackComponent> = listOf(),
     val hanShapeBasedSQLite: String = "han.sqlite3",
+    val japaneseDictSQLite: String = "japanese_dict.sqlite3",
 ) : Extension() {
 
     override fun components(): List<ExtensionComponent> = items
@@ -69,6 +70,7 @@ class LanguagePackExtension( // FIXME: how to make this support multiple types o
     override fun serialType() = SERIAL_TYPE
 
     @Transient var hanShapeBasedSQLiteDatabase: SQLiteDatabase = SQLiteDatabase.create(null)
+    @Transient var japaneseDictSQLiteDatabase: SQLiteDatabase = SQLiteDatabase.create(null)
 
     override fun onAfterLoad(context: Context, cacheDir: FsDir) {
         // FIXME: this is loading language packs of all subtypes when they load.
@@ -85,10 +87,22 @@ class LanguagePackExtension( // FIXME: how to make this support multiple types o
         } catch (e: SQLiteException) {
             flogError { "SQLiteException in openDatabase: path=$databasePath, error='${e}'" }
         }
+
+        val jpDatabasePath = workingDir?.subFile(japaneseDictSQLite)?.path
+        if (jpDatabasePath != null && FsDir(jpDatabasePath).exists()) {
+            try {
+                japaneseDictSQLiteDatabase.takeIf { it.isOpen }?.close()
+                japaneseDictSQLiteDatabase =
+                    SQLiteDatabase.openDatabase(jpDatabasePath, null, SQLiteDatabase.OPEN_READONLY);
+            } catch (e: SQLiteException) {
+                flogError { "SQLiteException in openDatabase for Japanese: path=$jpDatabasePath, error='${e}'" }
+            }
+        }
     }
 
     override fun onBeforeUnload(context: Context, cacheDir: FsDir) {
         super.onBeforeUnload(context, cacheDir)
         hanShapeBasedSQLiteDatabase.takeIf { it.isOpen }?.close()
+        japaneseDictSQLiteDatabase.takeIf { it.isOpen }?.close()
     }
 }

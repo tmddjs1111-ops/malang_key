@@ -398,10 +398,7 @@ private fun MalangSmartbarRow(modifier: Modifier = Modifier) {
             ) {
                 QuickActionButton(
                     action = action,
-                    evaluator = evaluator,
-                    onLongClick = {
-                        keyboardManager.activeState.isActionsEditorVisible = true
-                    }
+                    evaluator = evaluator
                 )
             }
         }

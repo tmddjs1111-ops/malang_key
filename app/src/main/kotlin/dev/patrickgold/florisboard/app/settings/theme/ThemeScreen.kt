@@ -60,6 +60,21 @@ import dev.patrickgold.florisboard.lib.ext.ExtensionComponentName
 import dev.patrickgold.florisboard.themeManager
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import dev.patrickgold.florisboard.app.apptheme.MalangText
+import dev.patrickgold.florisboard.app.apptheme.MalangBg
+import dev.patrickgold.jetpref.datastore.model.PreferenceData
+import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
+import dev.patrickgold.jetpref.material.ui.JetPrefColorPicker
+import dev.patrickgold.jetpref.material.ui.rememberJetPrefColorPickerState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+
+val MalangJuaFont = FontFamily(Font(R.font.jua))
 
 data class MalangThemeInfo(
     val extId: String,
@@ -76,7 +91,8 @@ val malangThemes = listOf(
     MalangThemeInfo("dev.malangkey.pastel", "sky", "스카이 블루", Color(0xFFBCE3FA)),
     MalangThemeInfo("dev.malangkey.pastel", "chocolate", "다크 초콜릿", Color(0xFF4E342E), true),
     MalangThemeInfo("dev.malangkey.colors", "black", "기본 블랙", Color(0xFF212121), true),
-    MalangThemeInfo("dev.malangkey.colors", "white", "기본 화이트", Color(0xFFFAFAFA))
+    MalangThemeInfo("dev.malangkey.colors", "white", "기본 화이트", Color(0xFFFAFAFA)),
+    MalangThemeInfo("dev.malangkey.colors", "custom", "커스텀", Color(0xFFE0E0E0))
 )
 
 val ColorCreamBeige = Color(0xFFFFF5ED)
@@ -86,6 +102,7 @@ val ColorDarkChocolate = Color(0xFF4E342E)
 fun ThemeScreen() = FlorisScreen {
     title = "키보드 테마 선택"
     previewFieldVisible = true
+    scrollable = false
 
     content {
         val florisPrefs = prefs
@@ -135,13 +152,23 @@ fun ThemeScreen() = FlorisScreen {
                                 .background(if (isSelected) ColorDarkChocolate else Color.White)
                                 .clickable {
                                     coroutineScope.launch {
-                                        // 테마를 클릭하면 해당 테마 모드(주간/야간)로 확실하게 강제 고정
-                                        if (themeInfo.isNight) {
-                                            florisPrefs.theme.mode.set(ThemeMode.ALWAYS_NIGHT)
-                                            florisPrefs.theme.nightThemeId.set(themeCompName)
-                                        } else {
+                                        if (themeInfo.compId == "custom") {
                                             florisPrefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
-                                            florisPrefs.theme.dayThemeId.set(themeCompName)
+                                            florisPrefs.theme.dayThemeId.set(ExtensionComponentName("dev.malangkey.colors", "custom"))
+                                        } else {
+                                            if (themeInfo.isNight) {
+                                                florisPrefs.theme.mode.set(ThemeMode.ALWAYS_NIGHT)
+                                                florisPrefs.theme.nightThemeId.set(themeCompName)
+                                            } else {
+                                                florisPrefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
+                                                florisPrefs.theme.dayThemeId.set(themeCompName)
+                                            }
+                                            
+                                            florisPrefs.malang.keyCornerRadius.set(6)
+                                            florisPrefs.malang.isGlassmorphismEnabled.set(false)
+                                            florisPrefs.malang.glassmorphismTransparency.set(0.3f)
+                                            florisPrefs.malang.isNeumorphismEnabled.set(false)
+                                            florisPrefs.malang.squircleShapeEnabled.set(false)
                                         }
                                     }
                                 }
@@ -179,8 +206,139 @@ fun ThemeScreen() = FlorisScreen {
                             )
                         }
                     }
+                    
+                    val isCustomThemeSelected = dayThemeId.componentId == "custom"
+                    if (isCustomThemeSelected) {
+                        item(span = { GridItemSpan(2) }) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    "🎨 실시간 키보드 색상 커스텀",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                                    color = MalangText.copy(alpha = 0.8f),
+                                    fontFamily = MalangJuaFont,
+                                    fontSize = 18.sp
+                                )
+                            }
+                        }
+    
+                        item(span = { GridItemSpan(2) }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ColorSwatchCard(
+                                    title = "배경 색상",
+                                    pref = florisPrefs.malang.customKeyboardBgColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ColorSwatchCard(
+                                    title = "키캡 색상",
+                                    pref = florisPrefs.malang.customKeyBgColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ColorSwatchCard(
+                                    title = "글자 색상",
+                                    pref = florisPrefs.malang.customKeyTextColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+    
+                        item(span = { GridItemSpan(2) }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ColorSwatchCard(
+                                    title = "확인 키캡",
+                                    pref = florisPrefs.malang.customEnterKeyBgColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ColorSwatchCard(
+                                    title = "확인 글자",
+                                    pref = florisPrefs.malang.customEnterKeyTextColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@OptIn(dev.patrickgold.jetpref.material.ui.ExperimentalJetPrefMaterial3Ui::class)
+@Composable
+fun ColorSwatchCard(
+    title: String,
+    pref: PreferenceData<Color>,
+    modifier: Modifier = Modifier
+) {
+    val color by pref.collectAsState()
+    var showDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    
+    Box(
+        modifier = modifier
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .clickable { showDialog = true }
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .shadow(3.dp, RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(if (color == Color.Unspecified) Color(0xFFEEEEEE) else color)
+                    .border(2.dp, MalangBg, RoundedCornerShape(24.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (color == Color.Unspecified) {
+                    Text("🎨", fontSize = 18.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = title,
+                fontFamily = MalangJuaFont,
+                fontSize = 14.sp,
+                color = MalangText,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+    
+    if (showDialog) {
+        var selectedColor by remember { mutableStateOf(if (color == Color.Unspecified) Color.White else color) }
+        val colorPickerState = rememberJetPrefColorPickerState(initColor = selectedColor)
+        JetPrefAlertDialog(
+            title = title,
+            confirmLabel = "선택",
+            onConfirm = {
+                scope.launch {
+                    pref.set(selectedColor)
+                }
+                showDialog = false
+            },
+            dismissLabel = "취소",
+            onDismiss = { showDialog = false }
+        ) {
+            JetPrefColorPicker(
+                state = colorPickerState,
+                onColorChange = { selectedColor = it }
+            )
         }
     }
 }

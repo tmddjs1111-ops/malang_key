@@ -109,6 +109,19 @@ class SubtypeManager(context: Context) {
         return true
     }
 
+    fun addSubtypeAndActivate(subtype: Subtype): Boolean {
+        val subtypeToAdd = subtype.copy(id = System.currentTimeMillis())
+        val subtypeList = subtypes
+        if (subtypeList.find { it.equalsExcludingId(subtype) } != null) {
+            return false
+        }
+        val newSubtypeList = subtypeList + subtypeToAdd
+        persistNewSubtypeList(newSubtypeList)
+        prefs.localization.activeSubtypeId.set(subtypeToAdd.id)
+        activeSubtype = subtypeToAdd
+        return true
+    }
+
     /**
      * Gets the currency set from the given subtype and returns it. Falls back to a default one if the subtype does not
      * exist.

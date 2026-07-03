@@ -481,27 +481,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.SHIFT] down event.
      */
     private fun handleShiftDown(data: KeyData) {
-        val prefs = prefs.keyboard.capitalizationBehavior
-        when (prefs.get()) {
-            CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP -> {
-                if (inputEventDispatcher.isConsecutiveDown(data)) {
-                    activeState.inputShiftState = InputShiftState.CAPS_LOCK
-                } else {
-                    if (activeState.inputShiftState == InputShiftState.UNSHIFTED) {
-                        activeState.inputShiftState = InputShiftState.SHIFTED_MANUAL
-                    } else {
-                        activeState.inputShiftState = InputShiftState.UNSHIFTED
-                    }
-                }
-            }
-            CapitalizationBehavior.CAPSLOCK_BY_CYCLE -> {
-                activeState.inputShiftState = when (activeState.inputShiftState) {
-                    InputShiftState.UNSHIFTED -> InputShiftState.SHIFTED_MANUAL
-                    InputShiftState.SHIFTED_MANUAL -> InputShiftState.CAPS_LOCK
-                    InputShiftState.SHIFTED_AUTOMATIC -> InputShiftState.UNSHIFTED
-                    InputShiftState.CAPS_LOCK -> InputShiftState.UNSHIFTED
-                }
-            }
+        activeState.inputShiftState = when (activeState.inputShiftState) {
+            InputShiftState.CAPS_LOCK -> InputShiftState.UNSHIFTED
+            else -> InputShiftState.CAPS_LOCK
         }
     }
 
@@ -568,16 +550,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             }
         }
 
-        if (prefs.keyboard.spaceBarSwitchesToCharacters.get()) {
-            when (activeState.keyboardMode) {
-                KeyboardMode.NUMERIC_ADVANCED,
-                KeyboardMode.SYMBOLS,
-                KeyboardMode.SYMBOLS2 -> {
-                    activeState.keyboardMode = KeyboardMode.CHARACTERS
-                }
-                else -> { /* Do nothing */ }
-            }
-        }
+
         if (prefs.correction.doubleSpacePeriod.get()) {
             if (inputEventDispatcher.isConsecutiveUp(data)) {
                 val text = editorInstance.run { activeContent.getTextBeforeCursor(2) }
@@ -948,9 +921,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 localSubtypePresets.addAll(keyboardExtension.subtypePresets)
             }
             localSubtypePresets.sortBy { it.locale.displayName() }
-            for (languageCode in listOf("en-CA", "en-AU", "en-UK", "en-US")) {
-                val index: Int = localSubtypePresets.indexOfFirst { it.locale.languageTag() == languageCode }
-                if (index > 0) {
+            for (languageCode in listOf("en-CA", "en-AU", "en-UK", "en-US", "ko-KR")) {
+                val indexes = localSubtypePresets.indices.filter { localSubtypePresets[it].locale.languageTag() == languageCode }
+                for (index in indexes.reversed()) {
                     localSubtypePresets.add(0, localSubtypePresets.removeAt(index))
                 }
             }
@@ -1010,32 +983,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         override fun evaluateVisible(data: KeyData): Boolean {
             return when (data.code) {
                 KeyCode.IME_UI_MODE_TEXT,
-                KeyCode.IME_UI_MODE_MEDIA -> {
-                    val tempUtilityKeyAction = when {
-                        prefs.keyboard.utilityKeyEnabled.get() -> prefs.keyboard.utilityKeyAction.get()
-                        else -> UtilityKeyAction.DISABLED
-                    }
-                    when (tempUtilityKeyAction) {
-                        UtilityKeyAction.DISABLED,
-                        UtilityKeyAction.SWITCH_LANGUAGE,
-                        UtilityKeyAction.SWITCH_KEYBOARD_APP -> false
-                        UtilityKeyAction.SWITCH_TO_EMOJIS -> true
-                        UtilityKeyAction.DYNAMIC_SWITCH_LANGUAGE_EMOJIS -> !shouldShowLanguageSwitch()
-                    }
-                }
-                KeyCode.LANGUAGE_SWITCH -> {
-                    val tempUtilityKeyAction = when {
-                        prefs.keyboard.utilityKeyEnabled.get() -> prefs.keyboard.utilityKeyAction.get()
-                        else -> UtilityKeyAction.DISABLED
-                    }
-                    when (tempUtilityKeyAction) {
-                        UtilityKeyAction.DISABLED,
-                        UtilityKeyAction.SWITCH_TO_EMOJIS -> false
-                        UtilityKeyAction.SWITCH_LANGUAGE,
-                        UtilityKeyAction.SWITCH_KEYBOARD_APP -> true
-                        UtilityKeyAction.DYNAMIC_SWITCH_LANGUAGE_EMOJIS -> shouldShowLanguageSwitch()
-                    }
-                }
+                KeyCode.IME_UI_MODE_MEDIA -> false
+                KeyCode.LANGUAGE_SWITCH -> false
                 else -> true
             }
         }

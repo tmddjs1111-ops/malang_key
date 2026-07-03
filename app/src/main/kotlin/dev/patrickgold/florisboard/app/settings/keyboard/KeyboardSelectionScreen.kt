@@ -59,7 +59,7 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                             subtypeManager.removeSubtype(existingSubtype)
                         }
                     } else {
-                        subtypeManager.addSubtype(subtype)
+                        subtypeManager.addSubtypeAndActivate(subtype)
                     }
                     // Force refresh keyboard cache
                     keyboardManager.resources.anyChangedVersion.value += 1

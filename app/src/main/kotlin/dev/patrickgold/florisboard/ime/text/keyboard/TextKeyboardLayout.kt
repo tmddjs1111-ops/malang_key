@@ -248,16 +248,7 @@ fun TextKeyboardLayout(
                         KeyboardMode.GRID_16KEY -> keyboardWidth / ((keyboard as TextKeyboard).maxKeyCountPerRow().toFloat() + 0.25f)
                         else -> keyboardWidth / 10f
                     }
-                    height = when (keyboard.mode) {
-                        KeyboardMode.CHARACTERS,
-                        KeyboardMode.NUMERIC_ADVANCED,
-                        KeyboardMode.SYMBOLS,
-                        KeyboardMode.SYMBOLS2 -> {
-                            (keyboardHeight / keyboard.rowCount)
-                                .coerceAtMost(keyboardRowBaseHeight.toPx() * 1.12f)
-                        }
-                        else -> keyboardRowBaseHeight.toPx()
-                    }
+                    height = keyboardRowBaseHeight.toPx()
                 }
                 desiredKey.visibleBounds.applyFrom(desiredKey.touchBounds).deflateBy(keyMarginH, keyMarginV)
                 keyboard.layout(keyboardWidth, keyboardHeight, desiredKey, true)
@@ -809,10 +800,37 @@ private class TextKeyboardLayoutController(
         val activeKey = pointer.activeKey
         flogDebug(LogTopic.TEXT_KEYBOARD_VIEW)
 
+        val subtypeManager = context.subtypeManager().value
+        val isFlickLayout = keyboard.mode == KeyboardMode.CHARACTERS &&
+                subtypeManager.activeSubtype.layoutMap.characters.componentId == "japanese_flick_12key"
+
         return when (initialKey.computedData.code) {
             KeyCode.DELETE -> handleDeleteSwipe(event)
             KeyCode.SPACE, KeyCode.CJK_SPACE -> handleSpaceSwipe(event)
             else -> when {
+                isFlickLayout && initialKey.computedData.code > KeyCode.SPACE && !popupUiController.isShowingExtendedPopup -> {
+                    val popups = initialKey.computedPopups.relevant
+                    if (popups.isNotEmpty() && event.type == SwipeGesture.Type.TOUCH_UP) {
+                        val index = when (event.direction) {
+                            SwipeGesture.Direction.LEFT -> 0
+                            SwipeGesture.Direction.UP -> 1
+                            SwipeGesture.Direction.RIGHT -> 2
+                            SwipeGesture.Direction.DOWN -> 3
+                            else -> -1
+                        }
+                        if (index in popups.indices) {
+                            val data = popups[index]
+                            inputEventDispatcher.sendDownUp(data)
+                            true
+                        } else {
+                            false
+                        }
+                    } else if (popups.isNotEmpty() && event.type == SwipeGesture.Type.TOUCH_MOVE) {
+                        true
+                    } else {
+                        false
+                    }
+                }
                 (initialKey.computedData.code == KeyCode.SHIFT && activeKey?.computedData?.code == KeyCode.SPACE ||
                     initialKey.computedData.code == KeyCode.SHIFT && activeKey?.computedData?.code == KeyCode.CJK_SPACE) &&
                     event.type == SwipeGesture.Type.TOUCH_MOVE -> handleSpaceSwipe(event)

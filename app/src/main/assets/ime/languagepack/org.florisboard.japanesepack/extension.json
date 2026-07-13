@@ -1,0 +1,28 @@
+{
+  "$": "ime.extension.languagepack",
+  "meta": {
+    "id": "org.florisboard.japanesepack",
+    "version": "0.1.0",
+    "title": "Japanese Dictionary Pack",
+    "description": "Japanese dictionary for Kana-to-Kanji conversion based on JMdict.",
+    "maintainers": [ "florisboard" ],
+    "license": "apache-2.0"
+  },
+  "items": [
+    {
+      "id": "ja-JP",
+      "label": "Japanese (Japan)",
+      "authors": [ "florisboard" ]
+    },
+    {
+      "id": "ja-JP-jis",
+      "label": "Japanese (Japan) [JIS]",
+      "authors": [ "florisboard" ]
+    },
+    {
+      "id": "ja-JP-romaji",
+      "label": "Japanese (Japan) [Romaji QWERTY]",
+      "authors": [ "florisboard" ]
+    }
+  ]
+}

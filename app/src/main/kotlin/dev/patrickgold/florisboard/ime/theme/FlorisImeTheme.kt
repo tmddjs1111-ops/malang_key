@@ -232,28 +232,26 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             }
 
 
-            val enterKeyRule = SnyggRule.fromOrNull("key[code=10]")
-            if (enterKeyRule != null) {
-                val propEditor = editor.rules.getOrPut(enterKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
-                if (isEnterKeyBgCustom) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
-                }
-                if (isEnterKeyTextCustom) {
-                    propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
-                }
-            }
-
-            val spaceKeyRule = SnyggRule.fromOrNull("key[code=32]")
-            if (spaceKeyRule != null) {
-                val propEditor = editor.rules.getOrPut(spaceKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
-                if (isKeyBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
-                }
-                if (isKeyTextCustom) {
-                    propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+            val actionKeyCodes = listOf(10, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -227, -301, 32)
+            for (code in actionKeyCodes) {
+                val actionKeyRule = SnyggRule.fromOrNull("key[code=$code]")
+                if (actionKeyRule != null) {
+                    val propEditor = editor.rules.getOrPut(actionKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                    if (isEnterKeyBgCustom) {
+                        propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
+                    } else if (code == 32) {
+                        if (isKeyBgCustom) {
+                            val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
+                            propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                        } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
+                            propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
+                        }
+                    }
+                    if (isEnterKeyTextCustom) {
+                        propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
+                    } else if (code == 32 && isKeyTextCustom) {
+                        propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                    }
                 }
             }
             

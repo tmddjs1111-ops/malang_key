@@ -253,12 +253,12 @@ fun ThemeScreen() = FlorisScreen {
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 ColorSwatchCard(
-                                    title = "확인 키캡",
+                                    title = "특수 키캡",
                                     pref = florisPrefs.malang.customEnterKeyBgColor,
                                     modifier = Modifier.weight(1f)
                                 )
                                 ColorSwatchCard(
-                                    title = "확인 글자",
+                                    title = "특수 글자",
                                     pref = florisPrefs.malang.customEnterKeyTextColor,
                                     modifier = Modifier.weight(1f)
                                 )

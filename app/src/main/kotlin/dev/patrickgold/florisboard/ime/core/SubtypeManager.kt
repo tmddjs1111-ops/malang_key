@@ -117,7 +117,9 @@ class SubtypeManager(context: Context) {
         }
         val newSubtypeList = subtypeList + subtypeToAdd
         persistNewSubtypeList(newSubtypeList)
-        prefs.localization.activeSubtypeId.set(subtypeToAdd.id)
+        scope.launch {
+            prefs.localization.activeSubtypeId.set(subtypeToAdd.id)
+        }
         activeSubtype = subtypeToAdd
         return true
     }

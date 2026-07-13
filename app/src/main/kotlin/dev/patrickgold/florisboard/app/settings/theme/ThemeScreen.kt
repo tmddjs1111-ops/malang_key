@@ -265,6 +265,24 @@ fun ThemeScreen() = FlorisScreen {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
                         }
+
+                        item(span = { GridItemSpan(2) }) {
+                            androidx.compose.material3.Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        florisPrefs.malang.customKeyboardBgColor.set(Color(0xFFFCF5D6))
+                                        florisPrefs.malang.customKeyBgColor.set(Color(0xFFFCF5D6))
+                                        florisPrefs.malang.customKeyTextColor.set(Color(0xFF311D18))
+                                        florisPrefs.malang.customEnterKeyBgColor.set(Color(0xFF311D18))
+                                        florisPrefs.malang.customEnterKeyTextColor.set(Color(0xFFFCF5D6))
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = ColorDarkChocolate)
+                            ) {
+                                Text("기본 커스텀 설정으로 되돌리기", color = Color.White, fontFamily = MalangJuaFont, fontSize = 16.sp)
+                            }
+                        }
                     }
                 }
             }

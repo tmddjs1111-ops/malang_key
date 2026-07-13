@@ -1,13 +1,13 @@
 {
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
-    "--bg": "#FDF8ED",
-    "--key-bg": "#212121",
-    "--key-fg": "#FFFFFF",
-    "--key-bg-pressed": "#424242",
-    "--action-bg": "#333333",
-    "--action-fg": "#FFFFFF",
-    "--action-bg-pressed": "#505050",
+    "--bg": "#fcf5d6",
+    "--key-bg": "#fcf5d6",
+    "--key-fg": "#311d18",
+    "--key-bg-pressed": "#e8e1c3",
+    "--action-bg": "#311d18",
+    "--action-fg": "#fcf5d6",
+    "--action-bg-pressed": "#4a2d25",
     "--shape": "rounded-corner(12dp, 12dp, 12dp, 12dp)"
   },
   "window": { "background": "var(--bg)" },
@@ -26,5 +26,10 @@
   "key[code=-1]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "key[code=-5]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "smartbar": { "background": "var(--bg)" },
-  "smartbar-item": { "foreground": "#5D4037" }
+  "smartbar-item": { "foreground": "#5D4037" },
+  "clipboard-item-popup": { "background": "var(--bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "4dp" },
+  "clipboard-item-actions": { "background": "var(--bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "4dp" },
+  "clipboard-item-action": { "foreground": "var(--key-fg)" },
+  "clipboard-item-action-icon": { "foreground": "var(--key-fg)" },
+  "clipboard-item-action-text": { "foreground": "var(--key-fg)" }
 }

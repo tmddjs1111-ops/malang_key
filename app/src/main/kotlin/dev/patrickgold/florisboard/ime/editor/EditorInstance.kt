@@ -438,8 +438,6 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         val text = activeContent.selectedText.ifBlank { currentInputConnection()?.getSelectedText(0) }
         if (text != null) {
             clipboardManager.addNewPlaintext(text.toString())
-        } else {
-            appContext.showShortToastSync("Failed to retrieve selected text requested to cut: Eiter selection state is invalid or an error occurred within the input connection.")
         }
         return deleteBackwards(OperationUnit.CHARACTERS)
     }
@@ -456,8 +454,6 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         val text = activeContent.selectedText.ifBlank { currentInputConnection()?.getSelectedText(0) }
         if (text != null) {
             clipboardManager.addNewPlaintext(text.toString())
-        } else {
-            appContext.showShortToastSync("Failed to retrieve selected text requested to copy: Eiter selection state is invalid or an error occurred within the input connection.")
         }
         val activeSelection = activeContent.selection
         return setSelection(activeSelection.end, activeSelection.end)
@@ -472,10 +468,11 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     fun performClipboardPaste(): Boolean {
         autoSpace.setInactive()
         phantomSpace.setInactive()
-        return commitClipboardItem(clipboardManager.primaryClip).also { result ->
-            if (!result) {
-                appContext.showShortToastSync("Failed to paste item.")
-            }
+        val ic = currentInputConnection() ?: return false
+        return if (activeInfo.isRawInputEditor) {
+            sendDownUpKeyEvent(KeyEvent.KEYCODE_V, meta(ctrl = true))
+        } else {
+            ic.performContextMenuAction(android.R.id.paste)
         }
     }
 

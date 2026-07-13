@@ -704,8 +704,8 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val malangSlots = custom(
             key = "smartbar__malang_slots",
             default = listOf(
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
+                QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
                 QuickAction.InsertKey(TextKeyData.ARROW_RIGHT),
@@ -725,27 +725,27 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Malang {
         val customKeyboardBgColor = custom(
             key = "malang__custom_keyboard_bg_color",
-            default = Color.Unspecified,
+            default = Color(0xFFFCF5D6),
             serializer = ColorPreferenceSerializer,
         )
         val customKeyBgColor = custom(
             key = "malang__custom_key_bg_color",
-            default = Color.Unspecified,
+            default = Color(0xFFFCF5D6),
             serializer = ColorPreferenceSerializer,
         )
         val customKeyTextColor = custom(
             key = "malang__custom_key_text_color",
-            default = Color.Unspecified,
+            default = Color(0xFF311D18),
             serializer = ColorPreferenceSerializer,
         )
         val customEnterKeyBgColor = custom(
             key = "malang__custom_enter_key_bg_color",
-            default = Color.Unspecified,
+            default = Color(0xFF311D18),
             serializer = ColorPreferenceSerializer,
         )
         val customEnterKeyTextColor = custom(
             key = "malang__custom_enter_key_text_color",
-            default = Color.Unspecified,
+            default = Color(0xFFFCF5D6),
             serializer = ColorPreferenceSerializer,
         )
         val keyCornerRadius = int(
@@ -839,12 +839,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "white"),
+            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "black"),
+            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

@@ -232,7 +232,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             }
 
 
-            val actionKeyCodes = listOf(10, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -227, -301, 32)
+            val actionKeyCodes = listOf(10, -1, -2, -3, -4, -5, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -212, -213, -227, -232, -301, 32, 44, 46)
             for (code in actionKeyCodes) {
                 val actionKeyRule = SnyggRule.fromOrNull("key[code=$code]")
                 if (actionKeyRule != null) {

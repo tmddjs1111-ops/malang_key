@@ -81,6 +81,7 @@ object HangulUnicode : Composer {
 
     private var lastInputKey: String = ""
     private var lastInputTime: Long = 0L
+    private var escapedBySpace: Boolean = false
 
     private fun disassemble(c: Char): List<Int> {
         val base = c.code - 0xAC00
@@ -183,6 +184,11 @@ object HangulUnicode : Composer {
             mappedInputStr = qwertyEnglishToKoreanMap[inputStr] ?: inputStr
         }
 
+        val isSameCycle = lastInputKey == mappedInputStr
+        if (!isSameCycle && lastInputKey != "SPACE") {
+            escapedBySpace = false
+        }
+
         when {
             lId.startsWith("korean_sky") -> handleSky(mappedInputStr, state, now)
             lId.startsWith("korean_cheonjiin") -> handleCheonjiin(mappedInputStr, state, now)
@@ -250,6 +256,7 @@ object HangulUnicode : Composer {
                 val isHangulKey = lastInputKey in CHOSEONG || lastInputKey in JUNGSEONG || lastInputKey == "·" || lastInputKey == "ㆍ"
                 if (isHangulKey) {
                     lastInputKey = "SPACE"
+                    escapedBySpace = true
                     return true
                 }
             }
@@ -328,6 +335,7 @@ object HangulUnicode : Composer {
     }
 
     private fun tryMergeBack(state: EngineState, nextChoStr: String): Boolean {
+        if (escapedBySpace) return false
         if (state.outNodes.isNotEmpty()) {
             val lastCommitted = state.outNodes.last()
             if (lastCommitted.length == 1) {

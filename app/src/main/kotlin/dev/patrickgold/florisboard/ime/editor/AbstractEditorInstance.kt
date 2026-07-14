@@ -377,6 +377,7 @@ abstract class AbstractEditorInstance(context: Context) {
             ic.setComposingText(finalText, 1)
             // Now set the proper composing region we expect
             ic.setComposingRegion(newContent.composing)
+            activeContent = newContent
             ic.endBatchEdit()
         }
         return true
@@ -405,6 +406,7 @@ abstract class AbstractEditorInstance(context: Context) {
             expectedContentQueue.push(newContent)
             ic.commitText(text, 1)
             ic.setComposingRegion(newContent.composing)
+            activeContent = newContent
         }
         ic.endBatchEdit()
         return true
@@ -431,6 +433,7 @@ abstract class AbstractEditorInstance(context: Context) {
             ic.setComposingText(text, 1)
             ic.finishComposingText()
             _lastCommitPosition.handleCommit(newContent.selection)
+            activeContent = newContent
         }
         ic.endBatchEdit()
         return true

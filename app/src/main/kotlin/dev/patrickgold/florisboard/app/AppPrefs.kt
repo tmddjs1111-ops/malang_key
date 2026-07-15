@@ -754,6 +754,22 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__keyboard_font_family",
             default = "system",
         )
+        val keyFontSizeMultiplier = int(
+            key = "malang__key_font_size_multiplier",
+            default = 100,
+        )
+        val keyHintFontSizeMultiplier = int(
+            key = "malang__key_hint_font_size_multiplier",
+            default = 100,
+        )
+        val keyBorderThickness = int(
+            key = "malang__key_border_thickness",
+            default = 0,
+        )
+        val keyBorderOpacity = int(
+            key = "malang__key_border_opacity",
+            default = 20,
+        )
         val isGlassmorphismEnabled = boolean(
             key = "malang__is_glassmorphism_enabled",
             default = false,

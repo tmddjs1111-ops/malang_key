@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.compositionLocalOf
 import org.florisboard.lib.snygg.value.SnyggCustomFontFamilyValue
 import org.florisboard.lib.snygg.value.SnyggGenericFontFamilyValue
+import org.florisboard.lib.snygg.value.SnyggSpSizeValue
+import androidx.compose.ui.unit.sp
 
 data class MalangConfig(
     val isGlassmorphismEnabled: Boolean = false,
@@ -84,6 +86,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val glassmorphismTransparency by prefs.malang.glassmorphismTransparency.collectAsState()
     val isNeumorphismEnabled by prefs.malang.isNeumorphismEnabled.collectAsState()
     val squircleShapeEnabled by prefs.malang.squircleShapeEnabled.collectAsState()
+
+    val keyFontSizeMultiplier by prefs.malang.keyFontSizeMultiplier.collectAsState()
+    val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
+    val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
+    val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
     val malangSoundEnabled by prefs.malang.malangSoundEnabled.collectAsState()
 
     val malangConfig = remember(isGlassmorphismEnabled, glassmorphismTransparency, isNeumorphismEnabled, squircleShapeEnabled, malangSoundEnabled) {
@@ -115,6 +122,10 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         glassmorphismTransparency,
         isNeumorphismEnabled,
         squircleShapeEnabled,
+        keyFontSizeMultiplier,
+        keyHintFontSizeMultiplier,
+        keyBorderThickness,
+        keyBorderOpacity,
         dayThemeId,
         themeMode
     ) {
@@ -129,8 +140,9 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val isRealEnterKeyBgCustom = isCustomThemeSelected && customRealEnterKeyBgColor != Color.Unspecified
         val isRealEnterKeyTextCustom = isCustomThemeSelected && customRealEnterKeyTextColor != Color.Unspecified
         val isFontCustom = keyboardFontFamily != "system"
+        val isKeyLayoutCustom = keyFontSizeMultiplier != 100 || keyHintFontSizeMultiplier != 100 || keyBorderThickness > 0
         
-        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
+        if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
             val editor = baseStylesheet.edit()
             
             val rootRule = SnyggRule.fromOrNull("root")
@@ -201,6 +213,14 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     val radius = keyCornerRadius.toFloat().dp
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
                 }
+                if (keyFontSizeMultiplier != 100) {
+                    val baseSize = 20f
+                    propEditor.properties["font-size"] = SnyggSpSizeValue((baseSize * keyFontSizeMultiplier / 100f).sp)
+                }
+                if (keyBorderThickness > 0) {
+                    propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
+                    propEditor.properties["border-color"] = org.florisboard.lib.snygg.value.SnyggStaticColorValue(Color.White.copy(alpha = keyBorderOpacity / 100f))
+                }
                 if (isFontCustom) {
                     val rulesWithText = listOf("keyboard", "key", "key-hint", "key-popup-element", "smartbar-action-tile", "smartbar-action-tile-text")
                     for (element in rulesWithText) {
@@ -217,6 +237,13 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                         }
                     }
                 }
+            }
+            
+            val keyHintRule = SnyggRule.fromOrNull("key-hint")
+            if (keyHintRule != null && keyHintFontSizeMultiplier != 100) {
+                val propEditor = editor.rules.getOrPut(keyHintRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                val baseHintSize = 12f
+                propEditor.properties["font-size"] = SnyggSpSizeValue((baseHintSize * keyHintFontSizeMultiplier / 100f).sp)
             }
             
             if (isKeyTextCustom) {

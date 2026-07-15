@@ -76,6 +76,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val customKeyTextColor by prefs.malang.customKeyTextColor.collectAsState()
     val customEnterKeyBgColor by prefs.malang.customEnterKeyBgColor.collectAsState()
     val customEnterKeyTextColor by prefs.malang.customEnterKeyTextColor.collectAsState()
+    val customRealEnterKeyBgColor by prefs.malang.customRealEnterKeyBgColor.collectAsState()
+    val customRealEnterKeyTextColor by prefs.malang.customRealEnterKeyTextColor.collectAsState()
     val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
     
     val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
@@ -105,6 +107,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         customKeyTextColor,
         customEnterKeyBgColor,
         customEnterKeyTextColor,
+        customRealEnterKeyBgColor,
+        customRealEnterKeyTextColor,
         keyCornerRadius,
         keyboardFontFamily,
         isGlassmorphismEnabled,
@@ -122,9 +126,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val isKeyTextCustom = isCustomThemeSelected && customKeyTextColor != Color.Unspecified
         val isEnterKeyBgCustom = isCustomThemeSelected && customEnterKeyBgColor != Color.Unspecified
         val isEnterKeyTextCustom = isCustomThemeSelected && customEnterKeyTextColor != Color.Unspecified
+        val isRealEnterKeyBgCustom = isCustomThemeSelected && customRealEnterKeyBgColor != Color.Unspecified
+        val isRealEnterKeyTextCustom = isCustomThemeSelected && customRealEnterKeyTextColor != Color.Unspecified
         val isFontCustom = keyboardFontFamily != "system"
         
-        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
+        if (isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
             val editor = baseStylesheet.edit()
             
             val rootRule = SnyggRule.fromOrNull("root")
@@ -196,12 +202,19 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
                 }
                 if (isFontCustom) {
-                    val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(keyboardFontFamily)
-                    val composeFontFamily = typo.bodyLarge.fontFamily
-                    if (composeFontFamily != null) {
-                        propEditor.properties["fontFamily"] = SnyggGenericFontFamilyValue(composeFontFamily)
-                    } else {
-                        propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(keyboardFontFamily)
+                    val rulesWithText = listOf("keyboard", "key", "key-hint", "key-popup-element", "smartbar-action-tile", "smartbar-action-tile-text")
+                    for (element in rulesWithText) {
+                        val elementRule = SnyggRule.fromOrNull(element)
+                        if (elementRule != null) {
+                            val propEditor = editor.rules.getOrPut(elementRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                            val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(keyboardFontFamily)
+                            val composeFontFamily = typo.bodyLarge.fontFamily
+                            if (composeFontFamily != null) {
+                                propEditor.properties["fontFamily"] = SnyggGenericFontFamilyValue(composeFontFamily)
+                            } else {
+                                propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(keyboardFontFamily)
+                            }
+                        }
                     }
                 }
             }
@@ -237,7 +250,9 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 val actionKeyRule = SnyggRule.fromOrNull("key[code=$code]")
                 if (actionKeyRule != null) {
                     val propEditor = editor.rules.getOrPut(actionKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
-                    if (isEnterKeyBgCustom) {
+                    if (code == 10 && isRealEnterKeyBgCustom) {
+                        propEditor.properties["background"] = SnyggStaticColorValue(customRealEnterKeyBgColor)
+                    } else if (isEnterKeyBgCustom) {
                         propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
                     } else if (code == 32) {
                         if (isKeyBgCustom) {
@@ -247,7 +262,9 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                             propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
                         }
                     }
-                    if (isEnterKeyTextCustom) {
+                    if (code == 10 && isRealEnterKeyTextCustom) {
+                        propEditor.properties["foreground"] = SnyggStaticColorValue(customRealEnterKeyTextColor)
+                    } else if (isEnterKeyTextCustom) {
                         propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
                     } else if (code == 32 && isKeyTextCustom) {
                         propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)

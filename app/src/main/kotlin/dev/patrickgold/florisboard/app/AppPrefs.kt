@@ -736,6 +736,16 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color(0xFFFCF5D6),
             serializer = ColorPreferenceSerializer,
         )
+        val customRealEnterKeyBgColor = custom(
+            key = "malang__custom_real_enter_key_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        val customRealEnterKeyTextColor = custom(
+            key = "malang__custom_real_enter_key_text_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
         val keyCornerRadius = int(
             key = "malang__key_corner_radius",
             default = 6,

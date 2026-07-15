@@ -424,12 +424,9 @@ private fun ThemeTabContent(
                         prefs.malang.customKeyTextColor.set(Color.Unspecified)
                         prefs.malang.customEnterKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customEnterKeyTextColor.set(Color.Unspecified)
+                        prefs.malang.customRealEnterKeyBgColor.set(Color.Unspecified)
+                        prefs.malang.customRealEnterKeyTextColor.set(Color.Unspecified)
                         prefs.malang.keyCornerRadius.set(6)
-                        prefs.malang.isGlassmorphismEnabled.set(false)
-                        prefs.malang.glassmorphismTransparency.set(0.3f)
-                        prefs.malang.isNeumorphismEnabled.set(false)
-                        prefs.malang.squircleShapeEnabled.set(false)
-                        prefs.malang.malangSoundEnabled.set(false)
                     }
                 },
                 border = BorderStroke(1.dp, MalangPrimary),
@@ -445,66 +442,9 @@ private fun ThemeTabContent(
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    // Section 4: Aesthetic Toggles Grid
-    Text(
-        "✨ 감성 스타일링 설정",
-        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
-        color = MalangText.copy(alpha = 0.8f),
-        fontFamily = MalangJuaFont,
-        fontSize = 18.sp
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            ToggleCard(
-                title = "입체감 (뉴모피즘)",
-                description = "키캡에 부드러운 음영 효과",
-                emoji = "⛰️",
-                pref = prefs.malang.isNeumorphismEnabled,
-                modifier = Modifier.weight(1f)
-            )
-            ToggleCard(
-                title = "투명 감성 (글래스)",
-                description = "유리 느낌의 반투명 효과",
-                emoji = "❄️",
-                pref = prefs.malang.isGlassmorphismEnabled,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            ToggleCard(
-                title = "스쿼클 키캡 모양",
-                description = "둥근 애플 스타일 곡선",
-                emoji = "⏹️",
-                pref = prefs.malang.squircleShapeEnabled,
-                modifier = Modifier.weight(1f)
-            )
-            ToggleCard(
-                title = "말랑 효과음 사용",
-                description = "키를 누를 때 귀여운 소리",
-                emoji = "🔊",
-                pref = prefs.malang.malangSoundEnabled,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-
     // Section 5: Typography & Advanced Features
     Text(
-        "📝 서체 및 테마 가져오기",
+        "📝 키보드 폰트 설정",
         modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
         color = MalangText.copy(alpha = 0.8f),
         fontFamily = MalangJuaFont,

@@ -262,7 +262,24 @@ fun ThemeScreen() = FlorisScreen {
                                     pref = florisPrefs.malang.customEnterKeyTextColor,
                                     modifier = Modifier.weight(1f)
                                 )
-                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+
+                        item(span = { GridItemSpan(2) }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ColorSwatchCard(
+                                    title = "엔터 키 색상",
+                                    pref = florisPrefs.malang.customRealEnterKeyBgColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ColorSwatchCard(
+                                    title = "엔터 글자 색상",
+                                    pref = florisPrefs.malang.customRealEnterKeyTextColor,
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
 
@@ -275,6 +292,8 @@ fun ThemeScreen() = FlorisScreen {
                                         florisPrefs.malang.customKeyTextColor.set(Color(0xFF311D18))
                                         florisPrefs.malang.customEnterKeyBgColor.set(Color(0xFF311D18))
                                         florisPrefs.malang.customEnterKeyTextColor.set(Color(0xFFFCF5D6))
+                                        florisPrefs.malang.customRealEnterKeyBgColor.set(Color(0xFF5D4037))
+                                        florisPrefs.malang.customRealEnterKeyTextColor.set(Color(0xFFFFFFFF))
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),

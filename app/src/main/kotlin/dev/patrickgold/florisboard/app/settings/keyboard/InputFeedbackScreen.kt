@@ -20,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.enumDisplayEntriesOf
-import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
+
 import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
@@ -97,70 +97,10 @@ fun InputFeedbackScreen() = FlorisScreen {
                 title = stringRes(R.string.pref__input_feedback__haptic_enabled__label),
             )
             ListPreference(
-                prefs.inputFeedback.hapticVibrationMode,
-                title = stringRes(R.string.pref__input_feedback__haptic_vibration_mode__label),
-                enabledIf = { prefs.inputFeedback.hapticEnabled isEqualTo true },
-                entries = enumDisplayEntriesOf(HapticVibrationMode::class),
-            )
-            DialogSliderPreference(
-                prefs.inputFeedback.hapticVibrationDuration,
-                title = stringRes(R.string.pref__input_feedback__haptic_vibration_duration__label),
-                valueLabel = { stringRes(R.string.unit__milliseconds__symbol, "v" to it) },
-                summary = {
-                    if (vibrator == null || !vibrator.hasVibrator()) {
-                        stringRes(R.string.pref__input_feedback__haptic_vibration_strength__summary_no_vibrator)
-                    } else {
-                        stringRes(R.string.unit__milliseconds__symbol, "v" to it)
-                    }
-                },
-                min = 1,
-                max = 100,
-                stepIncrement = 1,
-                onPreviewSelectedValue = { duration ->
-                    val strength = prefs.inputFeedback.hapticVibrationStrength.get()
-                    vibrator?.vibrate(duration, strength)
-                },
-                enabledIf = {
-                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
-                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_VIBRATOR_DIRECTLY &&
-                        vibrator != null && vibrator.hasVibrator()
-                },
-            )
-            DialogSliderPreference(
-                prefs.inputFeedback.hapticVibrationStrength,
-                title = stringRes(R.string.pref__input_feedback__haptic_vibration_strength__label),
-                valueLabel = { stringRes(R.string.unit__percent__symbol, "v" to it) },
-                summary = { strength ->
-                    if (vibrator == null || !vibrator.hasVibrator()) {
-                        stringRes(R.string.pref__input_feedback__haptic_vibration_strength__summary_no_vibrator)
-                    } else if (!vibrator.hasAmplitudeControl()) {
-                        stringRes(R.string.pref__input_feedback__haptic_vibration_strength__summary_no_amplitude_ctrl)
-                    } else {
-                        stringRes(R.string.unit__percent__symbol, "v" to strength)
-                    }
-                },
-                min = 1,
-                max = 100,
-                stepIncrement = 1,
-                onPreviewSelectedValue = { strength ->
-                    val duration = prefs.inputFeedback.hapticVibrationDuration.get()
-                    vibrator?.vibrate(duration, strength)
-                },
-                enabledIf = {
-                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
-                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_VIBRATOR_DIRECTLY &&
-                        vibrator != null && vibrator.hasVibrator() &&
-                        vibrator.hasAmplitudeControl()
-                },
-            )
-            ListPreference(
                 prefs.inputFeedback.hapticVibrationPrimitive,
                 title = stringRes(R.string.pref__input_feedback__haptic_vibration_primitive__label),
                 entries = enumDisplayEntriesOf(HapticVibrationPrimitive::class),
-                enabledIf = {
-                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
-                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE
-                },
+                enabledIf = { prefs.inputFeedback.hapticEnabled isEqualTo true },
             )
             DialogSliderPreference(
                 prefs.inputFeedback.hapticVibrationIntensity,
@@ -173,10 +113,7 @@ fun InputFeedbackScreen() = FlorisScreen {
                     val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
                     vibrator?.vibrateClick(primitive.androidId, intensity / 100f)
                 },
-                enabledIf = {
-                    prefs.inputFeedback.hapticEnabled isEqualTo true &&
-                        prefs.inputFeedback.hapticVibrationMode isEqualTo HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE
-                },
+                enabledIf = { prefs.inputFeedback.hapticEnabled isEqualTo true },
             )
             SwitchPreference(
                 prefs.inputFeedback.hapticFeatKeyPress,

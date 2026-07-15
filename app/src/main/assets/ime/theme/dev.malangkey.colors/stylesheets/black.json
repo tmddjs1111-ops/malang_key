@@ -25,6 +25,8 @@
   "key[code=10]:pressed": { "background": "var(--action-bg-pressed)" },
   "key[code=-1]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
   "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
+  "key-popup-box": { "background": "var(--key-bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "2dp" },
+  "key-popup-element:focus": { "background": "var(--key-bg-pressed)" },
   "smartbar": { "background": "var(--bg)" },
   "smartbar-item": { "foreground": "var(--key-fg)" },
   "clipboard-item-popup": { "background": "var(--bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "4dp" },

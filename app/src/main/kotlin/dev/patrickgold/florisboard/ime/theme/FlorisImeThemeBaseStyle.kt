@@ -103,21 +103,21 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
     }
     FlorisImeUi.KeyHint.elementName {
         background = rgbaColor(0, 0, 0, 0f)
-        foreground = `var`("--on-surface-variant")
+        foreground = `var`("--key-fg")
         fontFamily = genericFontFamily(FontFamily.Monospace)
         fontSize = fontSize(12.sp)
         padding = padding(0.dp, 1.dp, 1.dp, 0.dp)
         textMaxLines = textMaxLines(1)
     }
     FlorisImeUi.KeyPopupBox.elementName {
-        background = rgbaColor(117, 117, 117)
+        background = `var`("--surface")
         foreground = `var`("--on-surface")
         fontSize = fontSize(22.sp)
         shape = `var`("--shape")
         shadowElevation = size(2.dp)
     }
     FlorisImeUi.KeyPopupElement.elementName(selector = SnyggSelector.FOCUS) {
-        background = rgbaColor(189, 189, 189)
+        background = `var`("--surface-variant")
         shape = `var`("--shape")
     }
     FlorisImeUi.KeyPopupExtendedIndicator.elementName {

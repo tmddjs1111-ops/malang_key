@@ -28,7 +28,7 @@ import dev.patrickgold.florisboard.ime.clipboard.ClipboardSyncBehavior
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
 import dev.patrickgold.florisboard.ime.core.Subtype
 import dev.patrickgold.florisboard.ime.input.CapitalizationBehavior
-import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
+
 import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.ime.keyboard.IncognitoMode
@@ -431,25 +431,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        val hapticVibrationMode = enum(
-            key = "input_feedback__haptic_vibration_mode",
-            default = HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE,
-        )
-        val hapticVibrationDuration = int(
-            key = "input_feedback__haptic_vibration_duration",
-            default = 50,
-        )
-        val hapticVibrationStrength = int(
-            key = "input_feedback__haptic_vibration_strength",
-            default = 50,
-        )
         val hapticVibrationPrimitive = enum(
             key = "input_feedback__haptic_vibration_primitive",
-            default = HapticVibrationPrimitive.TICK,
+            default = HapticVibrationPrimitive.QUICK_CLICK,
         )
         val hapticVibrationIntensity = int(
             key = "input_feedback__haptic_vibration_intensity",
-            default = 100,
+            default = 70,
         )
         val hapticFeatKeyPress = boolean(
             key = "input_feedback__haptic_feat_key_press",

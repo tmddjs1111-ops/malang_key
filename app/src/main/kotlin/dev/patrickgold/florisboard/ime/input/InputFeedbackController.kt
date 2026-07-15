@@ -136,20 +136,11 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
             try {
                 if (isMalang) {
                     vibrator.vibrateClick(HapticFeedbackConstants.CLOCK_TICK, 0.3f * factor.toFloat())
-                } else if (prefs.inputFeedback.hapticVibrationMode.get() == HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE) {
+                } else {
                     val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
                     val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
                     flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
                     vibrator.vibrateClick(primitive.androidId, intensity)
-                } else {
-                    val duration = prefs.inputFeedback.hapticVibrationDuration.get()
-                    val strength = prefs.inputFeedback.hapticVibrationStrength.get()
-                    flogDebug { "Using direct vibrator: duration=$duration, strength=$strength" }
-                    vibrator.vibrate(
-                        duration = duration,
-                        strength = strength,
-                        factor = factor,
-                    )
                 }
             } catch (e: Exception) {
                 flogDebug { "Haptic execution failed: ${e.message}" }

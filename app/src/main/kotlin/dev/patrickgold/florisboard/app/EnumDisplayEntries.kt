@@ -23,7 +23,6 @@ import dev.patrickgold.florisboard.app.settings.theme.SnyggLevel
 import dev.patrickgold.florisboard.ime.clipboard.ClipboardSyncBehavior
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
 import dev.patrickgold.florisboard.ime.input.CapitalizationBehavior
-import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
 import dev.patrickgold.florisboard.ime.input.HapticVibrationPrimitive
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.florisboard.ime.input.InputShiftState
@@ -292,22 +291,6 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
                 key = ExtendedActionsPlacement.OVERLAY_APP_UI,
                 label = stringRes(R.string.enum__extended_actions_placement__overlay_app_ui),
                 description = stringRes(R.string.enum__extended_actions_placement__overlay_app_ui__description),
-                showDescriptionOnlyIfSelected = true,
-            )
-        }
-    },
-    HapticVibrationMode::class to DEFAULT to {
-        listPrefEntries {
-            entry(
-                key = HapticVibrationMode.USE_VIBRATOR_DIRECTLY,
-                label = stringRes(R.string.enum__haptic_vibration_mode__use_vibrator_directly),
-                description = stringRes(R.string.enum__haptic_vibration_mode__use_vibrator_directly__description),
-                showDescriptionOnlyIfSelected = true,
-            )
-            entry(
-                key = HapticVibrationMode.USE_HAPTIC_FEEDBACK_INTERFACE,
-                label = stringRes(R.string.enum__haptic_vibration_mode__use_haptic_feedback_interface),
-                description = stringRes(R.string.enum__haptic_vibration_mode__use_haptic_feedback_interface__description),
                 showDescriptionOnlyIfSelected = true,
             )
         }

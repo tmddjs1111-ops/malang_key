@@ -363,6 +363,10 @@ private fun ThemeTabContent(
         val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
         val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
         val glassmorphismTransparency by prefs.malang.glassmorphismTransparency.collectAsState()
+        val keyFontSizeMultiplier by prefs.malang.keyFontSizeMultiplier.collectAsState()
+        val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
+        val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
+        val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
 
         // Key Corner Radius Slider
         Row(
@@ -377,6 +381,87 @@ private fun ThemeTabContent(
             value = keyCornerRadius.toFloat(),
             onValueChange = { scope.launch { prefs.malang.keyCornerRadius.set(it.toInt()) } },
             valueRange = 0f..32f,
+            colors = SliderDefaults.colors(
+                thumbColor = MalangPrimary,
+                activeTrackColor = MalangSecondary,
+                inactiveTrackColor = MalangTertiary
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("메인 폰트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("${keyFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
+        }
+        Slider(
+            value = keyFontSizeMultiplier.toFloat(),
+            onValueChange = { scope.launch { prefs.malang.keyFontSizeMultiplier.set(it.toInt()) } },
+            valueRange = 50f..150f,
+            colors = SliderDefaults.colors(
+                thumbColor = MalangPrimary,
+                activeTrackColor = MalangSecondary,
+                inactiveTrackColor = MalangTertiary
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("힌트 폰트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("${keyHintFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
+        }
+        Slider(
+            value = keyHintFontSizeMultiplier.toFloat(),
+            onValueChange = { scope.launch { prefs.malang.keyHintFontSizeMultiplier.set(it.toInt()) } },
+            valueRange = 50f..150f,
+            colors = SliderDefaults.colors(
+                thumbColor = MalangPrimary,
+                activeTrackColor = MalangSecondary,
+                inactiveTrackColor = MalangTertiary
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("외곽선 두께", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("${keyBorderThickness}dp", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
+        }
+        Slider(
+            value = keyBorderThickness.toFloat(),
+            onValueChange = { scope.launch { prefs.malang.keyBorderThickness.set(it.toInt()) } },
+            valueRange = 0f..5f,
+            steps = 4,
+            colors = SliderDefaults.colors(
+                thumbColor = MalangPrimary,
+                activeTrackColor = MalangSecondary,
+                inactiveTrackColor = MalangTertiary
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("외곽선 불투명도", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("${keyBorderOpacity}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
+        }
+        Slider(
+            value = keyBorderOpacity.toFloat(),
+            onValueChange = { scope.launch { prefs.malang.keyBorderOpacity.set(it.toInt()) } },
+            valueRange = 0f..100f,
             colors = SliderDefaults.colors(
                 thumbColor = MalangPrimary,
                 activeTrackColor = MalangSecondary,
@@ -427,6 +512,10 @@ private fun ThemeTabContent(
                         prefs.malang.customRealEnterKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customRealEnterKeyTextColor.set(Color.Unspecified)
                         prefs.malang.keyCornerRadius.set(6)
+                        prefs.malang.keyFontSizeMultiplier.set(100)
+                        prefs.malang.keyHintFontSizeMultiplier.set(100)
+                        prefs.malang.keyBorderThickness.set(0)
+                        prefs.malang.keyBorderOpacity.set(20)
                     }
                 },
                 border = BorderStroke(1.dp, MalangPrimary),

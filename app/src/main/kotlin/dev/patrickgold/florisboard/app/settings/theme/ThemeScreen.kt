@@ -284,43 +284,6 @@ fun ThemeScreen() = FlorisScreen {
                         }
 
                         item(span = { GridItemSpan(2) }) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    pref = florisPrefs.malang.keyFontSizeMultiplier,
-                                    title = "메인 폰트 크기 (%)",
-                                    valueLabel = { "${it}%" },
-                                    min = 50,
-                                    max = 150,
-                                    stepIncrement = 5,
-                                )
-                                dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    pref = florisPrefs.malang.keyHintFontSizeMultiplier,
-                                    title = "힌트 폰트 크기 (%)",
-                                    valueLabel = { "${it}%" },
-                                    min = 50,
-                                    max = 150,
-                                    stepIncrement = 5,
-                                )
-                                dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    pref = florisPrefs.malang.keyBorderThickness,
-                                    title = "키보드 외곽선 두께 (dp)",
-                                    valueLabel = { "${it}dp" },
-                                    min = 0,
-                                    max = 5,
-                                    stepIncrement = 1,
-                                )
-                                dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    pref = florisPrefs.malang.keyBorderOpacity,
-                                    title = "키보드 외곽선 불투명도 (%)",
-                                    valueLabel = { "${it}%" },
-                                    min = 0,
-                                    max = 100,
-                                    stepIncrement = 5,
-                                )
-                            }
-                        }
-
-                        item(span = { GridItemSpan(2) }) {
                             androidx.compose.material3.Button(
                                 onClick = {
                                     coroutineScope.launch {
@@ -331,10 +294,6 @@ fun ThemeScreen() = FlorisScreen {
                                         florisPrefs.malang.customEnterKeyTextColor.set(Color(0xFFFCF5D6))
                                         florisPrefs.malang.customRealEnterKeyBgColor.set(Color(0xFF5D4037))
                                         florisPrefs.malang.customRealEnterKeyTextColor.set(Color(0xFFFFFFFF))
-                                        florisPrefs.malang.keyFontSizeMultiplier.set(100)
-                                        florisPrefs.malang.keyHintFontSizeMultiplier.set(100)
-                                        florisPrefs.malang.keyBorderThickness.set(0)
-                                        florisPrefs.malang.keyBorderOpacity.set(20)
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),

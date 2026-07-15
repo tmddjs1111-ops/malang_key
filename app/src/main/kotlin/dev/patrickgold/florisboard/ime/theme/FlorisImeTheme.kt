@@ -210,9 +210,9 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                             val typo = dev.patrickgold.florisboard.app.apptheme.getTypographyFor(keyboardFontFamily)
                             val composeFontFamily = typo.bodyLarge.fontFamily
                             if (composeFontFamily != null) {
-                                propEditor.properties["fontFamily"] = SnyggGenericFontFamilyValue(composeFontFamily)
+                                propEditor.properties["font-family"] = SnyggGenericFontFamilyValue(composeFontFamily)
                             } else {
-                                propEditor.properties["fontFamily"] = SnyggCustomFontFamilyValue(keyboardFontFamily)
+                                propEditor.properties["font-family"] = SnyggCustomFontFamilyValue(keyboardFontFamily)
                             }
                         }
                     }

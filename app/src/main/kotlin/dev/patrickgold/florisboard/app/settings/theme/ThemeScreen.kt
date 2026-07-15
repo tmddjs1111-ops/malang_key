@@ -286,7 +286,7 @@ fun ThemeScreen() = FlorisScreen {
                         item(span = { GridItemSpan(2) }) {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    prefs = florisPrefs.malang.keyFontSizeMultiplier,
+                                    pref = florisPrefs.malang.keyFontSizeMultiplier,
                                     title = "메인 폰트 크기 (%)",
                                     valueLabel = { "${it}%" },
                                     min = 50,
@@ -294,7 +294,7 @@ fun ThemeScreen() = FlorisScreen {
                                     stepIncrement = 5,
                                 )
                                 dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    prefs = florisPrefs.malang.keyHintFontSizeMultiplier,
+                                    pref = florisPrefs.malang.keyHintFontSizeMultiplier,
                                     title = "힌트 폰트 크기 (%)",
                                     valueLabel = { "${it}%" },
                                     min = 50,
@@ -302,7 +302,7 @@ fun ThemeScreen() = FlorisScreen {
                                     stepIncrement = 5,
                                 )
                                 dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    prefs = florisPrefs.malang.keyBorderThickness,
+                                    pref = florisPrefs.malang.keyBorderThickness,
                                     title = "키보드 외곽선 두께 (dp)",
                                     valueLabel = { "${it}dp" },
                                     min = 0,
@@ -310,7 +310,7 @@ fun ThemeScreen() = FlorisScreen {
                                     stepIncrement = 1,
                                 )
                                 dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference(
-                                    prefs = florisPrefs.malang.keyBorderOpacity,
+                                    pref = florisPrefs.malang.keyBorderOpacity,
                                     title = "키보드 외곽선 불투명도 (%)",
                                     valueLabel = { "${it}%" },
                                     min = 0,

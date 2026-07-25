@@ -618,8 +618,13 @@ private class TextKeyboardLayoutController(
                     pointer.hasTriggeredLongPress = true
                     when (key.computedData.code) {
                         KeyCode.SPACE, KeyCode.CJK_SPACE -> {
-                            // Long-press on spacebar is disabled as per user request
-                            true
+                            if (prefs.keyboard.emoticonSuggestionEnabled.get()) {
+                                keyboardManager.isEmoticonSearchVisible.value = true
+                                inputFeedbackController?.keyLongPress(key.computedData)
+                                true
+                            } else {
+                                false
+                            }
                         }
                         KeyCode.SHIFT -> {
                             if (inputEventDispatcher.isUninterruptedEventSequence(key.computedData)) {

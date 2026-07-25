@@ -100,6 +100,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     val resources = KeyboardManagerResources()
     val activeState = ObservableKeyboardState.new()
     val isLanguageHudVisible = MutableStateFlow(false)
+    val isEmoticonSearchVisible = MutableStateFlow(false)
     val languageHudProgress = MutableStateFlow(0.0f) // 0.0 to 1.0
     val languageHudDirection = MutableStateFlow(0) // -1 for left, 1 for right
     var smartbarVisibleDynamicActionsCount by mutableIntStateOf(0)
@@ -291,6 +292,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
         when (candidate) {
             is ClipboardSuggestionCandidate -> editorInstance.commitClipboardItem(candidate.clipboardItem)
+            is dev.patrickgold.florisboard.ime.nlp.ReplaceWordSuggestionCandidate -> {
+                editorInstance.setSelectionSurrounding(candidate.originalWordLength, dev.patrickgold.florisboard.ime.editor.OperationUnit.CHARACTERS, dev.patrickgold.florisboard.ime.editor.OperationScope.BEFORE_CURSOR)
+                editorInstance.commitText("")
+                editorInstance.commitCompletion(candidate)
+            }
             else -> editorInstance.commitCompletion(candidate)
         }
     }

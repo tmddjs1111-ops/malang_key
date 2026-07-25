@@ -580,6 +580,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__incognito_indicator",
             default = IncognitoDisplayMode.DISPLAY_BEHIND_KEYBOARD,
         )
+        val emoticonSuggestionEnabled = boolean(
+            key = "keyboard__emoticon_suggestion_enabled",
+            default = false,
+        )
+        val spaceLongPressDelay = int(
+            key = "keyboard__space_long_press_delay",
+            default = 3000,
+        )
 
         fun keyHintConfiguration(): KeyHintConfiguration {
             return KeyHintConfiguration(

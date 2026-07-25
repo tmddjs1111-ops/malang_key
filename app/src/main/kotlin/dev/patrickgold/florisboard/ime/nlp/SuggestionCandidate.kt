@@ -116,6 +116,21 @@ data class WordSuggestionCandidate(
 }
 
 /**
+ * A candidate that replaces a preceding word of a specific length before inserting the new text.
+ */
+data class ReplaceWordSuggestionCandidate(
+    override val text: CharSequence,
+    val originalWordLength: Int,
+    override val secondaryText: CharSequence? = null,
+    override val confidence: Double = 0.0,
+    override val isEligibleForAutoCommit: Boolean = false,
+    override val isEligibleForUserRemoval: Boolean = true,
+    override val sourceProvider: SuggestionProvider? = null,
+) : SuggestionCandidate {
+    override val icon: ImageVector? = null
+}
+
+/**
  * Default implementation for a clipboard candidate. Should generally not be used by a suggestion provider, except by
  * the clipboard suggestion provider.
  *

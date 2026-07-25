@@ -17,203 +17,45 @@
 package dev.patrickgold.florisboard.app.settings.media
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.EmojiSymbols
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.outlined.EmojiEmotions
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
-import dev.patrickgold.florisboard.app.enumDisplayEntriesOf
-import dev.patrickgold.florisboard.ime.media.emoji.EmojiHistory
-import dev.patrickgold.florisboard.ime.media.emoji.EmojiHistoryHelper
-import dev.patrickgold.florisboard.ime.media.emoji.EmojiSkinTone
-import dev.patrickgold.florisboard.ime.media.emoji.EmojiSuggestionType
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
-import dev.patrickgold.jetpref.datastore.ui.ListPreference
-import dev.patrickgold.jetpref.datastore.ui.Preference
 import dev.patrickgold.florisboard.app.apptheme.MalangPreferenceGroup
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
-import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
-import kotlinx.coroutines.launch
-import org.florisboard.lib.compose.pluralsRes
 import org.florisboard.lib.compose.stringRes
 
 @OptIn(ExperimentalJetPrefDatastoreUi::class)
 @Composable
 fun MediaScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__media__title)
+    title = "인스타 폰트 & 이모티콘 설정"
     previewFieldVisible = true
     iconSpaceReserved = true
 
     val prefs by FlorisPreferenceStore
 
-    var shouldDelete by remember { mutableStateOf<ShouldDelete?>(null) }
-    val scope = rememberCoroutineScope()
-
     content {
-        MalangPreferenceGroup {
-            ListPreference(
-                prefs.emoji.preferredSkinTone,
-                title = stringRes(R.string.prefs__media__emoji_preferred_skin_tone),
-                entries = enumDisplayEntriesOf(EmojiSkinTone::class),
-            )
-        }
-
-        MalangPreferenceGroup(title = stringRes(R.string.prefs__media__emoji_history__title)) {
+        MalangPreferenceGroup(title = "기본 설정") {
             SwitchPreference(
-                prefs.emoji.historyEnabled,
-                icon = Icons.Outlined.Schedule,
-                title = stringRes(R.string.prefs__media__emoji_history_enabled),
-                summary = stringRes(R.string.prefs__media__emoji_history_enabled__summary),
-            )
-            ListPreference(
-                prefs.emoji.historyPinnedUpdateStrategy,
-                title = stringRes(R.string.prefs__media__emoji_history_pinned_update_strategy),
-                entries = enumDisplayEntriesOf(EmojiHistory.UpdateStrategy::class),
-                enabledIf = { prefs.emoji.historyEnabled.isTrue() },
-            )
-            ListPreference(
-                prefs.emoji.historyRecentUpdateStrategy,
-                title = stringRes(R.string.prefs__media__emoji_history_recent_update_strategy),
-                entries = enumDisplayEntriesOf(EmojiHistory.UpdateStrategy::class),
-                enabledIf = { prefs.emoji.historyEnabled.isTrue() },
+                prefs.keyboard.emoticonSuggestionEnabled,
+                icon = Icons.Outlined.EmojiEmotions,
+                title = "스페이스바 검색창 사용",
+                summary = "스페이스바를 길게 누르면 인스타 폰트 및 이모티콘 검색창이 나타납니다.",
             )
             DialogSliderPreference(
-                primaryPref = prefs.emoji.historyPinnedMaxSize,
-                secondaryPref = prefs.emoji.historyRecentMaxSize,
-                title = stringRes(R.string.prefs__media__emoji_history_max_size),
-                primaryLabel = stringRes(R.string.emoji__history__pinned),
-                secondaryLabel = stringRes(R.string.emoji__history__recent),
-                valueLabel = { maxSize ->
-                    if (maxSize == EmojiHistory.MaxSizeUnlimited) {
-                        stringRes(R.string.general__unlimited)
-                    } else {
-                        pluralsRes(R.plurals.unit__items__written, maxSize, "v" to maxSize)
-                    }
-                },
-                min = 0,
-                max = 120,
-                stepIncrement = 1,
-                enabledIf = { prefs.emoji.historyEnabled.isTrue() },
-            )
-            Preference(
-                title = stringRes(R.string.prefs__media__emoji_history_pinned_reset),
-                onClick = {
-                    shouldDelete = ShouldDelete(true)
-                },
-                enabledIf = { prefs.emoji.historyEnabled.isTrue() },
-            )
-            Preference(
-                title = stringRes(R.string.prefs__media__emoji_history_reset),
-                onClick = {
-                    shouldDelete = ShouldDelete(false)
-                },
-                enabledIf = { prefs.emoji.historyEnabled.isTrue() },
-            )
-
-        }
-
-        MalangPreferenceGroup(title = stringRes(R.string.prefs__media__emoji_suggestion__title)) {
-            SwitchPreference(
-                prefs.emoji.suggestionEnabled,
-                icon = Icons.Outlined.EmojiSymbols,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_enabled),
-                summary = stringRes(R.string.prefs__media__emoji_suggestion_enabled__summary),
-            )
-            ListPreference(
-                prefs.emoji.suggestionType,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_type),
-                entries = enumDisplayEntriesOf(EmojiSuggestionType::class),
-                enabledIf = { prefs.emoji.suggestionEnabled.isTrue() },
-            )
-            SwitchPreference(
-                prefs.emoji.suggestionUpdateHistory,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_update_history),
-                summary = stringRes(R.string.prefs__media__emoji_suggestion_update_history__summary),
-                enabledIf = {
-                    prefs.emoji.suggestionEnabled.isTrue() && prefs.emoji.historyEnabled.isTrue()
-                },
-            )
-            SwitchPreference(
-                prefs.emoji.suggestionCandidateShowName,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_candidate_show_name),
-                summary = stringRes(R.string.prefs__media__emoji_suggestion_candidate_show_name__summary),
-                enabledIf = { prefs.emoji.suggestionEnabled.isTrue() },
-            )
-            DialogSliderPreference(
-                prefs.emoji.suggestionQueryMinLength,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_query_min_length),
-                valueLabel = { length ->
-                    pluralsRes(R.plurals.unit__characters__written, length, "v" to length)
-                },
-                min = 1,
-                max = 5,
-                stepIncrement = 1,
-                enabledIf = { prefs.emoji.suggestionEnabled.isTrue() },
-            )
-            DialogSliderPreference(
-                prefs.emoji.suggestionCandidateMaxCount,
-                title = stringRes(R.string.prefs__media__emoji_suggestion_candidate_max_count),
-                valueLabel = { count ->
-                    pluralsRes(R.plurals.unit__candidates__written, count, "v" to count)
-                },
-                min = 1,
-                max = 10,
-                stepIncrement = 1,
-                enabledIf = { prefs.emoji.suggestionEnabled.isTrue() },
+                prefs.keyboard.spaceLongPressDelay,
+                icon = Icons.Outlined.Timer,
+                title = "스페이스바 누름 시간",
+                valueLabel = { "${it / 1000.0}초" },
+                min = 500,
+                max = 5000,
+                stepIncrement = 500,
+                enabledIf = { prefs.keyboard.emoticonSuggestionEnabled.isTrue() },
             )
         }
     }
-
-    DeleteEmojiHistoryConfirmDialog(
-        shouldDelete = shouldDelete,
-        onDismiss = {
-            shouldDelete = null
-        },
-        onConfirm = {
-            shouldDelete?.let {
-                scope.launch {
-                    if (it.pinned) {
-                        EmojiHistoryHelper.deletePinned(prefs = prefs)
-                    } else {
-                        EmojiHistoryHelper.deleteHistory(prefs = prefs)
-                    }
-                }
-                shouldDelete = null
-            }
-        },
-    )
 }
-
-@Composable
-fun DeleteEmojiHistoryConfirmDialog(
-    shouldDelete: ShouldDelete?,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    shouldDelete?.let {
-        JetPrefAlertDialog(
-            title = stringRes(R.string.action__reset_confirm_title),
-            confirmLabel = stringRes(R.string.action__yes),
-            dismissLabel = stringRes(R.string.action__no),
-            onDismiss = onDismiss,
-            onConfirm = onConfirm,
-        ) {
-            if (it.pinned) {
-                Text(stringRes(R.string.action__reset_confirm_message, "name" to "pinned emojis"))
-            } else {
-                Text(stringRes(R.string.action__reset_confirm_message, "name" to "emoji history"))
-            }
-
-        }
-    }
-}
-
-data class ShouldDelete(val pinned: Boolean)

@@ -335,7 +335,8 @@ class LayoutManager(context: Context) {
 
         when (keyboardMode) {
             KeyboardMode.CHARACTERS -> {
-                if (subtype.layoutMap.characters.componentId.contains("korean")) {
+                val charId = subtype.layoutMap.characters.componentId
+                if (charId.contains("_16") || charId.contains("sky") || charId.contains("cheonjiin") || charId.contains("naratgul") || charId.contains("danmoeum")) {
                     main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
                     return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)
                 }

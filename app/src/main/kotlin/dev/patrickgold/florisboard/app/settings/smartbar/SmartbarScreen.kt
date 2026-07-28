@@ -151,6 +151,7 @@ fun MalangSlotsEditor() {
             QuickAction.InsertKey(TextKeyData(code = KeyCode.ENTER, label = "Enter")),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+            QuickAction.InsertKey(TextKeyData.IME_UI_MODE_EDITING),
             QuickAction.InsertKey(TextKeyData.SYSTEM_INPUT_METHOD_PICKER),
         )
     }
@@ -299,6 +300,7 @@ fun getActionLabel(action: QuickAction, evaluator: dev.patrickgold.florisboard.i
         KeyCode.SPACE -> "스페이스"
         TextKeyData.IME_UI_MODE_CLIPBOARD.code -> "클립보드"
         TextKeyData.IME_UI_MODE_MEDIA.code -> "이모지"
+        TextKeyData.IME_UI_MODE_EDITING.code -> "커서 이동"
         TextKeyData.IME_SUBTYPE_PICKER.code -> "언어변경"
         TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
         else -> label ?: "기능"

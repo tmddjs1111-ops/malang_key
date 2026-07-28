@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import dev.patrickgold.compose.tooltip.PlainTooltip
 import dev.patrickgold.florisboard.ime.input.LocalInputFeedbackController
 import dev.patrickgold.florisboard.ime.keyboard.ComputingEvaluator
@@ -44,6 +45,7 @@ import dev.patrickgold.florisboard.ime.keyboard.computeLabel
 import dev.patrickgold.florisboard.ime.text.key.KeyCode
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
+import dev.patrickgold.florisboard.keyboardManager
 import org.florisboard.lib.snygg.SnyggSelector
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggIcon
@@ -64,6 +66,7 @@ fun QuickActionButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val keyboardManager by context.keyboardManager()
     val inputFeedbackController = LocalInputFeedbackController.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -93,7 +96,7 @@ fun QuickActionButton(
         }
     }
 
-    PlainTooltip(action.computeTooltip(evaluator), enabled = type == QuickActionBarType.INTERACTIVE_BUTTON) {
+    PlainTooltip(action.computeTooltip(evaluator), enabled = false) {
         SnyggBox(
             elementName = elementName,
             attributes = attributes,
@@ -111,24 +114,54 @@ fun QuickActionButton(
                             inputFeedbackController.keyPress(TextKeyData.UNSPECIFIED)
                             interactionSource.tryEmit(press)
                             action.onPointerDown(context)
-                            var isLongClickTriggered = false
-                            val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                                waitForUpOrCancellation()
-                            }
-                            if (up == null) {
-                                if (onLongClick != null) {
-                                    onLongClick()
-                                    isLongClickTriggered = true
-                                    inputFeedbackController.keyLongPress(TextKeyData.UNSPECIFIED)
+                            
+                            if (action.keyData().code == KeyCode.IME_UI_MODE_EDITING) {
+                                var accumulatedX = 0f
+                                val stepThresholdPx = 12.dp.toPx()
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull() ?: break
+                                    if (change.isConsumed || !change.pressed) {
+                                        break
+                                    }
+                                    val deltaX = change.position.x - change.previousPosition.x
+                                    accumulatedX += deltaX
+                                    while (accumulatedX >= stepThresholdPx) {
+                                        keyboardManager.inputEventDispatcher.sendDown(TextKeyData.ARROW_RIGHT)
+                                        keyboardManager.inputEventDispatcher.sendUp(TextKeyData.ARROW_RIGHT)
+                                        inputFeedbackController.keyPress(TextKeyData.ARROW_RIGHT)
+                                        accumulatedX -= stepThresholdPx
+                                    }
+                                    while (accumulatedX <= -stepThresholdPx) {
+                                        keyboardManager.inputEventDispatcher.sendDown(TextKeyData.ARROW_LEFT)
+                                        keyboardManager.inputEventDispatcher.sendUp(TextKeyData.ARROW_LEFT)
+                                        inputFeedbackController.keyPress(TextKeyData.ARROW_LEFT)
+                                        accumulatedX += stepThresholdPx
+                                    }
+                                    change.consume()
                                 }
-                                waitForUpOrCancellation()
-                            }
-                            if (isLongClickTriggered) {
-                                interactionSource.tryEmit(PressInteraction.Cancel(press))
-                                action.onPointerCancel(context)
-                            } else {
                                 interactionSource.tryEmit(PressInteraction.Release(press))
                                 action.onPointerUp(context)
+                            } else {
+                                var isLongClickTriggered = false
+                                val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                    waitForUpOrCancellation()
+                                }
+                                if (up == null) {
+                                    if (onLongClick != null) {
+                                        onLongClick()
+                                        isLongClickTriggered = true
+                                        inputFeedbackController.keyLongPress(TextKeyData.UNSPECIFIED)
+                                    }
+                                    waitForUpOrCancellation()
+                                }
+                                if (isLongClickTriggered) {
+                                    interactionSource.tryEmit(PressInteraction.Cancel(press))
+                                    action.onPointerCancel(context)
+                                } else {
+                                    interactionSource.tryEmit(PressInteraction.Release(press))
+                                    action.onPointerUp(context)
+                                }
                             }
                         }
                     }

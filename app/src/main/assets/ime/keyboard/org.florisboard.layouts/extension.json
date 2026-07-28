@@ -376,7 +376,7 @@
       },
       {
         "id": "korean",
-        "label": "한국어 - 쿼티",
+        "label": "한국어 - 두벌식(쿼티)",
         "authors": [
           "patrickgold",
           "Hayleia"
@@ -385,7 +385,7 @@
       },
       {
         "id": "korean_phonetic",
-        "label": "한국어 - 2벌식",
+        "label": "한국어 - 두벌식(표준)",
         "authors": [
           "Shunnuo"
         ],
@@ -394,15 +394,6 @@
       {
         "id": "korean_naratgul",
         "label": "한국어 - 나랏글",
-        "authors": [
-          "patrickgold",
-          "MalangKey"
-        ],
-        "direction": "ltr"
-      },
-      {
-        "id": "korean_danmoeum",
-        "label": "한국어 - 단모음",
         "authors": [
           "patrickgold",
           "MalangKey"

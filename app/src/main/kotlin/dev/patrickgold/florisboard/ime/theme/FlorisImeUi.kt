@@ -182,6 +182,15 @@ enum class FlorisImeUi(val elementName: String, val resId: Int?) {
         resId = R.string.snygg__rule_element__clipboard_history_locked_message,
     ),
 
+    Editing(
+        elementName = "editing",
+        resId = R.string.snygg__rule_element__editing,
+    ),
+    EditingButton(
+        elementName = "editing-button",
+        resId = R.string.snygg__rule_element__editing_button,
+    ),
+
     ExtractedLandscapeInputLayout(
         elementName = "extracted-landscape-input-layout",
         resId = R.string.snygg__rule_element__extracted_landscape_input_layout,

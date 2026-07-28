@@ -1,18 +1,15 @@
 package dev.patrickgold.florisboard.ime.text.keyboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +32,8 @@ fun EmoticonSearchPanel(
     val activeContent by editorInstance.activeContentFlow.collectAsState()
     
     val currentWord = remember(activeContent) {
-        val textBefore = activeContent.getTextBeforeCursor(20)
-        textBefore.takeLastWhile { !it.isWhitespace() }.toString()
+        val textBefore = activeContent.textBeforeSelection.toString()
+        textBefore.takeLast(20).takeLastWhile { !it.isWhitespace() }
     }
     
     val candidates = remember(currentWord) {
@@ -49,40 +46,22 @@ fun EmoticonSearchPanel(
             .height(250.dp)
             .background(Color(0xFFFCF5D6)) // Malang Key default bg
     ) {
-        // Fake Search Bar Header
+        // Panel Header with Title and Close Button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Fake TextField
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .background(Color.White, RoundedCornerShape(24.dp))
-                    .border(1.dp, Color(0xFFE0D8B0), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                if (currentWord.isEmpty()) {
-                    Text("단어를 입력해보세요 (예: 안녕)", color = Color.Gray, fontSize = 16.sp)
-                } else {
-                    Text(currentWord, color = Color.Black, fontSize = 16.sp)
-                }
-            }
-            
+            Text(
+                text = if (currentWord.isEmpty()) "이모티콘 & 인스타체 추천" else "'$currentWord' 변환 결과",
+                color = Color(0xFF887766),
+                fontSize = 14.sp
+            )
             IconButton(
                 onClick = { keyboardManager.isEmoticonSearchVisible.value = false },
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.size(36.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -91,8 +70,8 @@ fun EmoticonSearchPanel(
                 )
             }
         }
-        
-        // Candidate List
+
+        // Candidate List (Fills the entire Emoticon Window)
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
@@ -111,13 +90,24 @@ fun EmoticonSearchPanel(
                             editorInstance.commitText(candidate.text.toString())
                             keyboardManager.isEmoticonSearchVisible.value = false
                         }
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = candidate.text.toString(),
                         fontSize = 18.sp,
-                        color = Color(0xFF311D18)
+                        color = Color(0xFF311D18),
+                        modifier = Modifier.weight(1f)
                     )
+                    if (candidate.secondaryText != null) {
+                        Text(
+                            text = candidate.secondaryText.toString(),
+                            fontSize = 12.sp,
+                            color = Color(0xFF887766),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 }
             }
         }

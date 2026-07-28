@@ -101,6 +101,7 @@ fun QuickActionsEditorPanel() {
             QuickAction.InsertKey(TextKeyData.SETTINGS),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+            QuickAction.InsertKey(TextKeyData.IME_UI_MODE_EDITING),
             QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
             QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),
             QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),

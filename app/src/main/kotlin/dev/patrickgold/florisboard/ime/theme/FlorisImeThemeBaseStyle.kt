@@ -320,6 +320,23 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         foreground = `var`("--on-surface")
     }
 
+    FlorisImeUi.Editing.elementName {
+        background = `var`("--background")
+        foreground = `var`("--on-background")
+    }
+    FlorisImeUi.EditingButton.elementName {
+        background = `var`("--surface")
+        foreground = `var`("--on-surface")
+        fontSize = fontSize(14.sp)
+        margin = padding(4.dp)
+        shape = `var`("--shape")
+        shadowElevation = size(2.dp)
+    }
+    FlorisImeUi.EditingButton.elementName(selector = SnyggSelector.PRESSED) {
+        background = `var`("--surface-variant")
+        foreground = `var`("--on-surface")
+    }
+
     FlorisImeUi.GlideTrail.elementName {
         foreground = `var`("--primary")
     }

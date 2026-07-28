@@ -125,6 +125,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.FORWARD_DELETE,
             KeyCode.UNDO,
             KeyCode.REDO,
+            KeyCode.MOVE_START_OF_LINE,
+            KeyCode.MOVE_END_OF_LINE,
+            KeyCode.MOVE_START_OF_PAGE,
+            KeyCode.MOVE_END_OF_PAGE,
         )
     ).also { it.keyEventReceiver = this }
 
@@ -735,6 +739,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.IME_UI_MODE_TEXT -> activeState.imeUiMode = ImeUiMode.TEXT
             KeyCode.IME_UI_MODE_MEDIA -> activeState.imeUiMode = ImeUiMode.MEDIA
             KeyCode.IME_UI_MODE_CLIPBOARD -> activeState.imeUiMode = ImeUiMode.CLIPBOARD
+            KeyCode.IME_UI_MODE_EDITING -> { /* No-op: handled by horizontal scrubbing gesture in QuickActionButton */ }
             KeyCode.VOICE_INPUT -> FlorisImeService.switchToVoiceInputMethod()
             KeyCode.KANA_SWITCHER -> handleKanaSwitch()
             KeyCode.KANA_HIRA -> handleKanaHira()
@@ -989,6 +994,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         override fun evaluateVisible(data: KeyData): Boolean {
             return when (data.code) {
                 KeyCode.IME_UI_MODE_TEXT,
+                KeyCode.IME_UI_MODE_EDITING,
                 KeyCode.IME_UI_MODE_MEDIA -> false
                 KeyCode.LANGUAGE_SWITCH -> false
                 else -> true

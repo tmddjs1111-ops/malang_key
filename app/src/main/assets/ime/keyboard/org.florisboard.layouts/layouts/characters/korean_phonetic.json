@@ -1,55 +1,34 @@
 [
   [
-    { "$": "auto_text_key", "code": 12615, "label": "ㅇ"},
-    { "$": "auto_text_key", "code": 12641, "label": "ㅡ"},
-    { "$": "case_selector",
-      "lower": { "code": 12628, "label": "ㅔ" },
-      "upper": { "code": 12630, "label": "ㅖ" }
-    },
-    { "$": "auto_text_key", "code": 12601, "label": "ㄹ"},
-    { "$": "auto_text_key", "code": 12620, "label": "ㅌ"},
-    { "$": "case_selector",
-      "lower": { "code": 12624, "label": "ㅐ" },
-      "upper": { "code": 12626, "label": "ㅒ" }
-    },
-    { "$": "auto_text_key", "code": 12636, "label": "ㅜ"},
-    { "$": "auto_text_key", "code": 12643, "label": "ㅣ"},
-    { "$": "auto_text_key", "code": 12631, "label": "ㅗ"},
-    { "$": "auto_text_key", "code": 12621, "label": "ㅍ"}
+    { "$": "case_selector", "lower": { "code": 113, "label": "ㅂ" }, "upper": { "code": 81, "label": "ㅃ" } },
+    { "$": "case_selector", "lower": { "code": 119, "label": "ㅈ" }, "upper": { "code": 87, "label": "ㅉ" } },
+    { "$": "case_selector", "lower": { "code": 101, "label": "ㄷ" }, "upper": { "code": 69, "label": "ㄸ" } },
+    { "$": "case_selector", "lower": { "code": 114, "label": "ㄱ" }, "upper": { "code": 82, "label": "ㄲ" } },
+    { "$": "case_selector", "lower": { "code": 116, "label": "ㅅ" }, "upper": { "code": 84, "label": "ㅆ" } },
+    { "$": "case_selector", "lower": { "code": 121, "label": "ㅛ" }, "upper": { "code": 89, "label": "ㅛ" } },
+    { "$": "case_selector", "lower": { "code": 117, "label": "ㅕ" }, "upper": { "code": 85, "label": "ㅕ" } },
+    { "$": "case_selector", "lower": { "code": 105, "label": "ㅑ" }, "upper": { "code": 73, "label": "ㅑ" } },
+    { "$": "case_selector", "lower": { "code": 111, "label": "ㅐ" }, "upper": { "code": 79, "label": "ㅒ" } },
+    { "$": "case_selector", "lower": { "code": 112, "label": "ㅔ" }, "upper": { "code": 80, "label": "ㅖ" } }
   ],
   [
-    { "$": "auto_text_key", "code": 12623, "label": "ㅏ"},
-    { "$": "case_selector",
-      "lower": { "code": 12613, "label": "ㅅ" },
-      "upper": { "code": 12614, "label": "ㅆ" }
-    },
-    { "$": "case_selector",
-      "lower": { "code": 12599, "label": "ㄷ" },
-      "upper": { "code": 12600, "label": "ㄸ" }
-    },
-    { "$": "auto_text_key", "code": 12625, "label": "ㅑ"},
-    { "$": "case_selector",
-      "lower": { "code": 12593, "label": "ㄱ" },
-      "upper": { "code": 12594, "label": "ㄲ" }
-    },
-    { "$": "auto_text_key", "code": 12622, "label": "ㅎ"},
-    { "$": "case_selector",
-      "lower": { "code": 12616, "label": "ㅈ" },
-      "upper": { "code": 12617, "label": "ㅉ" }
-    },
-    { "$": "auto_text_key", "code": 12619, "label": "ㅋ"},
-    { "$": "auto_text_key", "code": 12635, "label": "ㅛ"}
+    { "$": "case_selector", "lower": { "code": 97, "label": "ㅁ" }, "upper": { "code": 65, "label": "ㅁ" } },
+    { "$": "case_selector", "lower": { "code": 115, "label": "ㄴ" }, "upper": { "code": 83, "label": "ㄴ" } },
+    { "$": "case_selector", "lower": { "code": 100, "label": "ㅇ" }, "upper": { "code": 68, "label": "ㅇ" } },
+    { "$": "case_selector", "lower": { "code": 102, "label": "ㄹ" }, "upper": { "code": 70, "label": "ㄹ" } },
+    { "$": "case_selector", "lower": { "code": 103, "label": "ㅎ" }, "upper": { "code": 71, "label": "ㅎ" } },
+    { "$": "case_selector", "lower": { "code": 104, "label": "ㅗ" }, "upper": { "code": 72, "label": "ㅗ" } },
+    { "$": "case_selector", "lower": { "code": 106, "label": "ㅓ" }, "upper": { "code": 74, "label": "ㅓ" } },
+    { "$": "case_selector", "lower": { "code": 107, "label": "ㅏ" }, "upper": { "code": 75, "label": "ㅏ" } },
+    { "$": "case_selector", "lower": { "code": 108, "label": "ㅣ" }, "upper": { "code": 76, "label": "ㅣ" } }
   ],
   [
-    { "$": "auto_text_key", "code": 12629, "label": "ㅕ"},
-    { "$": "auto_text_key", "code": 12640, "label": "ㅠ"},
-    { "$": "auto_text_key", "code": 12618, "label": "ㅊ"},
-    { "$": "auto_text_key", "code": 12627, "label": "ㅓ"},
-    { "$": "case_selector",
-      "lower": { "code": 12610, "label": "ㅂ" },
-      "upper": { "code": 12611, "label": "ㅃ" }
-    },
-    { "$": "auto_text_key", "code": 12596, "label": "ㄴ"},
-    { "$": "auto_text_key", "code": 12609, "label": "ㅁ"}
+    { "$": "case_selector", "lower": { "code": 122, "label": "ㅋ" }, "upper": { "code": 90, "label": "ㅋ" } },
+    { "$": "case_selector", "lower": { "code": 120, "label": "ㅌ" }, "upper": { "code": 88, "label": "ㅌ" } },
+    { "$": "case_selector", "lower": { "code": 99, "label": "ㅊ" }, "upper": { "code": 67, "label": "ㅊ" } },
+    { "$": "case_selector", "lower": { "code": 118, "label": "ㅍ" }, "upper": { "code": 86, "label": "ㅍ" } },
+    { "$": "case_selector", "lower": { "code": 98, "label": "ㅠ" }, "upper": { "code": 66, "label": "ㅠ" } },
+    { "$": "case_selector", "lower": { "code": 110, "label": "ㅜ" }, "upper": { "code": 78, "label": "ㅜ" } },
+    { "$": "case_selector", "lower": { "code": 109, "label": "ㅡ" }, "upper": { "code": 77, "label": "ㅡ" } }
   ]
 ]

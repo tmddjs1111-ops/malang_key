@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.ContentPasteGo
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.KeyboardCapslock
 import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.KeyboardVoice
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LastPage
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
@@ -175,6 +177,9 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
             KeyCode.KESHIDA -> {
                 evaluator.context()?.getString(R.string.key__view_keshida)
             }
+            KeyCode.IME_UI_MODE_EDITING -> {
+                evaluator.context()?.getString(R.string.quick_action__ime_ui_mode_editing)
+            }
             else -> null
         }
     }
@@ -194,6 +199,14 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
         }
         KeyCode.ARROW_DOWN -> {
             Icons.Default.KeyboardArrowDown
+        }
+        KeyCode.MOVE_START_OF_LINE,
+        KeyCode.MOVE_START_OF_PAGE -> {
+            Icons.Default.FirstPage
+        }
+        KeyCode.MOVE_END_OF_LINE,
+        KeyCode.MOVE_END_OF_PAGE -> {
+            Icons.Default.LastPage
         }
         KeyCode.CLIPBOARD_COPY -> {
             Icons.Default.ContentCopy
@@ -257,6 +270,9 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
         }
         KeyCode.IME_UI_MODE_CLIPBOARD -> {
             Icons.AutoMirrored.Outlined.Assignment
+        }
+        KeyCode.IME_UI_MODE_EDITING -> {
+            context()?.vectorResource(id = R.drawable.ic_drag_pan)
         }
         KeyCode.LANGUAGE_SWITCH -> {
             Icons.Default.Language

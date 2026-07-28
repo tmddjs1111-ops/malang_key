@@ -76,7 +76,9 @@ object HangulUnicode : Composer {
         "q" to "ㅂ", "w" to "ㅈ", "e" to "ㄷ", "r" to "ㄱ", "t" to "ㅅ", "y" to "ㅛ", "u" to "ㅕ", "i" to "ㅑ", "o" to "ㅐ", "p" to "ㅔ",
         "a" to "ㅁ", "s" to "ㄴ", "d" to "ㅇ", "f" to "ㄹ", "g" to "ㅎ", "h" to "ㅗ", "j" to "ㅓ", "k" to "ㅏ", "l" to "ㅣ",
         "z" to "ㅋ", "x" to "ㅌ", "c" to "ㅊ", "v" to "ㅍ", "b" to "ㅠ", "n" to "ㅜ", "m" to "ㅡ",
-        "Q" to "ㅃ", "W" to "ㅉ", "E" to "ㄸ", "R" to "ㄲ", "T" to "ㅆ", "O" to "ㅒ", "P" to "ㅖ"
+        "Q" to "ㅃ", "W" to "ㅉ", "E" to "ㄸ", "R" to "ㄲ", "T" to "ㅆ", "Y" to "ㅛ", "U" to "ㅕ", "I" to "ㅑ", "O" to "ㅒ", "P" to "ㅖ",
+        "A" to "ㅁ", "S" to "ㄴ", "D" to "ㅇ", "F" to "ㄹ", "G" to "ㅎ", "H" to "ㅗ", "J" to "ㅓ", "K" to "ㅏ", "L" to "ㅣ",
+        "Z" to "ㅋ", "X" to "ㅌ", "C" to "ㅊ", "V" to "ㅍ", "B" to "ㅠ", "N" to "ㅜ", "M" to "ㅡ"
     )
 
     private var lastInputKey: String = ""
@@ -180,7 +182,7 @@ object HangulUnicode : Composer {
         val lId = layoutId ?: "korean"
         
         var mappedInputStr = inputStr
-        if (lId == "korean" || lId.startsWith("korean_qwerty")) {
+        if (lId == "korean" || lId.startsWith("korean_") || lId.startsWith("qwerty")) {
             mappedInputStr = qwertyEnglishToKoreanMap[inputStr] ?: inputStr
         }
 

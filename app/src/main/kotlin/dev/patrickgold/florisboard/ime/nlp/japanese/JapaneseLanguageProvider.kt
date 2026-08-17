@@ -42,6 +42,71 @@ import kotlinx.coroutines.withContext
 class JapaneseLanguageProvider(val context: Context) : SpellingProvider, SuggestionProvider {
     companion object {
         const val ProviderId = "org.florisboard.nlp.providers.japanese"
+
+        private val builtInDict = mapOf(
+            "にほん" to listOf("日本"),
+            "かたな" to listOf("刀"),
+            "ありがとう" to listOf("有難う", "ありがとう"),
+            "たべる" to listOf("食べる", "たべる"),
+            "さくら" to listOf("桜", "さくら"),
+            "やま" to listOf("山"),
+            "かわ" to listOf("川"),
+            "そら" to listOf("空"),
+            "うみ" to listOf("海"),
+            "ひと" to listOf("人"),
+            "きょう" to listOf("今日"),
+            "あした" to listOf("明日"),
+            "きのう" to listOf("昨日"),
+            "ねこ" to listOf("猫"),
+            "いぬ" to listOf("犬"),
+            "わたし" to listOf("私"),
+            "あなた" to listOf("貴方", "あなた"),
+            "ともだち" to listOf("友達"),
+            "せんせい" to listOf("先生"),
+            "がっこう" to listOf("学校"),
+            "すき" to listOf("好き"),
+            "たのしい" to listOf("楽しい"),
+            "うれしい" to listOf("嬉しい"),
+            "たべもの" to listOf("食べ物"),
+            "のみもの" to listOf("飲み物"),
+            "ほん" to listOf("本"),
+            "くるま" to listOf("車"),
+            "でんしゃ" to listOf("電車"),
+            "あさ" to listOf("朝"),
+            "ひる" to listOf("昼"),
+            "よる" to listOf("夜"),
+            "あめ" to listOf("雨"),
+            "ゆき" to listOf("雪"),
+            "はな" to listOf("花", "鼻"),
+            "き" to listOf("木", "気"),
+            "もり" to listOf("森"),
+            "つき" to listOf("月"),
+            "ひ" to listOf("日", "火"),
+            "ほし" to listOf("星"),
+            "みず" to listOf("水"),
+            "てんき" to listOf("天気"),
+            "かみ" to listOf("神", "紙", "髪"),
+            "こころ" to listOf("心"),
+            "め" to listOf("目"),
+            "くち" to listOf("口"),
+            "みみ" to listOf("耳"),
+            "て" to listOf("手"),
+            "あし" to listOf("足"),
+            "かお" to listOf("顔"),
+            "あい" to listOf("愛"),
+            "あお" to listOf("青"),
+            "あか" to listOf("赤"),
+            "しろ" to listOf("白"),
+            "くろ" to listOf("黒"),
+            "くに" to listOf("国"),
+            "せかい" to listOf("世界"),
+            "じかん" to listOf("時間"),
+            "しごと" to listOf("仕事"),
+            "かぞく" to listOf("家族"),
+            "おとこ" to listOf("男"),
+            "おんな" to listOf("女"),
+            "こども" to listOf("子供")
+        )
     }
 
     private val extensionManager by context.extensionManager()
@@ -120,17 +185,45 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             return emptyList()
         }
         
-        val (_, languagePackExtension) = getLanguagePack(subtype) ?: return emptyList()
+        val queryText = content.composingText.toString()
+        val suggestions = mutableListOf<SuggestionCandidate>()
+        
+        // 1. Check built-in Kana-to-Kanji candidates
+        builtInDict[queryText]?.forEach { kanjiWord ->
+            suggestions.add(WordSuggestionCandidate(
+                text = kanjiWord,
+                secondaryText = queryText,
+                confidence = 0.9,
+                isEligibleForAutoCommit = false,
+                sourceProvider = this@JapaneseLanguageProvider,
+            ))
+        }
+        
+        for ((reading, words) in builtInDict) {
+            if (suggestions.size >= maxCandidateCount) break
+            if (reading != queryText && reading.startsWith(queryText)) {
+                words.forEach { kanjiWord ->
+                    if (suggestions.none { (it as? WordSuggestionCandidate)?.text == kanjiWord }) {
+                        suggestions.add(WordSuggestionCandidate(
+                            text = kanjiWord,
+                            secondaryText = reading,
+                            confidence = 0.7,
+                            isEligibleForAutoCommit = false,
+                            sourceProvider = this@JapaneseLanguageProvider,
+                        ))
+                    }
+                }
+            }
+        }
+        
+        val (_, languagePackExtension) = getLanguagePack(subtype) ?: return suggestions
         
         try {
             val database = languagePackExtension.japaneseDictSQLiteDatabase
             if (!database.isOpen) {
-                flogError { "Japanese Dictionary database is not open." }
-                return emptyList()
+                return suggestions
             }
             
-            // Expected schema: CREATE TABLE dictionary (id INTEGER PRIMARY KEY, reading TEXT NOT NULL, word TEXT NOT NULL, frequency INTEGER DEFAULT 0);
-            val queryText = content.composingText.toString()
             val cur = database.query(
                 "dictionary", 
                 arrayOf("reading", "word"), 
@@ -146,28 +239,27 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             val rowCount = cur.count
             flogDebug { "Japanese DB Query was '$queryText', found $rowCount rows." }
             
-            val suggestions = buildList {
-                for (n in 0 until rowCount) {
-                    val reading = cur.getString(0)
-                    val word = cur.getString(1)
-                    cur.moveToNext()
-                    
-                    // Add the word (Kanji) as candidate, reading as secondary
-                    add(WordSuggestionCandidate(
+            for (n in 0 until rowCount) {
+                val reading = cur.getString(0)
+                val word = cur.getString(1)
+                cur.moveToNext()
+                
+                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
+                    suggestions.add(WordSuggestionCandidate(
                         text = word,
                         secondaryText = reading,
                         confidence = 0.5,
-                        isEligibleForAutoCommit = false, // Never auto-commit Kanji without user intent usually
+                        isEligibleForAutoCommit = false,
                         sourceProvider = this@JapaneseLanguageProvider,
                     ))
                 }
             }
             cur.close()
-            return suggestions
         } catch (e: Exception) {
             flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='${e}'" }
-            return emptyList()
         }
+        
+        return suggestions
     }
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {

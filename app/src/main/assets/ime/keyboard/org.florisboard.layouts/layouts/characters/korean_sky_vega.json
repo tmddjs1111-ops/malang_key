@@ -5,13 +5,13 @@
       "label": "⌨",
       "type": "system_gui",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     },
     {
       "code": 12593,
       "label": "ㄱㅋ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 49,
@@ -41,7 +41,7 @@
       "code": 12643,
       "label": "ㅣㅡ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 50,
@@ -67,7 +67,7 @@
       "code": 12623,
       "label": "ㅏㅑ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 51,
@@ -90,7 +90,7 @@
       "label": "⌫",
       "type": "enter_editing",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     }
   ],
   [
@@ -98,13 +98,13 @@
       "code": 44,
       "label": ",",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     },
     {
       "code": 12599,
       "label": "ㄷㅌ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 52,
@@ -126,7 +126,7 @@
       "code": 12596,
       "label": "ㄴㄹ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 53,
@@ -156,7 +156,7 @@
       "code": 12627,
       "label": "ㅓㅕ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 54,
@@ -174,7 +174,7 @@
       "code": 32,
       "label": " ",
       "weight": 0.9,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": -227,
@@ -189,13 +189,13 @@
       "label": "123",
       "type": "system_gui",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     },
     {
       "code": 12609,
       "label": "ㅁㅅ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 55,
@@ -225,7 +225,7 @@
       "code": 12610,
       "label": "ㅂㅍ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 56,
@@ -255,7 +255,7 @@
       "code": 12631,
       "label": "ㅗㅛ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 57,
@@ -274,7 +274,7 @@
       "label": "⏎",
       "type": "enter_editing",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     }
   ],
   [
@@ -283,13 +283,13 @@
       "label": "?123",
       "type": "system_gui",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     },
     {
       "code": 12616,
       "label": "ㅈㅊ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 61,
@@ -319,7 +319,7 @@
       "code": 12615,
       "label": "ㅇㅎ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 48,
@@ -341,7 +341,7 @@
       "code": 12636,
       "label": "ㅜㅠ",
       "weight": 1.15,
-      "grow": 1,
+      "grow": 1.0,
       "popup": {
         "main": {
           "code": 63,
@@ -359,7 +359,7 @@
       "code": 46,
       "label": "·",
       "weight": 0.9,
-      "grow": 1
+      "grow": 1.0
     }
   ]
 ]

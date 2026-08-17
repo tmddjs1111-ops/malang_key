@@ -28,8 +28,9 @@ object HangulUnicode : Composer {
         "ㄷ" to listOf("ㄷ", "ㅌ", "ㄸ"),
         "ㅂ" to listOf("ㅂ", "ㅍ", "ㅃ"),
         "ㅁ" to listOf("ㅁ", "ㅅ", "ㅆ"), // For Sky, this key is ㅁㅅ
+        "ㅅ" to listOf("ㅅ", "ㅎ", "ㅆ"), // For Cheonjiin key
         "ㅈ" to listOf("ㅈ", "ㅊ", "ㅉ"),
-        "ㅇ" to listOf("ㅇ", "ㅎ"),
+        "ㅇ" to listOf("ㅇ", "ㅎ", "ㅁ"), // For Sky & Cheonjiin key
         "ㅣ" to listOf("ㅣ", "ㅡ", "ㅢ"),
         "ㅏ" to listOf("ㅏ", "ㅑ"),
         "ㅓ" to listOf("ㅓ", "ㅕ"),

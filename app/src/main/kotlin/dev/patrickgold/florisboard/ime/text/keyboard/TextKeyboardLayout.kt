@@ -806,16 +806,18 @@ private class TextKeyboardLayoutController(
         flogDebug(LogTopic.TEXT_KEYBOARD_VIEW)
 
         val subtypeManager = context.subtypeManager().value
+        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         val isFlickLayout = keyboard.mode == KeyboardMode.CHARACTERS &&
-                subtypeManager.activeSubtype.layoutMap.characters.componentId == "japanese_flick_12key"
+                (layoutId == "japanese_flick_12key" || layoutId == "japanese_20key" || layoutId.contains("flick") || layoutId.contains("japanese"))
 
         return when (initialKey.computedData.code) {
             KeyCode.DELETE -> handleDeleteSwipe(event)
             KeyCode.SPACE, KeyCode.CJK_SPACE -> handleSpaceSwipe(event)
             else -> when {
-                isFlickLayout && initialKey.computedData.code > KeyCode.SPACE && !popupUiController.isShowingExtendedPopup -> {
+                isFlickLayout && initialKey.computedData.code > KeyCode.SPACE -> {
                     val popups = initialKey.computedPopups.relevant
                     if (popups.isNotEmpty() && event.type == SwipeGesture.Type.TOUCH_UP) {
+                        popupUiController.hide()
                         val index = when (event.direction) {
                             SwipeGesture.Direction.LEFT -> 0
                             SwipeGesture.Direction.UP -> 1

@@ -17,6 +17,7 @@
 package dev.patrickgold.florisboard.ime.nlp.japanese
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import dev.patrickgold.florisboard.extensionManager
 import dev.patrickgold.florisboard.ime.core.Subtype
@@ -171,6 +172,28 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         return SpellingResult.validWord()
     }
 
+    @Transient private var assetDatabase: SQLiteDatabase? = null
+
+    private fun getOrOpenAssetDatabase(): SQLiteDatabase? {
+        if (assetDatabase?.isOpen == true) return assetDatabase
+        try {
+            val dbFile = java.io.File(context.filesDir, "japanese_dict.sqlite3")
+            if (!dbFile.exists()) {
+                context.assets.open("ime/languagepack/org.florisboard.japanesepack/japanese_dict.sqlite3").use { input ->
+                    java.io.FileOutputStream(dbFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+            if (dbFile.exists()) {
+                assetDatabase = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+            }
+        } catch (e: Exception) {
+            flogError { "Failed to open asset Japanese DB: $e" }
+        }
+        return assetDatabase
+    }
+
     override suspend fun suggest(
         subtype: Subtype,
         content: EditorContent,
@@ -216,47 +239,45 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             }
         }
         
-        val (_, languagePackExtension) = getLanguagePack(subtype) ?: return suggestions
+        val languagePackExt = getLanguagePack(subtype)?.second
+        val database = languagePackExt?.japaneseDictSQLiteDatabase?.takeIf { it.isOpen } ?: getOrOpenAssetDatabase()
         
-        try {
-            val database = languagePackExtension.japaneseDictSQLiteDatabase
-            if (!database.isOpen) {
-                return suggestions
-            }
-            
-            val cur = database.query(
-                "dictionary", 
-                arrayOf("reading", "word"), 
-                "reading LIKE ? || '%'", 
-                arrayOf(queryText), 
-                "", 
-                "", 
-                "reading ASC, frequency DESC", 
-                "$maxCandidateCount"
-            )
-            
-            cur.moveToFirst()
-            val rowCount = cur.count
-            flogDebug { "Japanese DB Query was '$queryText', found $rowCount rows." }
-            
-            for (n in 0 until rowCount) {
-                val reading = cur.getString(0)
-                val word = cur.getString(1)
-                cur.moveToNext()
+        if (database != null && database.isOpen) {
+            try {
+                val cur = database.query(
+                    "dictionary", 
+                    arrayOf("reading", "word"), 
+                    "reading LIKE ? || '%'", 
+                    arrayOf(queryText), 
+                    "", 
+                    "", 
+                    "reading ASC, frequency DESC", 
+                    "$maxCandidateCount"
+                )
                 
-                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
-                    suggestions.add(WordSuggestionCandidate(
-                        text = word,
-                        secondaryText = reading,
-                        confidence = 0.5,
-                        isEligibleForAutoCommit = false,
-                        sourceProvider = this@JapaneseLanguageProvider,
-                    ))
+                cur.moveToFirst()
+                val rowCount = cur.count
+                flogDebug { "Japanese DB Query was '$queryText', found $rowCount rows." }
+                
+                for (n in 0 until rowCount) {
+                    val reading = cur.getString(0)
+                    val word = cur.getString(1)
+                    cur.moveToNext()
+                    
+                    if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
+                        suggestions.add(WordSuggestionCandidate(
+                            text = word,
+                            secondaryText = reading,
+                            confidence = 0.5,
+                            isEligibleForAutoCommit = false,
+                            sourceProvider = this@JapaneseLanguageProvider,
+                        ))
+                    }
                 }
+                cur.close()
+            } catch (e: Exception) {
+                flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='${e}'" }
             }
-            cur.close()
-        } catch (e: Exception) {
-            flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='${e}'" }
         }
         
         return suggestions

@@ -112,13 +112,18 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
     FlorisImeUi.KeyPopupBox.elementName {
         background = `var`("--surface")
         foreground = `var`("--on-surface")
-        fontSize = fontSize(22.sp)
+        fontSize = fontSize(18.sp)
         shape = `var`("--shape")
         shadowElevation = size(2.dp)
     }
+    FlorisImeUi.KeyPopupElement.elementName {
+        fontSize = fontSize(16.sp)
+        padding = padding(2.dp)
+        shape = roundedCornerShape(6.dp)
+    }
     FlorisImeUi.KeyPopupElement.elementName(selector = SnyggSelector.FOCUS) {
         background = `var`("--surface-variant")
-        shape = `var`("--shape")
+        shape = roundedCornerShape(6.dp)
     }
     FlorisImeUi.KeyPopupExtendedIndicator.elementName {
         fontSize = fontSize(16.sp)

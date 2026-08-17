@@ -19,6 +19,7 @@ package dev.patrickgold.florisboard.ime.popup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.scale
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import dev.patrickgold.florisboard.ime.keyboard.Key
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,7 +119,9 @@ fun PopupExtBox(
                         elementName = FlorisImeUi.KeyPopupElement.elementName,
                         attributes = localAttrs,
                         selector = selector,
-                        modifier = Modifier.size(elemWidth, elemHeight),
+                        modifier = Modifier
+                            .size(elemWidth, elemHeight)
+                            .padding(horizontal = 1.dp, vertical = 1.dp),
                     ) {
                         element.label?.let { label ->
                             val scaleModifier = if (isClipboard) Modifier.scale(0.66f) else Modifier

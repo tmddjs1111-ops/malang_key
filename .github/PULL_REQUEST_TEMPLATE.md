@@ -4,7 +4,7 @@
 
 ## APK testing
 
-For each change in the pull request, a workflow is run, which produces a debug artifact APK. Go to Checks -> FlorisBoard CI -> `app-debug.apk` and download the APK. It installs under the `dev.patrickgold.florisboard.debug` namespace and will not mess with your main installation.
+For each change in the pull request, a workflow is run, which produces a debug artifact APK. Go to Checks -> FlorisBoard CI -> `app-debug.apk` and download the APK. It installs under the `dev.malangkey.debug` namespace and will not mess with your main installation.
 
 ## Checklist
 

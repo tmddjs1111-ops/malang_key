@@ -1,4 +1,4 @@
-import dev.patrickgold.florisboard.ime.text.composing.HangulUnicode
+import dev.malangkey.ime.text.composing.HangulUnicode
 
 fun main() {
     val h = HangulUnicode

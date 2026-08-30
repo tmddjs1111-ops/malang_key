@@ -20,7 +20,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.patrickgold.florisboard.benchmark"
+    namespace = "dev.malangkey.benchmark"
     compileSdk = 34
 
     compileOptions {

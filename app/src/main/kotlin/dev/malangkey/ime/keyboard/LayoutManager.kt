@@ -289,6 +289,7 @@ class LayoutManager(context: Context) {
         return TextKeyboard(
             arrangement = array,
             mode = keyboardMode,
+            hasCompactNumberRow = extensionLayout?.type == LayoutType.NUMERIC_ROW,
             extendedPopupMapping = extendedPopups.await().onFailure {
                 flogWarning(LogTopic.LAYOUT_MANAGER) { it.toString() }
             }.getOrNull()?.mapping,
@@ -336,7 +337,14 @@ class LayoutManager(context: Context) {
         when (keyboardMode) {
             KeyboardMode.CHARACTERS -> {
                 val charId = subtype.layoutMap.characters.componentId
-                if (charId.contains("_16") || charId.contains("sky") || charId.contains("cheonjiin") || charId.contains("naratgul") || charId.contains("danmoeum")) {
+                val isStandaloneGrid = charId.contains("_16") ||
+                    charId.contains("sky") ||
+                    charId.contains("cheonjiin") ||
+                    charId.contains("naratgul") ||
+                    charId.contains("danmoeum") ||
+                    charId == "japanese_20key" ||
+                    charId == "japanese_flick_12key"
+                if (isStandaloneGrid) {
                     main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
                     return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)
                 }

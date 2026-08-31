@@ -610,6 +610,8 @@
     <string name="about__project_license__summary" comment="Preference summary">말랑키 is licensed under {license_name}</string>
     <string name="about__project_license__error_license_text_failed" comment="Error text for license text loading failure">Error: Failed to load license text.\n-&gt; Reason: {error_message}</string>
     <string name="about__project_license__error_reason_asset_manager_null" comment="Error text if asset manager is null">Asset manager reference is null</string>
+    <string name="about__jmdict__title" comment="Preference title">Japanese dictionary (JMdict)</string>
+    <string name="about__jmdict__summary" comment="Preference summary">EDRDG · CC BY-SA 4.0 — view source and license</string>
     <string name="about__third_party_licenses__title" comment="Preference title">Third-party licenses</string>
     <string name="about__third_party_licenses__summary" comment="Preference summary">Licenses of the third-party libraries included in this app</string>
 

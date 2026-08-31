@@ -252,6 +252,11 @@ class NlpManager(context: Context) {
         return activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
     }
 
+    /** Returns the highest-ranked visible candidate from the requested provider. */
+    fun getPrimaryCandidate(providerId: String): SuggestionCandidate? {
+        return activeCandidates.firstOrNull { it.sourceProvider?.providerId == providerId }
+    }
+
     fun removeSuggestion(subtype: Subtype, candidate: SuggestionCandidate): Boolean {
         return runBlocking { candidate.sourceProvider?.removeSuggestion(subtype, candidate) == true }.also { result ->
             if (result) {
@@ -277,7 +282,17 @@ class NlpManager(context: Context) {
 
     private fun assembleCandidates() {
         runBlocking {
+            val internalCandidates = buildList {
+                internalSuggestionsGuard.withLock {
+                    addAll(internalSuggestions.second)
+                }
+            }
+            val japaneseCandidates = internalCandidates.filter {
+                it.sourceProvider?.providerId ==
+                    dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId
+            }
             val candidates = when {
+                japaneseCandidates.isNotEmpty() -> japaneseCandidates
                 isSuggestionOn() -> {
                     clipboardSuggestionProvider.suggest(
                         subtype = Subtype.DEFAULT,
@@ -285,13 +300,7 @@ class NlpManager(context: Context) {
                         maxCandidateCount = 8,
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
-                    ).ifEmpty {
-                        buildList {
-                            internalSuggestionsGuard.withLock {
-                                addAll(internalSuggestions.second)
-                            }
-                        }
-                    }
+                    ).ifEmpty { internalCandidates }
                 }
                 else -> emptyList()
             }

@@ -19,6 +19,7 @@ package dev.malangkey.ime.text.keyboard
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.animation.AccelerateInterpolator
 import androidx.compose.foundation.border
@@ -46,6 +47,7 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -67,6 +69,7 @@ import dev.malangkey.ime.editor.OperationUnit
 import dev.malangkey.ime.input.InputEventDispatcher
 import dev.malangkey.ime.keyboard.ComputingEvaluator
 import dev.malangkey.ime.keyboard.FlorisImeSizing
+import dev.malangkey.ime.keyboard.KeyData
 import dev.malangkey.ime.keyboard.KeyboardMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
 import dev.malangkey.ime.popup.ExceptionsForKeyCodes
@@ -118,6 +121,30 @@ import kotlin.math.sqrt
 import androidx.compose.foundation.layout.width
 import dev.malangkey.ime.core.Subtype
 
+private fun isJapaneseFlickLayoutId(componentId: String): Boolean {
+    return componentId == "japanese_20key" || componentId == "japanese_flick_12key"
+}
+
+internal fun isLanguageSwipeSpace(code: Int): Boolean = when (code) {
+    KeyCode.SPACE,
+    KeyCode.CJK_SPACE,
+    KeyCode.JAPANESE_SPACE -> true
+    else -> false
+}
+
+internal fun isJapaneseKanaRowBase(code: Int): Boolean = when (code) {
+    // Hiragana: あ・か・さ・た・な・は・ま・や・ら・わ
+    0x3042, 0x304B, 0x3055, 0x305F, 0x306A,
+    0x306F, 0x307E, 0x3084, 0x3089, 0x308F,
+    // Katakana: ア・カ・サ・タ・ナ・ハ・マ・ヤ・ラ・ワ
+    0x30A2, 0x30AB, 0x30B5, 0x30BF, 0x30CA,
+    0x30CF, 0x30DE, 0x30E4, 0x30E9, 0x30EF,
+    // Half-width katakana: ｱ・ｶ・ｻ・ﾀ・ﾅ・ﾊ・ﾏ・ﾔ・ﾗ・ﾜ
+    0xFF71, 0xFF76, 0xFF7B, 0xFF80, 0xFF85,
+    0xFF8A, 0xFF8F, 0xFF94, 0xFF97, 0xFF9C -> true
+    else -> false
+}
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -132,7 +159,8 @@ fun TextKeyboardLayout(
 
     val keyboard = evaluator.keyboard as TextKeyboard
     val glideEnabledInternal by prefs.glide.enabled.collectAsState()
-    val glideEnabled = glideEnabledInternal && evaluator.editorInfo.isRichInputEditor &&
+    val isJapaneseFlickLayout = isJapaneseFlickLayoutId(evaluator.subtype.layoutMap.characters.componentId)
+    val glideEnabled = glideEnabledInternal && !isJapaneseFlickLayout && evaluator.editorInfo.isRichInputEditor &&
         evaluator.state.keyVariation != KeyVariation.PASSWORD
     val glideShowTrail by prefs.glide.showTrail.collectAsState()
     val glideTrailStyle = rememberSnyggThemeQuery(FlorisImeUi.GlideTrail.elementName)
@@ -353,6 +381,11 @@ private fun TextKeyButton(
         key.visibleBounds.size.toDpSize()
     }
     val malangConfig = dev.malangkey.ime.theme.LocalMalangConfig.current
+    val compactNumberRowScale = if ((evaluator.keyboard as TextKeyboard).isCompactNumberRowKey(key)) {
+        TextKeyboard.CompactNumberRowHeightFactor
+    } else {
+        1.0f
+    }
     var keyModifier = Modifier
         .requiredSize(size)
         .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() }
@@ -402,6 +435,7 @@ private fun TextKeyButton(
             SnyggText(
                 modifier = Modifier
                     .wrapContentSize()
+                    .scale(compactNumberRowScale)
                     .align(if (isTelPadKey) BiasAlignment(-0.5f, 0f) else Alignment.Center),
                 text = customLabel,
             )
@@ -413,6 +447,7 @@ private fun TextKeyButton(
                 selector = selector,
                 modifier = Modifier
                     .wrapContentSize()
+                    .scale(compactNumberRowScale)
                     .align(if (isTelPadKey) BiasAlignment(0.5f, 0f) else Alignment.TopEnd)
                     .padding(end = 6.dp, top = 4.dp),
                 text = hintedLabel,
@@ -449,6 +484,7 @@ private class TextKeyboardLayoutController(
     private val inputFeedbackController get() = FlorisImeService.inputFeedbackController()
     private val keyHintConfiguration = prefs.keyboard.keyHintConfiguration()
     private val pointerMap: PointerMap<TouchPointer> = PointerMap { TouchPointer() }
+    private val japaneseMultiTapState = JapaneseMultiTapState()
     lateinit var popupUiController: PopupUiController
 
     private var initSelectionStart: Int = 0
@@ -464,8 +500,45 @@ private class TextKeyboardLayoutController(
     lateinit var keyboard: TextKeyboard
     var size = Size.Zero
 
-    val isGlideEnabled: Boolean get() = prefs.glide.enabled.get() && editorInstance.activeInfo.isRichInputEditor &&
+    private val isJapaneseFlickLayout: Boolean
+        get() = (
+            keyboard.mode == KeyboardMode.CHARACTERS ||
+                keyboard.mode == KeyboardMode.GRID_16KEY
+            ) && isJapaneseFlickLayoutId(
+                context.subtypeManager().value.activeSubtype.layoutMap.characters.componentId,
+            )
+
+    val isGlideEnabled: Boolean get() = !isJapaneseFlickLayout && prefs.glide.enabled.get() && editorInstance.activeInfo.isRichInputEditor &&
         keyboardManager.activeState.keyVariation != KeyVariation.PASSWORD
+
+    private fun isFlickKey(pointer: TouchPointer): Boolean {
+        val initialKey = pointer.initialKey ?: return false
+        return isJapaneseFlickLayout && initialKey.computedPopups.relevant.isNotEmpty()
+    }
+
+    private fun japaneseMultiTapSequence(key: TextKey): List<KeyData>? {
+        if (!isJapaneseFlickLayout || !isJapaneseKanaRowBase(key.computedData.code)) return null
+        return buildList {
+            add(key.computedData)
+            addAll(key.computedPopups.relevant)
+        }.distinctBy { it.code }.takeIf { it.size > 1 }
+    }
+
+    private fun commitJapaneseMultiTap(key: TextKey, sequence: List<KeyData>) {
+        val precedingCode = editorInstance.run { activeContent.getTextBeforeCursor(1) }
+            .lastOrNull()
+            ?.code
+        val result = japaneseMultiTapState.next(
+            baseCode = key.computedData.code,
+            sequenceCodes = sequence.map { it.code },
+            precedingCode = precedingCode,
+            nowMillis = SystemClock.uptimeMillis(),
+        )
+        if (result.replacePrevious) {
+            editorInstance.deleteBackwards(OperationUnit.CHARACTERS)
+        }
+        inputEventDispatcher.sendDownUp(sequence[result.index])
+    }
 
     fun onTouchEventInternal(event: MotionEvent) {
         flogDebug { "event=$event" }
@@ -527,13 +600,15 @@ private class TextKeyboardLayoutController(
                     if (pointer != null) {
                         pointer.index = pointerIndex
 
-                        val alwaysTriggerOnMove = (pointer.hasTriggeredGestureMove
-                            && (pointer.initialKey?.computedData?.code == KeyCode.DELETE
-                            && prefs.gestures.deleteKeySwipeLeft.get().let {
-                                it == SwipeAction.DELETE_CHARACTERS_PRECISELY || it == SwipeAction.SELECT_CHARACTERS_PRECISELY
-                            }
-                            || pointer.initialKey?.computedData?.code == KeyCode.SPACE
-                            || pointer.initialKey?.computedData?.code == KeyCode.CJK_SPACE))
+                        val initialKeyCode = pointer.initialKey?.computedData?.code
+                        val alwaysTriggerOnMove = pointer.hasTriggeredGestureMove && (
+                            initialKeyCode == KeyCode.DELETE &&
+                                prefs.gestures.deleteKeySwipeLeft.get().let {
+                                    it == SwipeAction.DELETE_CHARACTERS_PRECISELY ||
+                                        it == SwipeAction.SELECT_CHARACTERS_PRECISELY
+                                } ||
+                                initialKeyCode?.let(::isLanguageSwipeSpace) == true
+                            )
                         
                         val isSwipe = swipeGestureDetector.onTouchMove(event, pointer, alwaysTriggerOnMove)
                         if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
@@ -553,7 +628,11 @@ private class TextKeyboardLayoutController(
                 val pointer = pointerMap.findById(pointerId)
                 if (pointer != null) {
                     pointer.index = pointerIndex
-                    val isSwipe = swipeGestureDetector.onTouchUp(event, pointer)
+                    val isSwipe = swipeGestureDetector.onTouchUp(
+                        event,
+                        pointer,
+                        cardinalOnly = isFlickKey(pointer),
+                    )
                     if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
                         if (pointer.hasTriggeredGestureMove && pointer.initialKey?.computedData?.code == KeyCode.DELETE) {
                             val selection = editorInstance.activeContent.selection
@@ -574,7 +653,11 @@ private class TextKeyboardLayoutController(
                 for (pointer in pointerMap) {
                     if (pointer.id == pointerId) {
                         pointer.index = pointerIndex
-                        val isSwipe = swipeGestureDetector.onTouchUp(event, pointer)
+                        val isSwipe = swipeGestureDetector.onTouchUp(
+                            event,
+                            pointer,
+                            cardinalOnly = isFlickKey(pointer),
+                        )
                         if ((!popupUiController.isShowingExtendedPopup && isSwipe) || pointer.hasTriggeredGestureMove) {
                             if (pointer.hasTriggeredGestureMove &&
                                 pointer.initialKey?.computedData?.code == KeyCode.DELETE &&
@@ -617,7 +700,7 @@ private class TextKeyboardLayoutController(
                 onLongPress = onLongPress@ {
                     pointer.hasTriggeredLongPress = true
                     when (key.computedData.code) {
-                        KeyCode.SPACE, KeyCode.CJK_SPACE -> {
+                        KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE -> {
                             if (prefs.keyboard.emoticonSuggestionEnabled.get()) {
                                 keyboardManager.isEmoticonSearchVisible.value = true
                                 inputFeedbackController?.keyLongPress(key.computedData)
@@ -731,7 +814,18 @@ private class TextKeyboardLayoutController(
             if (popupUiController.isSuitableForPopups(activeKey)) {
                 val retData = popupUiController.getActiveKeyData(activeKey)
                 if (retData != null && !pointer.hasTriggeredGestureMove) {
-                    if (retData == activeKey.computedData) {
+                    val multiTapSequence = if (
+                        !pointer.hasTriggeredLongPress && retData == activeKey.computedData
+                    ) {
+                        japaneseMultiTapSequence(activeKey)
+                    } else {
+                        null
+                    }
+                    if (multiTapSequence != null) {
+                        inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
+                        commitJapaneseMultiTap(activeKey, multiTapSequence)
+                    } else if (retData == activeKey.computedData) {
+                        japaneseMultiTapState.reset()
                         if (activeKey.computedData != activeKey.computedDataOnDown) {
                             inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
                             inputEventDispatcher.sendDownUp(activeKey.computedData)
@@ -739,14 +833,17 @@ private class TextKeyboardLayoutController(
                             inputEventDispatcher.sendUp(activeKey.computedDataOnDown)
                         }
                     } else {
+                        japaneseMultiTapState.reset()
                         inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
                         inputEventDispatcher.sendDownUp(retData)
                     }
                 } else {
+                    japaneseMultiTapState.reset()
                     inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
                 }
                 popupUiController.hide()
             } else {
+                japaneseMultiTapState.reset()
                 if (pointer.hasTriggeredGestureMove) {
                     inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
                 } else {
@@ -805,18 +902,14 @@ private class TextKeyboardLayoutController(
         val activeKey = pointer.activeKey
         flogDebug(LogTopic.TEXT_KEYBOARD_VIEW)
 
-        val subtypeManager = context.subtypeManager().value
-        val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
-        val isFlickLayout = keyboard.mode == KeyboardMode.CHARACTERS &&
-                (layoutId == "japanese_flick_12key" || layoutId == "japanese_20key" || layoutId.contains("flick") || layoutId.contains("japanese"))
-
         return when (initialKey.computedData.code) {
             KeyCode.DELETE -> handleDeleteSwipe(event)
-            KeyCode.SPACE, KeyCode.CJK_SPACE -> handleSpaceSwipe(event)
+            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE -> handleSpaceSwipe(event)
             else -> when {
-                isFlickLayout && initialKey.computedData.code > KeyCode.SPACE -> {
+                isJapaneseFlickLayout && initialKey.computedPopups.relevant.isNotEmpty() -> {
                     val popups = initialKey.computedPopups.relevant
                     if (popups.isNotEmpty() && event.type == SwipeGesture.Type.TOUCH_UP) {
+                        japaneseMultiTapState.reset()
                         popupUiController.hide()
                         val index = when (event.direction) {
                             SwipeGesture.Direction.LEFT -> 0
@@ -833,13 +926,14 @@ private class TextKeyboardLayoutController(
                             false
                         }
                     } else if (popups.isNotEmpty() && event.type == SwipeGesture.Type.TOUCH_MOVE) {
+                        japaneseMultiTapState.reset()
                         true
                     } else {
                         false
                     }
                 }
-                (initialKey.computedData.code == KeyCode.SHIFT && activeKey?.computedData?.code == KeyCode.SPACE ||
-                    initialKey.computedData.code == KeyCode.SHIFT && activeKey?.computedData?.code == KeyCode.CJK_SPACE) &&
+                initialKey.computedData.code == KeyCode.SHIFT &&
+                    activeKey?.computedData?.code?.let(::isLanguageSwipeSpace) == true &&
                     event.type == SwipeGesture.Type.TOUCH_MOVE -> handleSpaceSwipe(event)
                 initialKey.computedData.code == KeyCode.SHIFT && activeKey?.computedData?.code != KeyCode.SHIFT &&
                     event.type == SwipeGesture.Type.TOUCH_UP -> {
@@ -944,6 +1038,7 @@ private class TextKeyboardLayoutController(
     }
 
     private fun handleSpaceSwipe(event: SwipeGesture.Event): Boolean {
+        japaneseMultiTapState.reset()
         return when (event.type) {
             SwipeGesture.Type.TOUCH_MOVE -> {
                 val absUnitX = abs(event.absUnitCountX)

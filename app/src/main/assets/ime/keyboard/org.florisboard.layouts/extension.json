@@ -375,6 +375,15 @@
         "modifier": null
       },
       {
+        "id": "japanese_20key",
+        "label": "日本語 (20キー)",
+        "authors": [
+          "MalangKey"
+        ],
+        "direction": "ltr",
+        "modifier": null
+      },
+      {
         "id": "korean",
         "label": "한국어 - 두벌식(쿼티)",
         "authors": [

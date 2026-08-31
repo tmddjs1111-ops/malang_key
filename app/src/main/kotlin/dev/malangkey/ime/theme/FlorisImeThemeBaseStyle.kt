@@ -89,6 +89,7 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
     FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(
         KeyCode.VIEW_NUMERIC,
         KeyCode.VIEW_NUMERIC_ADVANCED,
+        KeyCode.EXIT_NUMERIC,
     )) {
         fontSize = fontSize(12.sp)
     }

@@ -34,15 +34,22 @@ import dev.malangkey.ime.nlp.WordSuggestionCandidate
 import dev.malangkey.lib.devtools.flogDebug
 import dev.malangkey.lib.devtools.flogError
 import dev.malangkey.subtypeManager
+import java.io.File
+import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class JapaneseLanguageProvider(val context: Context) : SpellingProvider, SuggestionProvider {
     companion object {
         const val ProviderId = "org.florisboard.nlp.providers.japanese"
+
+        private const val AssetDatabasePath =
+            "ime/languagepack/org.florisboard.japanesepack/japanese_dict.sqlite3"
+        private const val InstalledDatabaseFileName = "japanese_dict_v1.sqlite3"
 
         private val builtInDict = mapOf(
             "にほん" to listOf("日本"),
@@ -172,26 +179,58 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         return SpellingResult.validWord()
     }
 
-    @Transient private var assetDatabase: SQLiteDatabase? = null
+    @Transient
+    private var assetDatabase: SQLiteDatabase? = null
 
+    @Synchronized
     private fun getOrOpenAssetDatabase(): SQLiteDatabase? {
         if (assetDatabase?.isOpen == true) return assetDatabase
-        try {
-            val dbFile = java.io.File(context.filesDir, "japanese_dict.sqlite3")
-            if (!dbFile.exists()) {
-                context.assets.open("ime/languagepack/org.florisboard.japanesepack/japanese_dict.sqlite3").use { input ->
-                    java.io.FileOutputStream(dbFile).use { output ->
-                        input.copyTo(output)
-                    }
+
+        val dbFile = File(context.filesDir, InstalledDatabaseFileName)
+        repeat(2) { attempt ->
+            try {
+                if (!dbFile.exists()) {
+                    installAssetDatabase(dbFile)
                 }
-            }
-            if (dbFile.exists()) {
                 assetDatabase = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                return assetDatabase
+            } catch (e: SQLiteException) {
+                if (attempt == 0) {
+                    dbFile.delete()
+                } else {
+                    flogError { "Failed to open bundled Japanese DB: $e" }
+                }
+            } catch (e: Exception) {
+                flogError { "Failed to install bundled Japanese DB: $e" }
+                return null
             }
-        } catch (e: Exception) {
-            flogError { "Failed to open asset Japanese DB: $e" }
         }
-        return assetDatabase
+        return null
+    }
+
+    private fun installAssetDatabase(destination: File) {
+        val temporaryFile = File(destination.parentFile, "${destination.name}.tmp")
+        temporaryFile.delete()
+        context.assets.open(AssetDatabasePath).use { input ->
+            FileOutputStream(temporaryFile).use { output ->
+                input.copyTo(output)
+                output.fd.sync()
+            }
+        }
+        if (!temporaryFile.renameTo(destination)) {
+            temporaryFile.copyTo(destination, overwrite = true)
+            temporaryFile.delete()
+        }
+    }
+
+    private fun normalizeReading(text: String): String = buildString(text.length) {
+        for (character in text) {
+            if (character in '\u30A1'..'\u30F6') {
+                append((character.code - 0x60).toChar())
+            } else {
+                append(character)
+            }
+        }
     }
 
     override suspend fun suggest(
@@ -208,79 +247,102 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             return emptyList()
         }
         
-        val queryText = content.composingText.toString()
-        val suggestions = mutableListOf<SuggestionCandidate>()
-        
-        // 1. Check built-in Kana-to-Kanji candidates
-        builtInDict[queryText]?.forEach { kanjiWord ->
-            suggestions.add(WordSuggestionCandidate(
-                text = kanjiWord,
-                secondaryText = queryText,
-                confidence = 0.9,
-                isEligibleForAutoCommit = false,
-                sourceProvider = this@JapaneseLanguageProvider,
-            ))
+        if (maxCandidateCount <= 0) {
+            return emptyList()
         }
-        
-        for ((reading, words) in builtInDict) {
-            if (suggestions.size >= maxCandidateCount) break
-            if (reading != queryText && reading.startsWith(queryText)) {
-                words.forEach { kanjiWord ->
-                    if (suggestions.none { (it as? WordSuggestionCandidate)?.text == kanjiWord }) {
-                        suggestions.add(WordSuggestionCandidate(
-                            text = kanjiWord,
-                            secondaryText = reading,
-                            confidence = 0.7,
-                            isEligibleForAutoCommit = false,
-                            sourceProvider = this@JapaneseLanguageProvider,
-                        ))
-                    }
-                }
+
+        val composingText = content.composingText
+        val queryText = normalizeReading(composingText)
+        val suggestions = mutableListOf<SuggestionCandidate>()
+
+        // Preserve a small set of hand-ranked everyday words where JMdict priority markers tie.
+        builtInDict[queryText]?.forEach { word ->
+            if (suggestions.size < maxCandidateCount) {
+                suggestions.add(WordSuggestionCandidate(
+                    text = word,
+                    secondaryText = queryText,
+                    confidence = 0.95,
+                    isEligibleForAutoCommit = false,
+                    sourceProvider = this@JapaneseLanguageProvider,
+                ))
             }
         }
-        
+
+        // Prefer the versioned database bundled in this APK. The language-pack database remains
+        // available as a compatibility fallback for installations created before this bundle.
         val languagePackExt = getLanguagePack(subtype)?.second
-        val database = languagePackExt?.japaneseDictSQLiteDatabase?.takeIf { it.isOpen } ?: getOrOpenAssetDatabase()
-        
+        val database = getOrOpenAssetDatabase()
+            ?: languagePackExt?.japaneseDictSQLiteDatabase?.takeIf { it.isOpen }
+
         if (database != null && database.isOpen) {
             try {
-                val cur = database.query(
-                    "dictionary", 
-                    arrayOf("reading", "word"), 
-                    "reading LIKE ? || '%'", 
-                    arrayOf(queryText), 
-                    "", 
-                    "", 
-                    "reading ASC, frequency DESC", 
-                    "$maxCandidateCount"
-                )
-                
-                cur.moveToFirst()
-                val rowCount = cur.count
-                flogDebug { "Japanese DB Query was '$queryText', found $rowCount rows." }
-                
-                for (n in 0 until rowCount) {
-                    val reading = cur.getString(0)
-                    val word = cur.getString(1)
-                    cur.moveToNext()
-                    
-                    if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
-                        suggestions.add(WordSuggestionCandidate(
-                            text = word,
-                            secondaryText = reading,
-                            confidence = 0.5,
-                            isEligibleForAutoCommit = false,
-                            sourceProvider = this@JapaneseLanguageProvider,
-                        ))
+                fun appendCandidates(selection: String, selectionArgs: Array<String>, confidence: Double) {
+                    val remainingCount = maxCandidateCount - suggestions.size
+                    if (remainingCount <= 0) return
+
+                    database.query(
+                        "dictionary",
+                        arrayOf("reading", "word"),
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        "frequency DESC, reading ASC, word ASC",
+                        maxCandidateCount.toString(),
+                    ).use { cursor ->
+                        while (cursor.moveToNext()) {
+                            if (suggestions.size >= maxCandidateCount) break
+                            val reading = cursor.getString(0)
+                            val word = cursor.getString(1)
+                            if (suggestions.any { (it as? WordSuggestionCandidate)?.text == word }) continue
+
+                            suggestions.add(WordSuggestionCandidate(
+                                text = word,
+                                secondaryText = reading,
+                                confidence = confidence,
+                                isEligibleForAutoCommit = false,
+                                sourceProvider = this@JapaneseLanguageProvider,
+                            ))
+                        }
                     }
                 }
-                cur.close()
+
+                appendCandidates("reading = ?", arrayOf(queryText), confidence = 0.9)
+                if (suggestions.size < maxCandidateCount) {
+                    appendCandidates(
+                        "reading >= ? AND reading < ? AND reading <> ?",
+                        arrayOf(queryText, "$queryText\uFFFF", queryText),
+                        confidence = 0.65,
+                    )
+                }
+                flogDebug { "Japanese DB query '$queryText' returned ${suggestions.size} candidates." }
             } catch (e: Exception) {
-                flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='${e}'" }
+                flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='$e'" }
             }
         }
-        
-        return suggestions
+
+        // Keep a tiny emergency dictionary so conversion still works if the asset cannot be opened.
+        if (database == null || !database.isOpen) {
+            for ((reading, words) in builtInDict) {
+                if (suggestions.size >= maxCandidateCount) break
+                if (reading != queryText && reading.startsWith(queryText)) {
+                    for (word in words) {
+                        if (suggestions.size >= maxCandidateCount) break
+                        if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
+                            suggestions.add(WordSuggestionCandidate(
+                                text = word,
+                                secondaryText = reading,
+                                confidence = 0.6,
+                                isEligibleForAutoCommit = false,
+                                sourceProvider = this@JapaneseLanguageProvider,
+                            ))
+                        }
+                    }
+                }
+            }
+        }
+
+        return suggestions.take(maxCandidateCount)
     }
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {
@@ -313,6 +375,9 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
     }
 
     override suspend fun destroy() {
+        assetDatabase?.close()
+        assetDatabase = null
+        scope.cancel()
     }
 
     override suspend fun determineLocalComposing(

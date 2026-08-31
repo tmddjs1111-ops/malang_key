@@ -107,7 +107,7 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
                 KeyboardMode.CHARACTERS
             }
         }
-        activeState.keyboardMode = keyboardMode
+        keyboardManager.activateKeyboardModeForInput(keyboardMode)
         activeState.isComposingEnabled = when (keyboardMode) {
             KeyboardMode.NUMERIC,
             KeyboardMode.PHONE,

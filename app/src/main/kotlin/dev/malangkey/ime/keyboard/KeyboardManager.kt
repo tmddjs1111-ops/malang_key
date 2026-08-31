@@ -84,6 +84,71 @@ import org.florisboard.lib.kotlin.safeSubstring
 
 private val DoubleSpacePeriodMatcher = """([^.!?‽\s]\s)""".toRegex()
 
+private val JapaneseKanaModifierMap: Map<Char, Char> = buildMap {
+    val variantGroups = listOf(
+        "あぁ", "いぃ", "うゔぅ", "えぇ", "おぉ",
+        "かが", "きぎ", "くぐ", "けげ", "こご",
+        "さざ", "しじ", "すず", "せぜ", "そぞ",
+        "ただ", "ちぢ", "つづっ", "てで", "とど",
+        "はばぱ", "ひびぴ", "ふぶぷ", "へべぺ", "ほぼぽ",
+        "やゃ", "ゆゅ", "よょ", "わゎ",
+        "アァ", "イィ", "ウヴゥ", "エェ", "オォ",
+        "カガ", "キギ", "クグ", "ケゲ", "コゴ",
+        "サザ", "シジ", "スズ", "セゼ", "ソゾ",
+        "タダ", "チヂ", "ツヅッ", "テデ", "トド",
+        "ハバパ", "ヒビピ", "フブプ", "ヘベペ", "ホボポ",
+        "ヤャ", "ユュ", "ヨョ", "ワヮ",
+    )
+    for (group in variantGroups) {
+        group.forEachIndexed { index, character ->
+            put(character, group[(index + 1) % group.length])
+        }
+    }
+}
+
+private val JapaneseDakutenMap: Map<Char, Char> = buildMap {
+    val variantGroups = listOf(
+        "うゔ", "かが", "きぎ", "くぐ", "けげ", "こご",
+        "さざ", "しじ", "すず", "せぜ", "そぞ",
+        "ただ", "ちぢ", "つづ", "てで", "とど",
+        "はばぱ", "ひびぴ", "ふぶぷ", "へべぺ", "ほぼぽ",
+        "ウヴ", "カガ", "キギ", "クグ", "ケゲ", "コゴ",
+        "サザ", "シジ", "スズ", "セゼ", "ソゾ",
+        "タダ", "チヂ", "ツヅ", "テデ", "トド",
+        "ハバパ", "ヒビピ", "フブプ", "ヘベペ", "ホボポ",
+    )
+    for (group in variantGroups) {
+        put(group[0], group[1])
+        put(group[1], group[0])
+        if (group.length == 3) put(group[2], group[1])
+    }
+}
+
+private val JapaneseHandakutenMap: Map<Char, Char> = buildMap {
+    val variantGroups = listOf(
+        "はばぱ", "ひびぴ", "ふぶぷ", "へべぺ", "ほぼぽ",
+        "ハバパ", "ヒビピ", "フブプ", "ヘベペ", "ホボポ",
+    )
+    for (group in variantGroups) {
+        put(group[0], group[2])
+        put(group[1], group[2])
+        put(group[2], group[0])
+    }
+}
+
+private val JapaneseSmallKanaMap: Map<Char, Char> = buildMap {
+    val variantGroups = listOf(
+        "あぁ", "いぃ", "うぅ", "えぇ", "おぉ", "つっ",
+        "やゃ", "ゆゅ", "よょ", "わゎ",
+        "アァ", "イィ", "ウゥ", "エェ", "オォ", "ツッ",
+        "ヤャ", "ユュ", "ヨョ", "ワヮ",
+    )
+    for (group in variantGroups) {
+        put(group[0], group[1])
+        put(group[1], group[0])
+    }
+}
+
 class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private val prefs by FlorisPreferenceStore
     private val appContext by context.appContext()
@@ -105,6 +170,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     val languageHudDirection = MutableStateFlow(0) // -1 for left, 1 for right
     var smartbarVisibleDynamicActionsCount by mutableIntStateOf(0)
     private var lastToastReference = WeakReference<Toast>(null)
+    private var keyboardModeBeforeNumeric = KeyboardMode.CHARACTERS
 
     private val activeEvaluatorGuard = Mutex(locked = false)
     private var activeEvaluatorVersion = AtomicInteger(0)
@@ -245,6 +311,31 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      */
     fun shouldShowLanguageSwitch(): Boolean {
         return subtypeManager.subtypes.size > 1
+    }
+
+    fun activateKeyboardModeForInput(targetMode: KeyboardMode) {
+        keyboardModeBeforeNumeric = KeyboardMode.CHARACTERS
+        activeState.keyboardMode = targetMode
+    }
+
+    private fun enterNumericKeyboardMode(targetMode: KeyboardMode) {
+        when (activeState.keyboardMode) {
+            KeyboardMode.NUMERIC,
+            KeyboardMode.NUMERIC_ADVANCED,
+            KeyboardMode.PHONE,
+            KeyboardMode.PHONE2 -> Unit
+            else -> keyboardModeBeforeNumeric = activeState.keyboardMode
+        }
+        activeState.keyboardMode = targetMode
+    }
+
+    private fun exitNumericKeyboardMode() {
+        activeState.keyboardMode = when (keyboardModeBeforeNumeric) {
+            KeyboardMode.CHARACTERS,
+            KeyboardMode.SYMBOLS,
+            KeyboardMode.SYMBOLS2 -> keyboardModeBeforeNumeric
+            else -> KeyboardMode.CHARACTERS
+        }
     }
 
     fun executeSwipeAction(swipeAction: SwipeAction) {
@@ -621,6 +712,27 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
     }
 
+    private fun replaceLastKana(replacements: Map<Char, Char>) {
+        val current = editorInstance.run { activeContent.getTextBeforeCursor(1).lastOrNull() } ?: return
+        val replacement = replacements[current] ?: return
+        editorInstance.deleteBackwards(OperationUnit.CHARACTERS)
+        editorInstance.commitChar(replacement.toString())
+    }
+
+    private fun handleKanaModifier() = replaceLastKana(JapaneseKanaModifierMap)
+
+    private fun handleJapaneseDakuten() = replaceLastKana(JapaneseDakutenMap)
+
+    private fun handleJapaneseHandakuten() = replaceLastKana(JapaneseHandakutenMap)
+
+    private fun handleJapaneseSmallKana() = replaceLastKana(JapaneseSmallKanaMap)
+
+    /** Commits the highest-ranked Japanese conversion candidate, if one is available. */
+    private fun handleJapaneseConvert() {
+        nlpManager.getPrimaryCandidate(dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId)
+            ?.let { commitCandidate(it) }
+    }
+
     /**
      * Handles a [KeyCode.KANA_HIRA] event
      */
@@ -742,9 +854,18 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.IME_UI_MODE_EDITING -> { /* No-op: handled by horizontal scrubbing gesture in QuickActionButton */ }
             KeyCode.VOICE_INPUT -> FlorisImeService.switchToVoiceInputMethod()
             KeyCode.KANA_SWITCHER -> handleKanaSwitch()
+            KeyCode.KANA_SMALL -> handleKanaModifier()
             KeyCode.KANA_HIRA -> handleKanaHira()
             KeyCode.KANA_KATA -> handleKanaKata()
             KeyCode.KANA_HALF_KATA -> handleKanaHalfKata()
+            KeyCode.JAPANESE_VIEW_NUMERIC -> enterNumericKeyboardMode(KeyboardMode.NUMERIC)
+            KeyCode.JAPANESE_VIEW_SYMBOLS -> activeState.keyboardMode = KeyboardMode.SYMBOLS
+            KeyCode.JAPANESE_SPACE -> handleSpace(data)
+            KeyCode.JAPANESE_ENTER -> handleEnter()
+            KeyCode.JAPANESE_CONVERT -> handleJapaneseConvert()
+            KeyCode.JAPANESE_DAKUTEN -> handleJapaneseDakuten()
+            KeyCode.JAPANESE_HANDAKUTEN -> handleJapaneseHandakuten()
+            KeyCode.JAPANESE_SMALL_KANA -> handleJapaneseSmallKana()
             KeyCode.LANGUAGE_SWITCH -> handleLanguageSwitch()
             KeyCode.REDO -> editorInstance.performRedo()
             KeyCode.SETTINGS -> FlorisImeService.launchSettings()
@@ -769,10 +890,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.TOGGLE_AUTOCORRECT -> handleToggleAutocorrect()
             KeyCode.UNDO -> editorInstance.performUndo()
             KeyCode.VIEW_CHARACTERS -> activeState.keyboardMode = KeyboardMode.CHARACTERS
-            KeyCode.VIEW_NUMERIC -> activeState.keyboardMode = KeyboardMode.NUMERIC
-            KeyCode.VIEW_NUMERIC_ADVANCED -> activeState.keyboardMode = KeyboardMode.NUMERIC_ADVANCED
-            KeyCode.VIEW_PHONE -> activeState.keyboardMode = KeyboardMode.PHONE
-            KeyCode.VIEW_PHONE2 -> activeState.keyboardMode = KeyboardMode.PHONE2
+            KeyCode.VIEW_NUMERIC -> enterNumericKeyboardMode(KeyboardMode.NUMERIC)
+            KeyCode.VIEW_NUMERIC_ADVANCED -> enterNumericKeyboardMode(KeyboardMode.NUMERIC_ADVANCED)
+            KeyCode.VIEW_PHONE -> enterNumericKeyboardMode(KeyboardMode.PHONE)
+            KeyCode.VIEW_PHONE2 -> enterNumericKeyboardMode(KeyboardMode.PHONE2)
+            KeyCode.EXIT_NUMERIC -> exitNumericKeyboardMode()
             KeyCode.VIEW_SYMBOLS -> activeState.keyboardMode = KeyboardMode.SYMBOLS
             KeyCode.VIEW_SYMBOLS2 -> activeState.keyboardMode = KeyboardMode.SYMBOLS2
             else -> {

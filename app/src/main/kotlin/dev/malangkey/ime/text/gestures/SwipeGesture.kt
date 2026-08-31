@@ -101,7 +101,7 @@ abstract class SwipeGesture {
             return false
         }
 
-        fun onTouchUp(event: MotionEvent, pointer: Pointer): Boolean {
+        fun onTouchUp(event: MotionEvent, pointer: Pointer, cardinalOnly: Boolean = false): Boolean {
             if (!isEnabled) return false
             pointerMap.findById(pointer.id)?.let { gesturePointer ->
                 val currentX = ViewUtils.px2dp(event.getX(pointer.index))
@@ -116,8 +116,14 @@ abstract class SwipeGesture {
                 val thresholdSpeed = prefs.gestures.swipeVelocityThreshold.get().toDouble()
                 val thresholdWidth = prefs.gestures.swipeDistanceThreshold.get().dp.value.toDouble()
                 val unitWidth = thresholdWidth / 4.0
-                return if ((abs(absDiffX) > thresholdWidth || abs(absDiffY) > thresholdWidth) && (abs(velocityX) > thresholdSpeed || abs(velocityY) > thresholdSpeed)) {
-                    val direction = detectDirection(absDiffX.toDouble(), absDiffY.toDouble())
+                val requiredDistance = if (cardinalOnly) thresholdWidth / 2.0 else thresholdWidth
+                val hasRequiredVelocity = cardinalOnly || abs(velocityX) > thresholdSpeed || abs(velocityY) > thresholdSpeed
+                return if ((abs(absDiffX) > requiredDistance || abs(absDiffY) > requiredDistance) && hasRequiredVelocity) {
+                    val direction = if (cardinalOnly) {
+                        detectCardinalDirection(absDiffX.toDouble(), absDiffY.toDouble())
+                    } else {
+                        detectDirection(absDiffX.toDouble(), absDiffY.toDouble())
+                    }
                     gesturePointer.absUnitCountX = (absDiffX / unitWidth).toInt()
                     gesturePointer.absUnitCountY = (absDiffY / unitWidth).toInt()
                     listener.onSwipe(Event(
@@ -169,6 +175,14 @@ abstract class SwipeGesture {
                 diffAngle >= (11/16.0) && diffAngle < (13/16.0) ->      Direction.UP
                 diffAngle >= (13/16.0) && diffAngle < (15/16.0) ->      Direction.UP_RIGHT
                 else ->                                                 Direction.RIGHT
+            }
+        }
+
+        private fun detectCardinalDirection(diffX: Double, diffY: Double): Direction {
+            return if (abs(diffX) >= abs(diffY)) {
+                if (diffX < 0) Direction.LEFT else Direction.RIGHT
+            } else {
+                if (diffY < 0) Direction.UP else Direction.DOWN
             }
         }
 

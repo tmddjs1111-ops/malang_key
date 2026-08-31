@@ -27,6 +27,7 @@ class TextKeyboard(
     override val mode: KeyboardMode,
     val extendedPopupMapping: PopupMapping?,
     val extendedPopupMappingDefault: PopupMapping?,
+    val hasCompactNumberRow: Boolean = false,
 ) : Keyboard() {
     val rowCount: Int
         get() = arrangement.size
@@ -36,6 +37,23 @@ class TextKeyboard(
 
     fun maxKeyCountPerRow(): Int {
         return arrangement.maxOfOrNull { it.size } ?: 10
+    }
+
+    fun heightInRows(): Float {
+        val compactRowReduction = if (hasCompactNumberRow && rowCount > 0) {
+            1.0f - CompactNumberRowHeightFactor
+        } else {
+            0.0f
+        }
+        return rowCount.toFloat() - compactRowReduction
+    }
+
+    fun isCompactNumberRowKey(key: TextKey): Boolean {
+        return hasCompactNumberRow && arrangement.firstOrNull()?.any { it === key } == true
+    }
+
+    private fun rowHeightFactor(rowIndex: Int): Float {
+        return if (hasCompactNumberRow && rowIndex == 0) CompactNumberRowHeightFactor else 1.0f
     }
 
     override fun getKeyForPos(pointerX: Float, pointerY: Float): TextKey? {
@@ -60,10 +78,12 @@ class TextKeyboard(
         if (desiredTouchBounds.isEmpty() || desiredVisibleBounds.isEmpty()) return
         if (keyboardWidth.isNaN() || keyboardHeight.isNaN()) return
         val rowMarginH = abs(desiredTouchBounds.width - desiredVisibleBounds.width)
-        val rowMarginV = (keyboardHeight - desiredTouchBounds.height * rowCount.toFloat()) / (rowCount - 1).coerceAtLeast(1).toFloat()
+        val rowMarginV = (keyboardHeight - desiredTouchBounds.height * heightInRows()) /
+            (rowCount - 1).coerceAtLeast(1).toFloat()
+        var posY = 0.0f
 
         for ((r, row) in rows().withIndex()) {
-            val posY = (desiredTouchBounds.height + rowMarginV) * r
+            val rowHeight = desiredTouchBounds.height * rowHeightFactor(r)
             val availableWidth = (keyboardWidth - rowMarginH) / desiredTouchBounds.width
             var requestedWidth = 0.0f
             var shrinkSum = 0.0f
@@ -89,7 +109,7 @@ class TextKeyboard(
                         left = posX
                         top = posY
                         right = posX + keyWidth
-                        bottom = posY + desiredTouchBounds.height
+                        bottom = posY + rowHeight
                     }
                     key.visibleBounds.apply {
                         left = key.touchBounds.left + abs(desiredTouchBounds.left - desiredVisibleBounds.left) + when {
@@ -130,7 +150,7 @@ class TextKeyboard(
                         left = posX
                         top = posY
                         right = posX + keyWidth
-                        bottom = posY + desiredTouchBounds.height
+                        bottom = posY + rowHeight
                     }
                     key.visibleBounds.apply {
                         left = key.touchBounds.left + abs(desiredTouchBounds.left - desiredVisibleBounds.left)
@@ -152,6 +172,7 @@ class TextKeyboard(
                     }
                 }
             }
+            posY += rowHeight + rowMarginV
         }
     }
 
@@ -161,6 +182,10 @@ class TextKeyboard(
 
     fun rows(): Iterator<Array<TextKey>> {
         return arrangement.iterator()
+    }
+
+    companion object {
+        const val CompactNumberRowHeightFactor = 0.82f
     }
 
     class TextKeyboardIterator internal constructor(

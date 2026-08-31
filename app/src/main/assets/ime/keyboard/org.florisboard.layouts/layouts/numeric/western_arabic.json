@@ -21,6 +21,6 @@
     { "code": 45, "label": "-" },
     { "code": 48, "label": "0", "type": "numeric", "popup": { "main": { "code": 43, "label": "+" } } },
     { "code": 46, "label": "." },
-    { "code": -202, "label": "?123", "type": "system_gui", "popup": { "main": { "code": -232, "label": "⌨" } } }
+    { "code": -208, "label": "EXIT", "type": "system_gui", "popup": { "main": { "code": -232, "label": "⌨" } } }
   ]
 ]

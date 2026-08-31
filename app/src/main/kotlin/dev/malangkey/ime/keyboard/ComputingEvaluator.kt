@@ -171,6 +171,7 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
             KeyCode.VIEW_SYMBOLS2 -> {
                 evaluator.context()?.getString(R.string.key__view_symbols2)
             }
+            KeyCode.EXIT_NUMERIC -> data.label
             KeyCode.HALF_SPACE -> {
                 evaluator.context()?.getString(R.string.key__view_half_space)
             }
@@ -180,6 +181,15 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
             KeyCode.IME_UI_MODE_EDITING -> {
                 evaluator.context()?.getString(R.string.quick_action__ime_ui_mode_editing)
             }
+            KeyCode.JAPANESE_VIEW_NUMERIC,
+            KeyCode.JAPANESE_VIEW_SYMBOLS,
+            KeyCode.JAPANESE_SPACE,
+            KeyCode.JAPANESE_ENTER,
+            KeyCode.JAPANESE_CONVERT,
+            KeyCode.KANA_SMALL,
+            KeyCode.JAPANESE_DAKUTEN,
+            KeyCode.JAPANESE_HANDAKUTEN,
+            KeyCode.JAPANESE_SMALL_KANA -> data.label
             else -> null
         }
     }

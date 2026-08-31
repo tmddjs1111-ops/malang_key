@@ -10,6 +10,7 @@
     <string name="florisboard__theme_editor_wiki_url" translatable="false">https://github.com/florisboard/florisboard/wiki/Using-the-new-Theme-Editor</string>
     <string name="florisboard__internal_key_codes_url" translatable="false">https://github.com/florisboard/florisboard/blob/main/app/src/main/kotlin/dev/malangkey/ime/text/key/KeyCode.kt</string>
     <string name="florisboard__character_key_codes_url" translatable="false">https://unicode-table.com/en</string>
+    <string name="jmdict__project_url" translatable="false">https://www.edrdg.org/wiki/JMdict-EDICT_Dictionary_Project.html</string>
 
     <string name="general__system_string_placeholder" translatable="false">%s</string>
     <string name="general__empty_string" translatable="false"/>

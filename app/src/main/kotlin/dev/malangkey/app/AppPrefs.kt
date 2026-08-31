@@ -183,7 +183,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Correction {
         val autoCapitalization = boolean(
             key = "correction__auto_capitalization",
-            default = true,
+            default = false,
         )
         val autoSpacePunctuation = boolean(
             key = "correction__auto_space_punctuation",
@@ -542,7 +542,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val heightFactorPortrait = int(
             key = "keyboard__height_factor_portrait",
-            default = 100,
+            default = 80,
         )
         val heightFactorLandscape = int(
             key = "keyboard__height_factor_landscape",
@@ -562,7 +562,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val popupEnabled = boolean(
             key = "keyboard__popup_enabled",
-            default = true,
+            default = false,
         )
         val mergeHintPopupsEnabled = boolean(
             key = "keyboard__merge_hint_popups_enabled",
@@ -760,7 +760,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val keyboardFontFamily = string(
             key = "malang__keyboard_font_family",
-            default = "system",
+            default = "jua",
         )
         val keyFontSizeMultiplier = int(
             key = "malang__key_font_size_multiplier",
@@ -768,7 +768,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val keyHintFontSizeMultiplier = int(
             key = "malang__key_hint_font_size_multiplier",
-            default = 100,
+            default = 80,
         )
         val keyBorderThickness = int(
             key = "malang__key_border_thickness",

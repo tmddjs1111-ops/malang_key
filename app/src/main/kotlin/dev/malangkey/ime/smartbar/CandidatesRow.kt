@@ -20,12 +20,18 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.ime.keyboard.FlorisImeSizing
 import dev.malangkey.ime.nlp.ClipboardSuggestionCandidate
 import dev.malangkey.ime.nlp.SuggestionCandidate
 import dev.malangkey.ime.theme.FlorisImeUi
@@ -53,6 +60,7 @@ import org.florisboard.lib.snygg.SnyggSelector
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggColumn
 import org.florisboard.lib.snygg.ui.SnyggIcon
+import org.florisboard.lib.snygg.ui.SnyggIconButton
 import org.florisboard.lib.snygg.ui.SnyggRow
 import org.florisboard.lib.snygg.ui.SnyggSpacer
 import org.florisboard.lib.snygg.ui.SnyggText
@@ -60,7 +68,11 @@ import org.florisboard.lib.snygg.ui.SnyggText
 val CandidatesRowScrollbarHeight = 2.dp
 
 @Composable
-fun CandidatesRow(modifier: Modifier = Modifier) {
+fun CandidatesRow(
+    modifier: Modifier = Modifier,
+    expanded: Boolean = false,
+    onExpandedChange: (Boolean) -> Unit = { },
+) {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
@@ -70,70 +82,162 @@ fun CandidatesRow(modifier: Modifier = Modifier) {
     val displayMode by prefs.suggestion.displayMode.collectAsState()
     val candidates by nlpManager.activeCandidatesFlow.collectAsState()
 
+    LaunchedEffect(candidates.size) {
+        if (candidates.size <= 3 && expanded) {
+            onExpandedChange(false)
+        }
+    }
+
     SnyggRow(
         elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
-        modifier = modifier
-            .fillMaxSize()
-            .conditional(displayMode == CandidatesDisplayMode.DYNAMIC_SCROLLABLE && candidates.size > 1) {
-                florisHorizontalScroll(scrollbarHeight = CandidatesRowScrollbarHeight)
-            },
-        horizontalArrangement = if (candidates.size > 1) {
-            Arrangement.Start
-        } else {
-            Arrangement.Center
-        },
+        modifier = modifier.fillMaxSize(),
     ) {
         if (candidates.isNotEmpty()) {
-            val candidateModifier = if (candidates.size == 1) {
-                Modifier
-                    .fillMaxHeight()
-                    .weight(1f, fill = false)
-            } else {
-                Modifier
-                    .fillMaxHeight()
-                    .conditional(displayMode == CandidatesDisplayMode.CLASSIC) {
-                        weight(1f)
-                    }
-                    .conditional(displayMode != CandidatesDisplayMode.CLASSIC) {
-                        wrapContentWidth().widthIn(max = 160.dp)
-                    }
-            }
-            val list = when (displayMode) {
-                CandidatesDisplayMode.CLASSIC -> candidates.subList(0, 3.coerceAtMost(candidates.size))
-                else -> candidates
-            }
-            for ((n, candidate) in list.withIndex()) {
-                if (n > 0) {
-                    SnyggSpacer(
-                        elementName = FlorisImeUi.SmartbarCandidateSpacer.elementName,
-                        modifier = Modifier
-                            .width(1.dp)
-                            .fillMaxHeight(0.6f)
-                            .align(Alignment.CenterVertically),
-                    )
-                }
-                CandidateItem(
-                    modifier = candidateModifier,
-                    candidate = candidate,
-                    displayMode = displayMode,
-                    onClick = {
-                        // Can't use candidate directly
-                        keyboardManager.commitCandidate(candidates[n])
+            if (expanded) {
+                ExpandedCandidates(
+                    candidates = candidates,
+                    longPressDelay = prefs.keyboard.longPressDelay.get().toLong(),
+                    onCandidateClick = { candidate ->
+                        onExpandedChange(false)
+                        keyboardManager.commitCandidate(candidate)
                     },
-                    onLongPress = {
-                        // Can't use candidate directly
-                        val candidateItem = candidates[n]
-                        if (candidateItem.isEligibleForUserRemoval) {
-                            nlpManager.removeSuggestion(subtypeManager.activeSubtype, candidateItem)
+                    onCandidateLongPress = { candidate ->
+                        if (candidate.isEligibleForUserRemoval) {
+                            nlpManager.removeSuggestion(subtypeManager.activeSubtype, candidate)
                         } else {
                             false
                         }
                     },
-                    longPressDelay = prefs.keyboard.longPressDelay.get().toLong(),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f),
                 )
+            } else {
+                SnyggRow(
+                    elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .conditional(displayMode == CandidatesDisplayMode.DYNAMIC_SCROLLABLE && candidates.size > 1) {
+                            florisHorizontalScroll(scrollbarHeight = CandidatesRowScrollbarHeight)
+                        },
+                    horizontalArrangement = if (candidates.size > 1) Arrangement.Start else Arrangement.Center,
+                ) {
+                    val list = when (displayMode) {
+                        CandidatesDisplayMode.CLASSIC -> candidates.take(3)
+                        else -> candidates
+                    }
+                    for ((n, candidate) in list.withIndex()) {
+                        if (n > 0) {
+                            CandidateSpacer()
+                        }
+                        val candidateModifier = if (candidates.size == 1) {
+                            Modifier
+                                .fillMaxHeight()
+                                .weight(1f, fill = false)
+                        } else {
+                            Modifier
+                                .fillMaxHeight()
+                                .conditional(displayMode == CandidatesDisplayMode.CLASSIC) {
+                                    weight(1f)
+                                }
+                                .conditional(displayMode != CandidatesDisplayMode.CLASSIC) {
+                                    wrapContentWidth().widthIn(max = 160.dp)
+                                }
+                        }
+                        CandidateItem(
+                            modifier = candidateModifier,
+                            candidate = candidate,
+                            displayMode = displayMode,
+                            onClick = { keyboardManager.commitCandidate(candidates[n]) },
+                            onLongPress = {
+                                val candidateItem = candidates[n]
+                                if (candidateItem.isEligibleForUserRemoval) {
+                                    nlpManager.removeSuggestion(subtypeManager.activeSubtype, candidateItem)
+                                } else {
+                                    false
+                                }
+                            },
+                            longPressDelay = prefs.keyboard.longPressDelay.get().toLong(),
+                        )
+                    }
+                }
+            }
+            if (candidates.size > 3) {
+                SnyggIconButton(
+                    elementName = FlorisImeUi.SmartbarExtendedActionsToggle.elementName,
+                    onClick = { onExpandedChange(!expanded) },
+                    modifier = Modifier
+                        .width(FlorisImeSizing.smartbarHeight)
+                        .fillMaxHeight(),
+                ) {
+                    SnyggIcon(
+                        elementName = FlorisImeUi.SmartbarExtendedActionsToggle.elementName,
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ExpandedCandidates(
+    candidates: List<SuggestionCandidate>,
+    longPressDelay: Long,
+    onCandidateClick: (SuggestionCandidate) -> Unit,
+    onCandidateLongPress: (SuggestionCandidate) -> Boolean,
+    modifier: Modifier = Modifier,
+) {
+    SnyggColumn(
+        elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
+        modifier = modifier,
+    ) {
+        for (row in candidates.take(8).chunked(4)) {
+            SnyggRow(
+                elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                for ((n, candidate) in row.withIndex()) {
+                    if (n > 0) {
+                        CandidateSpacer()
+                    }
+                    CandidateItem(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f),
+                        candidate = candidate,
+                        displayMode = CandidatesDisplayMode.CLASSIC,
+                        onClick = { onCandidateClick(candidate) },
+                        onLongPress = { onCandidateLongPress(candidate) },
+                        longPressDelay = longPressDelay,
+                    )
+                }
+                repeat(4 - row.size) {
+                    SnyggBox(
+                        elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f),
+                    ) { }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.CandidateSpacer() {
+    SnyggSpacer(
+        elementName = FlorisImeUi.SmartbarCandidateSpacer.elementName,
+        modifier = Modifier
+            .width(1.dp)
+            .fillMaxHeight(0.6f)
+            .align(Alignment.CenterVertically),
+    )
 }
 
 @Composable

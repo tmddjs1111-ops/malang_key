@@ -47,6 +47,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Fixed>(),
             ) { (rootInsets, offset), fixedMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -113,6 +115,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Fixed>(),
             ) { (rootInsets, offset), fixedMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -178,6 +182,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Fixed>(),
             ) { (rootInsets, offset), fixedMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -244,6 +250,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Fixed>(),
             ) { (rootInsets, offset), fixedMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -312,6 +320,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Floating>(),
             ) { (rootInsets, offset), floatingMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -375,6 +385,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Floating>(),
             ) { (rootInsets, offset), floatingMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -447,6 +459,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Floating>(),
             ) { (rootInsets, offset), floatingMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {
@@ -519,6 +533,8 @@ class ImeWindowControllerEditorResizeTest : FunSpec({
                 Arb.enum<ImeWindowMode.Floating>(),
             ) { (rootInsets, offset), floatingMode ->
                 val prefs by jetprefDataStoreOf(FlorisPreferenceModel::class)
+                prefs.keyboard.heightFactorPortrait.set(100)
+                prefs.keyboard.heightFactorLandscape.set(100)
                 val windowController = ImeWindowController(prefs, backgroundScope)
                 windowController.updateRootInsets(rootInsets)
                 windowController.updateWindowConfig {

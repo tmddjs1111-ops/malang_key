@@ -512,8 +512,9 @@ private fun ThemeTabContent(
                         prefs.malang.customRealEnterKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customRealEnterKeyTextColor.set(Color.Unspecified)
                         prefs.malang.keyCornerRadius.set(6)
+                        prefs.malang.keyboardFontFamily.set("jua")
                         prefs.malang.keyFontSizeMultiplier.set(100)
-                        prefs.malang.keyHintFontSizeMultiplier.set(100)
+                        prefs.malang.keyHintFontSizeMultiplier.set(80)
                         prefs.malang.keyBorderThickness.set(0)
                         prefs.malang.keyBorderOpacity.set(20)
                     }

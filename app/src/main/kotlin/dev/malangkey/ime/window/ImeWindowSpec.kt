@@ -110,7 +110,7 @@ sealed class ImeWindowSpec {
         require(smartbarRowCount in 0..2)
         val staticSmartbarHeight = calcRowHeight(constraints.defKeyboardHeight * constraints.smartbarStaticScalingFactor * smartbarRowCount)
         val keyboardHeight = ((effKeyboardHeight - staticSmartbarHeight) * constraints.baselineRowCount) /
-            (rowCount + constraints.smartbarDynamicScalingFactor * smartbarRowCount)
+            ((rowCount + constraints.smartbarDynamicScalingFactor * smartbarRowCount) * userPreferredOptions.heightFactor)
         return keyboardHeight
     }
 

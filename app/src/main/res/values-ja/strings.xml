@@ -520,6 +520,8 @@
     <string name="about__project_license__summary" comment="Preference summary">MalangKeyは{license_name}の下でライセンスされています</string>
     <string name="about__project_license__error_license_text_failed" comment="Error text for license text loading failure">エラー: ライセンステキストの読み込みに失敗しました。\n-&gt; 理由: {error_message}</string>
     <string name="about__project_license__error_reason_asset_manager_null" comment="Error text if asset manager is null">アセットマネージャーの参照がnullです</string>
+    <string name="about__jmdict__title" comment="Preference title">日本語内蔵辞書 (JMdict)</string>
+    <string name="about__jmdict__summary" comment="Preference summary">EDRDG · CC BY-SA 4.0 — 出典とライセンスを表示</string>
     <string name="about__third_party_licenses__title" comment="Preference title">サードパーティライセンス</string>
     <string name="about__third_party_licenses__summary" comment="Preference summary">このアプリに含まれるサードパーティライブラリのライセンス</string>
     <!-- Setup UI strings -->

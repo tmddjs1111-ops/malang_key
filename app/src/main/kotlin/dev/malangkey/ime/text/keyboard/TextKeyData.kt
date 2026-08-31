@@ -132,6 +132,7 @@ data class TextKeyData(
                 VIEW_SYMBOLS,
                 VIEW_SYMBOLS2,
                 VIEW_NUMERIC_ADVANCED,
+                EXIT_NUMERIC,
                 IME_UI_MODE_TEXT,
                 IME_UI_MODE_MEDIA,
                 IME_UI_MODE_CLIPBOARD,
@@ -407,6 +408,12 @@ data class TextKeyData(
             type = KeyType.SYSTEM_GUI,
             code = KeyCode.VIEW_NUMERIC_ADVANCED,
             label = "view_numeric_advanced",
+        )
+        /** Returns from a numeric keypad to the keyboard mode which opened it. */
+        val EXIT_NUMERIC = TextKeyData(
+            type = KeyType.SYSTEM_GUI,
+            code = KeyCode.EXIT_NUMERIC,
+            label = "EXIT",
         )
 
         /** Predefined key data for [KeyCode.IME_UI_MODE_TEXT] */

@@ -1,0 +1,12 @@
+JMdict attribution
+
+This product includes Japanese dictionary data from the JMdict project.
+
+Copyright: Electronic Dictionary Research and Development Group (EDRDG)
+Project: https://www.edrdg.org/wiki/JMdict-EDICT_Dictionary_Project.html
+License: Creative Commons Attribution-ShareAlike 4.0 International
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+MalangKey converts the JMdict XML data into an indexed SQLite database and
+assigns candidate ranking scores from JMdict priority markers. The original
+dictionary entries are otherwise not translated or semantically modified.

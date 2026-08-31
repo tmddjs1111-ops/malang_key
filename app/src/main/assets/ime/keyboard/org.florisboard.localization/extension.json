@@ -964,7 +964,7 @@
       "currencySet": "org.florisboard.currencysets:yen",
       "popupMapping": "org.florisboard.localization:ja-JP-jis",
       "preferred": {
-        "characters": "org.florisboard.layouts:japanese_flick_12key",
+        "characters": "org.florisboard.layouts:japanese_20key",
         "symbols": "org.florisboard.layouts:cjk",
         "symbols2": "org.florisboard.layouts:cjk",
         "numericRow": "org.florisboard.layouts:cjk"
@@ -997,22 +997,6 @@
       "popupMapping": "org.florisboard.localization:ja-JP-jis",
       "preferred": {
         "characters": "org.florisboard.layouts:qwerty",
-        "symbols": "org.florisboard.layouts:cjk",
-        "symbols2": "org.florisboard.layouts:cjk",
-        "numericRow": "org.florisboard.layouts:cjk"
-      }
-    },
-    {
-      "languageTag": "ja-JP-20key",
-      "nlpProviders": {
-        "spelling": "org.florisboard.nlp.providers.japanese",
-        "suggestion": "org.florisboard.nlp.providers.japanese"
-      },
-      "composer": "org.florisboard.composers:kana-unicode",
-      "currencySet": "org.florisboard.currencysets:yen",
-      "popupMapping": "org.florisboard.localization:ja-JP-jis",
-      "preferred": {
-        "characters": "org.florisboard.layouts:japanese_20key",
         "symbols": "org.florisboard.layouts:cjk",
         "symbols2": "org.florisboard.layouts:cjk",
         "numericRow": "org.florisboard.layouts:cjk"

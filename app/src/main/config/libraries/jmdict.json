@@ -1,0 +1,14 @@
+{
+  "uniqueId": "jmdict",
+  "name": "JMdict Japanese-Multilingual Dictionary",
+  "developers": [
+    {
+      "name": "Electronic Dictionary Research and Development Group",
+      "organisationUrl": "https://www.edrdg.org/"
+    }
+  ],
+  "website": "https://www.edrdg.org/wiki/JMdict-EDICT_Dictionary_Project.html",
+  "licenses": [
+    "cc-by-sa-4.0"
+  ]
+}

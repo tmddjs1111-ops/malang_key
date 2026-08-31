@@ -1,6 +1,6 @@
 [
   [
-    { "code": -232, "label": "記号", "type": "system_gui", "grow": 1 },
+    { "code": -232, "label": "⌄", "type": "system_gui", "grow": 1 },
     { "code": 12354, "label": "あ", "grow": 1, "popup": { "relevant": [
         { "code": 12356, "label": "い" },
         { "code": 12358, "label": "う" },
@@ -25,7 +25,7 @@
     { "code": -7, "label": "⌫", "type": "enter_editing", "grow": 1 }
   ],
   [
-    { "code": -225, "label": "←", "type": "enter_editing", "grow": 1 },
+    { "code": 12289, "label": "、", "type": "character", "grow": 1 },
     { "code": 12383, "label": "た", "grow": 1, "popup": { "relevant": [
         { "code": 12385, "label": "ち" },
         { "code": 12388, "label": "つ" },
@@ -47,10 +47,10 @@
         { "code": 12411, "label": "ほ" }
       ]}
     },
-    { "code": -226, "label": "→", "type": "enter_editing", "grow": 1 }
+    { "code": -9716, "label": "␣", "type": "system_gui", "grow": 1 }
   ],
   [
-    { "code": -9710, "label": "カナ", "type": "system_gui", "grow": 1 },
+    { "code": -9714, "label": "123", "type": "system_gui", "grow": 1 },
     { "code": 12414, "label": "ま", "grow": 1, "popup": { "relevant": [
         { "code": 12415, "label": "み" },
         { "code": 12416, "label": "む" },
@@ -72,13 +72,14 @@
         { "code": 12429, "label": "ろ" }
       ]}
     },
-    { "code": -8, "label": "変換", "type": "enter_editing", "grow": 1 }
+    { "code": -9717, "label": "完了", "type": "system_gui", "grow": 1 }
   ],
   [
-    { "code": -213, "label": "あA", "type": "system_gui", "grow": 1 },
-    { "code": 12288, "label": "゛゜小", "type": "character", "grow": 1, "popup": { "relevant": [
-        { "code": 12441, "label": "゛" },
-        { "code": 12442, "label": "゜" }
+    { "code": -9715, "label": ">?123", "type": "system_gui", "grow": 1 },
+    { "code": -9719, "label": "゛゜小", "type": "system_gui", "grow": 1, "popup": { "relevant": [
+        { "code": -9720, "label": "゛", "type": "system_gui" },
+        { "code": -9722, "label": "小", "type": "system_gui" },
+        { "code": -9721, "label": "゜", "type": "system_gui" }
       ]}
     },
     { "code": 12431, "label": "わ", "grow": 1, "popup": { "relevant": [
@@ -94,6 +95,6 @@
         { "code": 33, "label": "!" }
       ]}
     },
-    { "code": -10, "label": "↵", "type": "enter_editing", "grow": 1 }
+    { "code": -9718, "label": "変換", "type": "system_gui", "grow": 1 }
   ]
 ]

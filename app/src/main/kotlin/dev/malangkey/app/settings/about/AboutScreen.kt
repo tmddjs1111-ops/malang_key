@@ -121,6 +121,12 @@ fun AboutScreen() = FlorisScreen {
         )
         Preference(
             icon = Icons.Outlined.Description,
+            title = stringRes(R.string.about__jmdict__title),
+            summary = stringRes(R.string.about__jmdict__summary),
+            onClick = { context.launchUrl(R.string.jmdict__project_url) },
+        )
+        Preference(
+            icon = Icons.Outlined.Description,
             title = stringRes(id = R.string.about__third_party_licenses__title),
             summary = stringRes(id = R.string.about__third_party_licenses__summary),
             onClick = { navController.navigate(Routes.Settings.ThirdPartyLicenses) },

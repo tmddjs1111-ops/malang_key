@@ -86,6 +86,7 @@ object KeyCode {
     const val VIEW_NUMERIC_ADVANCED =       -205
     const val VIEW_PHONE =                  -206
     const val VIEW_PHONE2 =                 -207
+    const val EXIT_NUMERIC =                -208
 
     const val IME_UI_MODE_TEXT =            -211
     const val IME_UI_MODE_MEDIA =           -212
@@ -130,11 +131,19 @@ object KeyCode {
     const val CHAR_WIDTH_FULL =            -9702
     const val CHAR_WIDTH_HALF =            -9703
 
-    const val KANA_SMALL =                 12307
+    const val KANA_SMALL =                 -9719
     const val KANA_SWITCHER =              -9710
     const val KANA_HIRA =                  -9711
     const val KANA_KATA =                  -9712
     const val KANA_HALF_KATA =             -9713
+    const val JAPANESE_VIEW_NUMERIC =      -9714
+    const val JAPANESE_VIEW_SYMBOLS =      -9715
+    const val JAPANESE_SPACE =             -9716
+    const val JAPANESE_ENTER =             -9717
+    const val JAPANESE_CONVERT =           -9718
+    const val JAPANESE_DAKUTEN =           -9720
+    const val JAPANESE_HANDAKUTEN =        -9721
+    const val JAPANESE_SMALL_KANA =        -9722
 
     const val KESHIDA =                     1600
     const val HALF_SPACE =                  8204

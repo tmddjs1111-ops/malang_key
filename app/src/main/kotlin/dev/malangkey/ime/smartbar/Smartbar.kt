@@ -45,7 +45,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -60,6 +63,7 @@ import dev.malangkey.R
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.FlorisImeSizing
 import dev.malangkey.ime.nlp.NlpInlineAutofill
+import dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider
 import dev.malangkey.ime.smartbar.quickaction.QuickActionButton
 import dev.malangkey.ime.smartbar.quickaction.QuickActionsRow
 import dev.malangkey.ime.smartbar.quickaction.ToggleOverflowPanelAction
@@ -95,11 +99,24 @@ private val NoAnimationTween = tween<Float>(0)
 @Composable
 fun Smartbar() {
     val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val nlpManager by context.nlpManager()
     val smartbarEnabled by prefs.smartbar.enabled.collectAsState()
     val extendedActionsPlacement by prefs.smartbar.extendedActionsPlacement.collectAsState()
+    val candidates by nlpManager.activeCandidatesFlow.collectAsState()
+    val hasJapaneseCandidates = candidates.any {
+        it.sourceProvider?.providerId == JapaneseLanguageProvider.ProviderId
+    }
+    var candidatesExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(hasJapaneseCandidates) {
+        if (!hasJapaneseCandidates) {
+            candidatesExpanded = false
+        }
+    }
 
     AnimatedVisibility(
-        visible = smartbarEnabled,
+        visible = smartbarEnabled || hasJapaneseCandidates,
         enter = VerticalEnterTransition,
         exit = VerticalExitTransition,
     ) {
@@ -107,13 +124,21 @@ fun Smartbar() {
             ExtendedActionsPlacement.ABOVE_CANDIDATES -> {
                 SnyggColumn(FlorisImeUi.Smartbar.elementName) {
                     SmartbarSecondaryRow()
-                    SmartbarMainRow()
+                    SmartbarMainRow(
+                        candidatesExpanded = candidatesExpanded,
+                        onCandidatesExpandedChange = { candidatesExpanded = it },
+                        showJapaneseCandidates = hasJapaneseCandidates,
+                    )
                 }
             }
 
             ExtendedActionsPlacement.BELOW_CANDIDATES -> {
                 SnyggColumn(FlorisImeUi.Smartbar.elementName) {
-                    SmartbarMainRow()
+                    SmartbarMainRow(
+                        candidatesExpanded = candidatesExpanded,
+                        onCandidatesExpandedChange = { candidatesExpanded = it },
+                        showJapaneseCandidates = hasJapaneseCandidates,
+                    )
                     SmartbarSecondaryRow()
                 }
             }
@@ -122,7 +147,7 @@ fun Smartbar() {
                 SnyggBox(FlorisImeUi.Smartbar.elementName,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(FlorisImeSizing.smartbarHeight),
+                        .height(FlorisImeSizing.smartbarHeight * if (candidatesExpanded) 2 else 1),
                     allowClip = false,
                 ) {
                     Box(
@@ -134,7 +159,11 @@ fun Smartbar() {
                     ) {
                         SmartbarSecondaryRow()
                     }
-                    SmartbarMainRow()
+                    SmartbarMainRow(
+                        candidatesExpanded = candidatesExpanded,
+                        onCandidatesExpandedChange = { candidatesExpanded = it },
+                        showJapaneseCandidates = hasJapaneseCandidates,
+                    )
                 }
             }
         }
@@ -142,7 +171,12 @@ fun Smartbar() {
 }
 
 @Composable
-private fun SmartbarMainRow(modifier: Modifier = Modifier) {
+private fun SmartbarMainRow(
+    candidatesExpanded: Boolean,
+    onCandidatesExpandedChange: (Boolean) -> Unit,
+    showJapaneseCandidates: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
@@ -226,7 +260,10 @@ private fun SmartbarMainRow(modifier: Modifier = Modifier) {
                 if (shouldShowInlineSuggestionsUi) {
                     InlineSuggestionsUi(inlineSuggestions)
                 } else {
-                    CandidatesRow()
+                    CandidatesRow(
+                        expanded = candidatesExpanded,
+                        onExpandedChange = onCandidatesExpandedChange,
+                    )
                 }
             }
             this@CenterContent.AnimatedVisibility(
@@ -321,14 +358,22 @@ private fun SmartbarMainRow(modifier: Modifier = Modifier) {
     SnyggRow(
         modifier = modifier
             .fillMaxWidth()
-            .height(FlorisImeSizing.smartbarHeight),
+            .height(FlorisImeSizing.smartbarHeight * if (candidatesExpanded) 2 else 1),
     ) {
-        when (smartbarLayout) {
+        if (showJapaneseCandidates) {
+            CandidatesRow(
+                expanded = candidatesExpanded,
+                onExpandedChange = onCandidatesExpandedChange,
+            )
+        } else when (smartbarLayout) {
             SmartbarLayout.SUGGESTIONS_ONLY -> {
                 if (shouldShowInlineSuggestionsUi) {
                     InlineSuggestionsUi(inlineSuggestions)
                 } else {
-                    CandidatesRow()
+                    CandidatesRow(
+                        expanded = candidatesExpanded,
+                        onExpandedChange = onCandidatesExpandedChange,
+                    )
                 }
             }
 

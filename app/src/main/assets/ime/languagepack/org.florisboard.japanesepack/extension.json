@@ -2,27 +2,32 @@
   "$": "ime.extension.languagepack",
   "meta": {
     "id": "org.florisboard.japanesepack",
-    "version": "0.1.0",
-    "title": "Japanese Dictionary Pack",
-    "description": "Japanese dictionary for Kana-to-Kanji conversion based on JMdict.",
-    "maintainers": [ "florisboard" ],
-    "license": "apache-2.0"
+    "version": "1.0.0",
+    "title": "MalangKey Japanese Dictionary",
+    "description": "Bundled Kana-to-Kanji conversion dictionary built from JMdict.",
+    "maintainers": [ "MalangKey" ],
+    "license": "cc-by-sa-4.0"
   },
   "items": [
     {
       "id": "ja-JP",
       "label": "Japanese (Japan)",
-      "authors": [ "florisboard" ]
+      "authors": [ "MalangKey", "EDRDG" ]
     },
     {
       "id": "ja-JP-jis",
       "label": "Japanese (Japan) [JIS]",
-      "authors": [ "florisboard" ]
+      "authors": [ "MalangKey", "EDRDG" ]
     },
     {
       "id": "ja-JP-romaji",
       "label": "Japanese (Japan) [Romaji QWERTY]",
-      "authors": [ "florisboard" ]
+      "authors": [ "MalangKey", "EDRDG" ]
+    },
+    {
+      "id": "ja-JP-20key",
+      "label": "Japanese (Japan) [20-key Flick]",
+      "authors": [ "MalangKey", "EDRDG" ]
     }
   ]
 }

@@ -26,7 +26,7 @@ fun MalangPreferenceGroup(title: String? = null, content: @Composable () -> Unit
             text = title,
             modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 8.dp),
             color = MalangText.copy(alpha = 0.8f),
-            fontFamily = FontFamily(Font(R.font.jua)),
+            fontFamily = JuaFontFamily,
             fontSize = 18.sp
         )
     } else {

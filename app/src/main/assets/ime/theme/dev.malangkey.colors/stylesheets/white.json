@@ -21,8 +21,12 @@
     "shadow-color": "rgba(0, 0, 0, 0.15)"
   },
   "key:pressed": { "background": "var(--key-bg-pressed)" },
+  "key[code=-9716]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=-9716]:pressed": { "background": "var(--action-bg-pressed)" },
   "key[code=10]": { "background": "#5D4037", "foreground": "#FFFFFF" },
   "key[code=10]:pressed": { "background": "#8D6E63" },
+  "key[code=-9717]": { "background": "#5D4037", "foreground": "#FFFFFF" },
+  "key[code=-9717]:pressed": { "background": "#8D6E63" },
   "key[code=-1]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "key[code=-5]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "key-popup-box": { "background": "var(--key-bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "2dp" },

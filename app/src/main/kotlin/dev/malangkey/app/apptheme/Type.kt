@@ -25,7 +25,10 @@ import androidx.compose.ui.unit.sp
 import dev.malangkey.R
 
 // 폰트 패밀리 대규모 등록
-val JuaFontFamily = FontFamily(Font(R.font.jua, FontWeight.Normal))
+val JuaFontFamily = FontFamily(
+    Font(R.font.jua, FontWeight.Normal),
+    Font(R.font.m_plus_rounded_1c, FontWeight.Normal)
+)
 val GmarketSansFontFamily = FontFamily(Font(R.font.gmarket_sans, FontWeight.Normal))
 val PretendardFontFamily = FontFamily(Font(R.font.pretendard, FontWeight.Normal))
 val NotoSansFontFamily = FontFamily(Font(R.font.noto_sans, FontWeight.Normal))
@@ -34,6 +37,7 @@ val NanumMyeongjoFontFamily = FontFamily(Font(R.font.nanum_myeongjo, FontWeight.
 val HandwritingFontFamily = FontFamily(Font(R.font.handwriting, FontWeight.Normal))
 val TuntunFontFamily = FontFamily(Font(R.font.tuntun, FontWeight.Normal))
 val TmonFontFamily = FontFamily(Font(R.font.tmon, FontWeight.Normal))
+val MPlusRoundedFontFamily = FontFamily(Font(R.font.m_plus_rounded_1c, FontWeight.Normal))
 
 fun getTypographyFor(fontFamilyId: String): Typography {
     val fontFamily = when (fontFamilyId) {

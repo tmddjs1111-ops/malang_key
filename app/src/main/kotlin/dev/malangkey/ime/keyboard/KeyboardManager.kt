@@ -638,7 +638,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         // Malang Key Migration: Multi-tap layout specific SPACE behavior
         val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         val isMultiTap = layoutId.contains("sky") || layoutId.contains("cheonjiin") || layoutId.contains("naratgul")
-        if (activeState.isComposingEnabled || isMultiTap) {
+        if (editorInstance.determineComposingEnabled() || isMultiTap) {
             val composer = resources.composers.value[subtypeManager.activeSubtype.composer] ?: dev.malangkey.ime.text.composing.Appender
             val consumed = composer.onSpacePressed(editorInstance.activeContent.textBeforeSelection, layoutId)
             val content = editorInstance.activeContent

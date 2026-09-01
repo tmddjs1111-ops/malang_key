@@ -62,7 +62,7 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
 import dev.malangkey.subtypeManager
 
-val MalangJuaFont = FontFamily(Font(R.font.jua))
+val MalangJuaFont = JuaFontFamily
 
 @OptIn(ExperimentalJetPrefDatastoreUi::class)
 @Composable
@@ -262,7 +262,7 @@ private fun SettingsTabContent(
         "고급 설정",
         modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
         color = MalangText.copy(alpha = 0.8f),
-        fontFamily = FontFamily(Font(R.font.jua)),
+        fontFamily = MalangJuaFont,
         fontSize = 18.sp
     )
 

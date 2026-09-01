@@ -68,13 +68,14 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import dev.malangkey.app.apptheme.MalangText
 import dev.malangkey.app.apptheme.MalangBg
+import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.patrickgold.jetpref.datastore.model.PreferenceData
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import dev.patrickgold.jetpref.material.ui.JetPrefColorPicker
 import dev.patrickgold.jetpref.material.ui.rememberJetPrefColorPickerState
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 
-val MalangJuaFont = FontFamily(Font(R.font.jua))
+val MalangJuaFont = JuaFontFamily
 
 data class MalangThemeInfo(
     val extId: String,

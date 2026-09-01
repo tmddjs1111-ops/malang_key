@@ -15,6 +15,9 @@
  */
 
 import com.android.build.api.dsl.ApplicationExtension
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -40,6 +43,8 @@ val projectVersionNameSuffix = projectVersionName.substringAfter("-", "").let { 
         suffix
     }
 }
+val projectBuildTimestamp: String = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
+    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z"))
 
 kotlin {
     compilerOptions {
@@ -76,6 +81,7 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BUILD_COMMIT_HASH", "\"${getGitCommitHash().get()}\"")
+        buildConfigField("String", "BUILD_TIMESTAMP", "\"$projectBuildTimestamp\"")
         buildConfigField("String", "FLADDONS_API_VERSION", "\"v~draft2\"")
         buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.florisboard.org\"")
 
@@ -229,11 +235,12 @@ dependencies {
 }
 
 fun getGitCommitHash(short: Boolean = false): Provider<String> {
-    if (!File(".git").exists()) {
+    if (!rootProject.file(".git").exists()) {
         return providers.provider { "null" }
     }
 
     val execProvider = providers.exec {
+        workingDir(rootProject.projectDir)
         if (short) {
             commandLine("git", "rev-parse", "--short", "HEAD")
         } else {

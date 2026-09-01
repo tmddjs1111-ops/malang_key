@@ -114,7 +114,8 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
             KeyboardMode.PHONE2,
             -> false
             else -> activeState.keyVariation != KeyVariation.PASSWORD &&
-                prefs.suggestion.enabled.get()// &&
+                (prefs.suggestion.enabled.get() ||
+                    nlpManager.providerForcesSuggestionOn(subtypeManager.activeSubtype))// &&
             //!instance.inputAttributes.flagTextAutoComplete &&
             //!instance.inputAttributes.flagTextNoSuggestions
         }
@@ -138,7 +139,16 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     }
 
     override fun determineComposingEnabled(): Boolean {
-        return activeState.isComposingEnabled && nlpManager.isSuggestionOn()
+        val keyboardModeSupportsComposing = when (activeState.keyboardMode) {
+            KeyboardMode.NUMERIC,
+            KeyboardMode.PHONE,
+            KeyboardMode.PHONE2,
+            -> false
+            else -> activeState.keyVariation != KeyVariation.PASSWORD
+        }
+        return keyboardModeSupportsComposing &&
+            (prefs.suggestion.enabled.get() ||
+                nlpManager.providerForcesSuggestionOn(subtypeManager.activeSubtype))
     }
 
     override fun determineComposer(composerName: ExtensionComponentName): Composer {
@@ -352,7 +362,7 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         return if (content.selection.isSelectionMode) {
             commitText("")
         } else runBlocking {
-            if (activeState.isComposingEnabled && unit == OperationUnit.CHARACTERS) {
+            if (determineComposingEnabled() && unit == OperationUnit.CHARACTERS) {
                 val composer = determineComposer(subtypeManager.activeSubtype.composer)
                 val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
                 val actions = composer.getActionsForBackspace(content.textBeforeSelection, layoutId)

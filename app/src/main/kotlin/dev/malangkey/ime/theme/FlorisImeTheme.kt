@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.window.LocalWindowController
 import dev.malangkey.keyboardManager
 import dev.malangkey.themeManager
@@ -272,29 +273,59 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             }
 
 
-            val actionKeyCodes = listOf(10, -1, -2, -3, -4, -5, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -212, -213, -227, -232, -301, 32, 44, 46)
+            val actionKeyCodes = listOf(
+                10, -1, -2, -3, -4, -5, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -212, -213, -227, -232, -301, 32, 44, 46,
+                12289, // 일본어 20key 2행 1열 쉼표(、) 사이드 키
+                KeyCode.JAPANESE_VIEW_NUMERIC,
+                KeyCode.JAPANESE_VIEW_SYMBOLS,
+                KeyCode.JAPANESE_SPACE,
+                KeyCode.JAPANESE_ENTER,
+                KeyCode.JAPANESE_CONVERT,
+                KeyCode.KANA_SWITCHER,
+                KeyCode.KANA_HIRA,
+                KeyCode.KANA_KATA,
+                KeyCode.KANA_HALF_KATA
+            )
             for (code in actionKeyCodes) {
                 val actionKeyRule = SnyggRule.fromOrNull("key[code=$code]")
                 if (actionKeyRule != null) {
                     val propEditor = editor.rules.getOrPut(actionKeyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
-                    if (code == 10 && isRealEnterKeyBgCustom) {
-                        propEditor.properties["background"] = SnyggStaticColorValue(customRealEnterKeyBgColor)
-                    } else if (isEnterKeyBgCustom) {
-                        propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
-                    } else if (code == 32) {
+                    val isEnterCode = (code == 10 || code == KeyCode.JAPANESE_ENTER)
+                    // The wide space bar is a normal keycap, while the compact Japanese
+                    // 20-key space button is a side/action key.
+                    val isSpaceCode = code == KeyCode.SPACE
+
+                    if (isEnterCode) {
+                        if (isRealEnterKeyBgCustom) {
+                            propEditor.properties["background"] = SnyggStaticColorValue(customRealEnterKeyBgColor)
+                        } else if (isEnterKeyBgCustom) {
+                            propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
+                        } else if (isCustomThemeSelected) {
+                            propEditor.properties["background"] = SnyggStaticColorValue(Color(0xFF311D18))
+                        }
+                    } else if (isSpaceCode) {
                         if (isKeyBgCustom) {
                             val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
                             propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                        } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
-                            propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
                         }
+                    } else if (isEnterKeyBgCustom) {
+                        propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
                     }
-                    if (code == 10 && isRealEnterKeyTextCustom) {
-                        propEditor.properties["foreground"] = SnyggStaticColorValue(customRealEnterKeyTextColor)
+
+                    if (isEnterCode) {
+                        if (isRealEnterKeyTextCustom) {
+                            propEditor.properties["foreground"] = SnyggStaticColorValue(customRealEnterKeyTextColor)
+                        } else if (isEnterKeyTextCustom) {
+                            propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
+                        } else if (isCustomThemeSelected) {
+                            propEditor.properties["foreground"] = SnyggStaticColorValue(Color(0xFFFCF5D6))
+                        }
+                    } else if (isSpaceCode) {
+                        if (isKeyTextCustom) {
+                            propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                        }
                     } else if (isEnterKeyTextCustom) {
                         propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
-                    } else if (code == 32 && isKeyTextCustom) {
-                        propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
                     }
                 }
             }

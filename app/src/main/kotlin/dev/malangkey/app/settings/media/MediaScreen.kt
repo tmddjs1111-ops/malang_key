@@ -18,16 +18,18 @@ package dev.malangkey.app.settings.media
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EmojiEmotions
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import dev.malangkey.BuildConfig
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.lib.compose.FlorisScreen
 import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
 import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
 import dev.malangkey.app.apptheme.MalangPreferenceGroup
+import dev.patrickgold.jetpref.datastore.ui.Preference
 import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
-import org.florisboard.lib.compose.stringRes
 
 @OptIn(ExperimentalJetPrefDatastoreUi::class)
 @Composable
@@ -37,6 +39,16 @@ fun MediaScreen() = FlorisScreen {
     iconSpaceReserved = true
 
     val prefs by FlorisPreferenceStore
+    val commitId = BuildConfig.BUILD_COMMIT_HASH.take(8)
+    val appBuildInfo = buildString {
+        append(BuildConfig.VERSION_NAME)
+        append(" (")
+        append(BuildConfig.VERSION_CODE)
+        append(")\n빌드 ")
+        append(commitId)
+        append(" · ")
+        append(BuildConfig.BUILD_TIMESTAMP)
+    }
 
     content {
         MalangPreferenceGroup(title = "기본 설정") {
@@ -55,6 +67,12 @@ fun MediaScreen() = FlorisScreen {
                 max = 5000,
                 stepIncrement = 500,
                 enabledIf = { prefs.keyboard.emoticonSuggestionEnabled.isTrue() },
+            )
+            Preference(
+                icon = Icons.Outlined.Info,
+                title = "앱 버전",
+                summary = appBuildInfo,
+                onClick = {},
             )
         }
     }

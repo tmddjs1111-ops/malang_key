@@ -36,12 +36,32 @@ import dev.malangkey.lib.devtools.flogError
 import dev.malangkey.subtypeManager
 import java.io.File
 import java.io.FileOutputStream
+import java.text.Normalizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private fun Char.isJapaneseComposingCharacter(): Boolean {
+    return this in '\u3040'..'\u309F' ||
+        this in '\u30A0'..'\u30FF' ||
+        this in '\uFF66'..'\uFF9F'
+}
+
+internal fun determineJapaneseComposingRange(
+    textBeforeSelection: CharSequence,
+    localLastCommitPosition: Int,
+): EditorRange {
+    val end = textBeforeSelection.length
+    val lowerBound = localLastCommitPosition.coerceIn(0, end)
+    var start = end
+    while (start > lowerBound && textBeforeSelection[start - 1].isJapaneseComposingCharacter()) {
+        start--
+    }
+    return if (start < end) EditorRange(start, end) else EditorRange.Unspecified
+}
 
 class JapaneseLanguageProvider(val context: Context) : SpellingProvider, SuggestionProvider {
     companion object {
@@ -223,12 +243,15 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         }
     }
 
-    private fun normalizeReading(text: String): String = buildString(text.length) {
-        for (character in text) {
-            if (character in '\u30A1'..'\u30F6') {
-                append((character.code - 0x60).toChar())
-            } else {
-                append(character)
+    private fun normalizeReading(text: String): String {
+        val normalizedText = Normalizer.normalize(text, Normalizer.Form.NFKC)
+        return buildString(normalizedText.length) {
+            for (character in normalizedText) {
+                if (character in '\u30A1'..'\u30F6') {
+                    append((character.code - 0x60).toChar())
+                } else {
+                    append(character)
+                }
             }
         }
     }
@@ -342,7 +365,25 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             }
         }
 
-        return suggestions.take(maxCandidateCount)
+        val hasRawReadingCandidate = suggestions.any {
+            (it as? WordSuggestionCandidate)?.text?.toString() == composingText
+        }
+        if (hasRawReadingCandidate) {
+            return suggestions.take(maxCandidateCount)
+        }
+
+        val rawReadingCandidate = WordSuggestionCandidate(
+            text = composingText,
+            confidence = 0.5,
+            isEligibleForAutoCommit = false,
+            isEligibleForUserRemoval = false,
+            sourceProvider = this@JapaneseLanguageProvider,
+        )
+        return if (maxCandidateCount == 1) {
+            listOf(rawReadingCandidate)
+        } else {
+            suggestions.take(maxCandidateCount - 1) + rawReadingCandidate
+        }
     }
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {
@@ -386,10 +427,7 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         breakIterators: BreakIteratorGroup,
         localLastCommitPosition: Int
     ): EditorRange {
-        // Simple fallback: composing text is exactly what FlorisBoard parsed normally.
-        // Actually, for Japanese, we just return Unspecified and let FlorisBoard's default logic handle it,
-        // or we could implement backward scanning for Hiragana. Let's rely on standard composer for now.
-        return EditorRange.Unspecified
+        return determineJapaneseComposingRange(textBeforeSelection, localLastCommitPosition)
     }
 
     override val forcesSuggestionOn

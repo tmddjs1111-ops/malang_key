@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
     "--bg": "#E8F5E9",
@@ -21,8 +21,12 @@
     "shadow-color": "rgba(0, 0, 0, 0.1)"
   },
   "key:pressed": { "background": "var(--key-bg-pressed)" },
+  "key[code=-9716]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=-9716]:pressed": { "background": "var(--action-bg-pressed)" },
   "key[code=10]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
   "key[code=10]:pressed": { "background": "var(--action-bg-pressed)" },
+  "key[code=-9717]": { "background": "var(--action-bg)", "foreground": "var(--action-fg)" },
+  "key[code=-9717]:pressed": { "background": "var(--action-bg-pressed)" },
   "key[code=-1]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
   "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
   "smartbar": { "background": "var(--bg)" },

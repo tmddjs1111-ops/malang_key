@@ -65,13 +65,13 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         background = `var`("--surface-variant")
         foreground = `var`("--on-surface")
     }
-    FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.ENTER)) {
+    FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.ENTER, KeyCode.JAPANESE_ENTER)) {
         background = `var`("--primary")
-        foreground = `var`("--on-surface")
+        foreground = `var`("--on-primary")
     }
-    FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.ENTER), selector = SnyggSelector.PRESSED) {
+    FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.ENTER, KeyCode.JAPANESE_ENTER), selector = SnyggSelector.PRESSED) {
         background = `var`("--primary-variant")
-        foreground = `var`("--on-surface")
+        foreground = `var`("--on-primary")
     }
     FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.SPACE)) {
         background = `var`("--surface")
@@ -79,10 +79,24 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         fontSize = fontSize(12.sp)
         textOverflow = textOverflow(TextOverflow.Ellipsis)
     }
+    FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(KeyCode.JAPANESE_SPACE)) {
+        background = `var`("--primary")
+        foreground = `var`("--on-primary")
+    }
+    FlorisImeUi.Key.elementName(
+        FlorisImeUi.Attr.Code to listOf(KeyCode.JAPANESE_SPACE),
+        selector = SnyggSelector.PRESSED,
+    ) {
+        background = `var`("--primary-variant")
+        foreground = `var`("--on-primary")
+    }
     FlorisImeUi.Key.elementName(FlorisImeUi.Attr.Code to listOf(
         KeyCode.VIEW_CHARACTERS,
         KeyCode.VIEW_SYMBOLS,
         KeyCode.VIEW_SYMBOLS2,
+        KeyCode.JAPANESE_VIEW_SYMBOLS,
+        KeyCode.JAPANESE_CONVERT,
+        KeyCode.KANA_SMALL,
     )) {
         fontSize = fontSize(18.sp)
     }
@@ -90,6 +104,7 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         KeyCode.VIEW_NUMERIC,
         KeyCode.VIEW_NUMERIC_ADVANCED,
         KeyCode.EXIT_NUMERIC,
+        KeyCode.JAPANESE_VIEW_NUMERIC,
     )) {
         fontSize = fontSize(12.sp)
     }

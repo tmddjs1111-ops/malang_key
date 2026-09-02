@@ -94,7 +94,6 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         KeyCode.VIEW_CHARACTERS,
         KeyCode.VIEW_SYMBOLS,
         KeyCode.VIEW_SYMBOLS2,
-        KeyCode.JAPANESE_VIEW_SYMBOLS,
         KeyCode.JAPANESE_CONVERT,
         KeyCode.KANA_SMALL,
     )) {
@@ -105,6 +104,7 @@ val FlorisImeThemeBaseStyle = SnyggStylesheet.v2 {
         KeyCode.VIEW_NUMERIC_ADVANCED,
         KeyCode.EXIT_NUMERIC,
         KeyCode.JAPANESE_VIEW_NUMERIC,
+        KeyCode.JAPANESE_VIEW_SYMBOLS,
     )) {
         fontSize = fontSize(12.sp)
     }

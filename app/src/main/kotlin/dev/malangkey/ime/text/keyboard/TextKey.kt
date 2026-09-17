@@ -32,6 +32,55 @@ import dev.malangkey.ime.text.key.KeyType
 import dev.malangkey.ime.text.key.KeyVariation
 import dev.malangkey.lib.lowercase
 
+internal fun symbolHintCodeForKey(keyboardMode: KeyboardMode, keyCode: Int): Int? {
+    return if (keyboardMode == KeyboardMode.GRID_16KEY) {
+        when (keyCode) {
+            12593 -> 64 // ㄱㅋ -> @
+            12643 -> 35 // ㅣㅡ -> #
+            12623 -> 36 // ㅏㅑ -> $
+            12599 -> 37 // ㄷㅌ -> %
+            12596 -> 38 // ㄴㄹ -> &
+            12627 -> 42 // ㅓㅕ -> *
+            12609 -> 40 // ㅁㅅ -> (
+            12610 -> 41 // ㅂㅍ -> )
+            12631 -> 33 // ㅗㅛ -> !
+            12615 -> 63 // ㅇㅎ -> ?
+            else -> null
+        }
+    } else {
+        when (keyCode) {
+            97, 65 -> 33 // a, A -> !
+            115, 83 -> 39 // s, S -> '
+            100, 68 -> 34 // d, D -> "
+            102, 70 -> 94 // f, F -> ^
+            103, 71 -> 35 // g, G -> #
+            104, 72 -> 38 // h, H -> &
+            106, 74 -> 42 // j, J -> *
+            107, 75 -> 40 // k, K -> (
+            108, 76 -> 41 // l, L -> )
+            122, 90 -> 126 // z, Z -> ~
+            120, 88 -> 45 // x, X -> -
+            99, 67 -> 43 // c, C -> +
+            118, 86 -> 61 // v, V -> =
+            98, 66 -> 58 // b, B -> :
+            110, 78 -> 59 // n, N -> ;
+            109, 77 -> 63 // m, M -> ?
+            // Keep the established Korean QWERTY hints unchanged.
+            12610 -> 33 // ㅂ -> !
+            12616 -> 64 // ㅈ -> @
+            12599 -> 35 // ㄷ -> #
+            12593 -> 36 // ㄱ -> $
+            12613 -> 37 // ㅅ -> %
+            12635 -> 94 // ㅛ -> ^
+            12629 -> 38 // ㅕ -> &
+            12625 -> 42 // ㅑ -> *
+            12624 -> 40 // ㅐ -> (
+            12626 -> 41 // ㅔ -> )
+            else -> null
+        }
+    }
+}
+
 class TextKey(override val data: AbstractKeyData) : Key(data) {
     var computedData: KeyData = TextKeyData.UNSPECIFIED
         private set
@@ -229,35 +278,7 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                 }
             }
             if (computedSymbolHint == null) {
-                val symbolHintCode = if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY) {
-                    when (keyCode) {
-                        12593 -> 64 // ㄱㅋ -> @
-                        12643 -> 35 // ㅣㅡ -> #
-                        12623 -> 36 // ㅏㅑ -> $
-                        12599 -> 37 // ㄷㅌ -> %
-                        12596 -> 38 // ㄴㄹ -> &
-                        12627 -> 42 // ㅓㅕ -> *
-                        12609 -> 40 // ㅁㅅ -> (
-                        12610 -> 41 // ㅂㅍ -> )
-                        12631 -> 33 // ㅗㅛ -> !
-                        12615 -> 63 // ㅇㅎ -> ?
-                        else -> null
-                    }
-                } else {
-                    when (keyCode) {
-                        113, 81, 12610 -> 33 // ㅂ -> !
-                        119, 87, 12616 -> 64 // ㅈ -> @
-                        101, 69, 12599 -> 35 // ㄷ -> #
-                        114, 82, 12593 -> 36 // ㄱ -> $
-                        116, 84, 12613 -> 37 // ㅅ -> %
-                        121, 89, 12635 -> 94 // ㅛ -> ^
-                        117, 85, 12629 -> 38 // ㅕ -> &
-                        105, 73, 12625 -> 42 // ㅑ -> *
-                        111, 79, 12624 -> 40 // ㅐ -> (
-                        112, 80, 12626 -> 41 // ㅔ -> )
-                        else -> null
-                    }
-                }
+                val symbolHintCode = symbolHintCodeForKey(evaluator.keyboard.mode, keyCode)
                 if (symbolHintCode != null) {
                     computedSymbolHint = TextKeyData(
                         code = symbolHintCode,

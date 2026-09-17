@@ -51,6 +51,9 @@ private data class LTN(
     val name: ExtensionComponentName,
 )
 
+private const val COMMON_NUMBER_LAYOUT_ID = "western_arabic"
+private const val COMMON_SYMBOLS_LAYOUT_ID = "western"
+
 data class CachedLayout(
     val type: LayoutType,
     val name: ExtensionComponentName,
@@ -349,7 +352,7 @@ class LayoutManager(context: Context) {
                     return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)
                 }
                 if (prefs.keyboard.numberRow.get()) {
-                    extension = LTN(LayoutType.NUMERIC_ROW, subtype.layoutMap.numericRow)
+                    extension = LTN(LayoutType.NUMERIC_ROW, extCoreLayout(COMMON_NUMBER_LAYOUT_ID))
                 }
                 main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
                 modifier = LTN(LayoutType.CHARACTERS_MOD, extCoreLayout("default"))
@@ -366,7 +369,9 @@ class LayoutManager(context: Context) {
                 }
             }
             KeyboardMode.NUMERIC_ADVANCED -> {
-                main = LTN(LayoutType.NUMERIC_ADVANCED, subtype.layoutMap.numericAdvanced)
+                // The user-facing 123 panel is shared by every language. In
+                // particular, Japanese must not substitute kanji numerals here.
+                main = LTN(LayoutType.NUMERIC_ADVANCED, extCoreLayout(COMMON_NUMBER_LAYOUT_ID))
             }
             KeyboardMode.PHONE -> {
                 main = LTN(LayoutType.PHONE, subtype.layoutMap.phone)
@@ -375,19 +380,21 @@ class LayoutManager(context: Context) {
                 main = LTN(LayoutType.PHONE2, subtype.layoutMap.phone2)
             }
             KeyboardMode.SYMBOLS -> {
-                extension = LTN(LayoutType.NUMERIC_ROW, subtype.layoutMap.numericRow)
-                main = LTN(LayoutType.SYMBOLS, subtype.layoutMap.symbols)
+                // Keep the complete special-character panel language-independent.
+                // Using the subtype's CJK numeric row would render 一〜零 in Japanese.
+                extension = LTN(LayoutType.NUMERIC_ROW, extCoreLayout(COMMON_NUMBER_LAYOUT_ID))
+                main = LTN(LayoutType.SYMBOLS, extCoreLayout(COMMON_SYMBOLS_LAYOUT_ID))
                 modifier = LTN(LayoutType.SYMBOLS_MOD, extCoreLayout("default"))
             }
             KeyboardMode.SYMBOLS2 -> {
-                main = LTN(LayoutType.SYMBOLS2, subtype.layoutMap.symbols2)
+                main = LTN(LayoutType.SYMBOLS2, extCoreLayout(COMMON_SYMBOLS_LAYOUT_ID))
                 modifier = LTN(LayoutType.SYMBOLS2_MOD, extCoreLayout("default"))
             }
             KeyboardMode.SMARTBAR_CLIPBOARD_CURSOR_ROW -> {
                 extension = LTN(LayoutType.EXTENSION, extCoreLayout("clipboard_cursor_row"))
             }
             KeyboardMode.SMARTBAR_NUMBER_ROW -> {
-                extension = LTN(LayoutType.NUMERIC_ROW, subtype.layoutMap.numericRow)
+                extension = LTN(LayoutType.NUMERIC_ROW, extCoreLayout(COMMON_NUMBER_LAYOUT_ID))
             }
             else -> {
                 // Default values are already provided

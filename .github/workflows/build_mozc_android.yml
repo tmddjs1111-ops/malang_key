@@ -1,0 +1,48 @@
+name: Build Mozc Android JNI
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Mozc Official Repository
+      run: |
+        git clone https://github.com/google/mozc.git
+        cd mozc
+        git checkout master
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install bazelisk
+      run: |
+        sudo npm install -g @bazel/bazelisk
+        sudo apt-get update && sudo apt-get install -y unzip zip
+
+    - name: Update Mozc Dependencies (Downloads NDK)
+      run: |
+        cd mozc/src
+        python3 build_tools/update_deps.py
+
+    - name: Build libmozc.so for Android
+      run: |
+        cd mozc/src
+        bazelisk build package --config oss_android --config release_build
+
+    - name: Prepare Artifacts Directory
+      run: |
+        mkdir -p mozc-output
+        # Copy output maintaining structure
+        cp -r mozc/src/bazel-bin/android/jni mozc-output/jni_libs
+        find mozc/src/bazel-bin -name "mozc.data" -exec cp {} mozc-output/ \;
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mozc-android-build
+        path: mozc-output/

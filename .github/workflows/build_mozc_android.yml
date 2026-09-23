@@ -1,7 +1,9 @@
 name: Build Mozc Android JNI
 
 on:
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  push:
+    paths:
+      - '.github/workflows/build_mozc_android.yml'
 
 jobs:
   build:

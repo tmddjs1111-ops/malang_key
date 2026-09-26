@@ -84,7 +84,8 @@ configure<ApplicationExtension> {
         buildConfigField("String", "BUILD_COMMIT_HASH", "\"${getGitCommitHash().get()}\"")
         buildConfigField("String", "BUILD_TIMESTAMP", "\"$projectBuildTimestamp\"")
         buildConfigField("String", "FLADDONS_API_VERSION", "\"v~draft2\"")
-        buildConfigField("String", "FLADDONS_STORE_URL", "\"beta.addons.florisboard.org\"")
+        // MalangKey has no addons store; the FlorisBoard store is not used. Blank hides store/update UI.
+        buildConfigField("String", "FLADDONS_STORE_URL", "\"\"")
 
         sourceSets {
             maybeCreate("main").apply {

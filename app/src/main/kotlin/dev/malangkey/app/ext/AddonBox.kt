@@ -60,13 +60,15 @@ fun ImportExtensionBox(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 6.dp),
         ) {
-            FlorisTextButton(
-                onClick = {
-                    context.launchUrl("https://${BuildConfig.FLADDONS_STORE_URL}/")
-                },
-                icon = Icons.Default.Shop,
-                text = stringRes(id = R.string.ext__home__visit_store),
-            )
+            if (BuildConfig.FLADDONS_STORE_URL.isNotBlank()) {
+                FlorisTextButton(
+                    onClick = {
+                        context.launchUrl("https://${BuildConfig.FLADDONS_STORE_URL}/")
+                    },
+                    icon = Icons.Default.Shop,
+                    text = stringRes(id = R.string.ext__home__visit_store),
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
             FlorisTextButton(
                 onClick = {
@@ -81,6 +83,8 @@ fun ImportExtensionBox(navController: NavController) {
 
 @Composable
 fun UpdateBox(extensionIndex: List<Extension>) {
+    // Update checks go through the addons store, which MalangKey does not have.
+    if (BuildConfig.FLADDONS_STORE_URL.isBlank()) return
     val context = LocalContext.current
     FlorisOutlinedBox(
         modifier = Modifier.defaultFlorisOutlinedBox(),

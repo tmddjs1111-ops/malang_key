@@ -393,7 +393,7 @@
       },
       {
         "id": "korean_naratgul",
-        "label": "한국어 - 나랏글",
+        "label": "한국어 - 획추가형",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -402,7 +402,7 @@
       },
       {
         "id": "korean_sky_malang",
-        "label": "한국어 - 스카이 (말랑)",
+        "label": "한국어 - 말랑 연타형",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -412,7 +412,7 @@
       },
       {
         "id": "korean_sky_vega",
-        "label": "한국어 - 스카이",
+        "label": "한국어 - 연타형",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -422,7 +422,7 @@
       },
       {
         "id": "korean_sky_16",
-        "label": "한국어 - 스카이 (16키)",
+        "label": "한국어 - 연타형 (16키)",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -442,7 +442,7 @@
       },
       {
         "id": "korean_naratgul_16",
-        "label": "한국어 - 나랏글 (16키)",
+        "label": "한국어 - 획추가형 (16키)",
         "authors": [
           "patrickgold",
           "MalangKey"
@@ -852,7 +852,7 @@
     "numeric": [
       {
         "id": "korean_sky_16_numeric",
-        "label": "Korean Sky 16key Numeric",
+        "label": "Korean Multi-tap 16key Numeric",
         "authors": [
           "patrickgold",
           "MalangKey"

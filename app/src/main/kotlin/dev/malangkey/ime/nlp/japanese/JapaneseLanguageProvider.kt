@@ -64,6 +64,15 @@ internal fun determineJapaneseComposingRange(
 }
 
 class JapaneseLanguageProvider(val context: Context) : SpellingProvider, SuggestionProvider {
+    private val historyFile by lazy { File(context.filesDir, "japanese_history.json") }
+    
+    class JapaneseHistoryEntry(
+        val word: String,
+        var count: Int,
+        var lastUsed: Long
+    )
+    
+    private val userHistory = mutableMapOf<String, MutableList<JapaneseHistoryEntry>>()
     companion object {
         const val ProviderId = "org.florisboard.nlp.providers.japanese"
 
@@ -164,7 +173,51 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         scope.launch { create() }
     }
 
+    private fun loadHistory() {
+        try {
+            if (historyFile.exists()) {
+                val json = org.json.JSONObject(historyFile.readText())
+                json.keys().forEach { reading ->
+                    val array = json.getJSONArray(reading)
+                    val entries = mutableListOf<JapaneseHistoryEntry>()
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        entries.add(JapaneseHistoryEntry(
+                            word = obj.getString("word"),
+                            count = obj.getInt("count"),
+                            lastUsed = obj.getLong("lastUsed")
+                        ))
+                    }
+                    userHistory[reading] = entries
+                }
+            }
+        } catch (e: Exception) {
+            flogError { "Failed to load Japanese history: $e" }
+        }
+    }
+
+    private fun saveHistory() {
+        try {
+            val root = org.json.JSONObject()
+            for ((reading, entries) in userHistory) {
+                val array = org.json.JSONArray()
+                for (entry in entries) {
+                    val obj = org.json.JSONObject()
+                    obj.put("word", entry.word)
+                    obj.put("count", entry.count)
+                    obj.put("lastUsed", entry.lastUsed)
+                    array.put(obj)
+                }
+                root.put(reading, array)
+            }
+            historyFile.writeText(root.toString())
+        } catch (e: Exception) {
+            flogError { "Failed to save Japanese history: $e" }
+        }
+    }
+
     override suspend fun create() {
+        loadHistory()
         languagePackItems = buildMap {
             for (languagePack in allLanguagePacks) {
                 for (languagePackItem in languagePack.items) {
@@ -256,6 +309,77 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         }
     }
 
+    private fun greedyChunking(queryText: String, database: SQLiteDatabase?): WordSuggestionCandidate? {
+        if (database == null || !database.isOpen) return null
+        
+        var remaining = queryText
+        val chunks = mutableListOf<String>()
+        var foundSomething = false
+        
+        while (remaining.isNotEmpty()) {
+            var matchFound = false
+            for (i in remaining.length downTo 1) {
+                val prefix = remaining.substring(0, i)
+                
+                val historyMatch = userHistory[prefix]?.firstOrNull()?.word
+                if (historyMatch != null) {
+                    chunks.add(historyMatch)
+                    remaining = remaining.substring(i)
+                    matchFound = true
+                    foundSomething = true
+                    break
+                }
+                
+                val builtInMatch = builtInDict[prefix]?.firstOrNull()
+                if (builtInMatch != null) {
+                    chunks.add(builtInMatch)
+                    remaining = remaining.substring(i)
+                    matchFound = true
+                    foundSomething = true
+                    break
+                }
+                
+                try {
+                    database.query(
+                        "dictionary",
+                        arrayOf("word"),
+                        "reading = ?",
+                        arrayOf(prefix),
+                        null, null,
+                        "frequency DESC",
+                        "1"
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            chunks.add(cursor.getString(0))
+                            remaining = remaining.substring(i)
+                            matchFound = true
+                            foundSomething = true
+                        }
+                    }
+                } catch (e: Exception) { }
+                if (matchFound) break
+            }
+            if (!matchFound) {
+                chunks.add(remaining.substring(0, 1))
+                remaining = remaining.substring(1)
+            }
+        }
+        
+        if (foundSomething && chunks.size > 1) {
+            val combined = chunks.joinToString("")
+            if (combined != queryText) {
+                return WordSuggestionCandidate(
+                    text = combined,
+                    secondaryText = queryText,
+                    confidence = 0.85,
+                    isEligibleForAutoCommit = false,
+                    sourceProvider = this@JapaneseLanguageProvider,
+                )
+            }
+        }
+        return null
+    }
+
     override suspend fun suggest(
         subtype: Subtype,
         content: EditorContent,
@@ -278,16 +402,32 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         val queryText = normalizeReading(composingText)
         val suggestions = mutableListOf<SuggestionCandidate>()
 
+        userHistory[queryText]?.forEach { entry ->
+            if (suggestions.size < maxCandidateCount) {
+                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == entry.word }) {
+                    suggestions.add(WordSuggestionCandidate(
+                        text = entry.word,
+                        secondaryText = queryText,
+                        confidence = 0.98,
+                        isEligibleForAutoCommit = false,
+                        sourceProvider = this@JapaneseLanguageProvider,
+                    ))
+                }
+            }
+        }
+
         // Preserve a small set of hand-ranked everyday words where JMdict priority markers tie.
         builtInDict[queryText]?.forEach { word ->
             if (suggestions.size < maxCandidateCount) {
-                suggestions.add(WordSuggestionCandidate(
-                    text = word,
-                    secondaryText = queryText,
-                    confidence = 0.95,
-                    isEligibleForAutoCommit = false,
-                    sourceProvider = this@JapaneseLanguageProvider,
-                ))
+                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
+                    suggestions.add(WordSuggestionCandidate(
+                        text = word,
+                        secondaryText = queryText,
+                        confidence = 0.95,
+                        isEligibleForAutoCommit = false,
+                        sourceProvider = this@JapaneseLanguageProvider,
+                    ))
+                }
             }
         }
 
@@ -338,6 +478,14 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
                         confidence = 0.65,
                     )
                 }
+                
+                if (suggestions.size < maxCandidateCount) {
+                    val chunkCandidate = greedyChunking(queryText, database)
+                    if (chunkCandidate != null && !suggestions.any { (it as? WordSuggestionCandidate)?.text == chunkCandidate.text }) {
+                        suggestions.add(chunkCandidate)
+                    }
+                }
+                
                 flogDebug { "Japanese DB query '$queryText' returned ${suggestions.size} candidates." }
             } catch (e: Exception) {
                 flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='$e'" }
@@ -388,6 +536,24 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {
         flogDebug { "Accepted: $candidate" }
+        if (candidate is WordSuggestionCandidate && candidate.secondaryText != null) {
+            val reading = candidate.secondaryText!!.toString()
+            val word = candidate.text.toString()
+            
+            val entries = userHistory.getOrPut(reading) { mutableListOf() }
+            val entry = entries.find { it.word == word }
+            if (entry != null) {
+                entry.count++
+                entry.lastUsed = System.currentTimeMillis()
+            } else {
+                entries.add(JapaneseHistoryEntry(word, 1, System.currentTimeMillis()))
+            }
+            entries.sortByDescending { (it.count.toLong() * 10000L) + it.lastUsed }
+            if (entries.size > 10) {
+                entries.removeAt(entries.lastIndex)
+            }
+            saveHistory()
+        }
     }
 
     override suspend fun notifySuggestionReverted(subtype: Subtype, candidate: SuggestionCandidate) {

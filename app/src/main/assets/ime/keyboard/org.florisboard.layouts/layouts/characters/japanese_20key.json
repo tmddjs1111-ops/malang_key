@@ -89,9 +89,9 @@
         { "code": 12316, "label": "〜" }
       ]}
     },
-    { "code": 12290, "label": "。? 、 !", "type": "character", "grow": 1, "popup": { "relevant": [
+    { "code": 12289, "label": "、。?!", "type": "character", "grow": 1, "popup": { "relevant": [
+        { "code": 12290, "label": "。" },
         { "code": 63, "label": "?" },
-        { "code": 12289, "label": "、" },
         { "code": 33, "label": "!" }
       ]}
     },

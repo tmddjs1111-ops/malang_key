@@ -29,6 +29,7 @@ plugins {
     alias(libs.plugins.mikepenz.aboutlibraries)
     alias(libs.plugins.kotest)
     alias(libs.plugins.kotlinx.kover)
+    id("com.google.protobuf") version "0.9.4"
 }
 
 val projectMinSdk: String by project
@@ -169,6 +170,21 @@ ksp {
     arg("room.expandProjection", "true")
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.21.12"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 tasks.withType<Test> {
     testLogging {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
@@ -232,6 +248,7 @@ dependencies {
     testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso.core)
+    implementation("com.google.protobuf:protobuf-javalite:3.21.12")
 }
 
 fun getGitCommitHash(short: Boolean = false): Provider<String> {

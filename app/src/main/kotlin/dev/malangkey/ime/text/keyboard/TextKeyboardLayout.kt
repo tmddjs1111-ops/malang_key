@@ -122,7 +122,7 @@ import androidx.compose.foundation.layout.width
 import dev.malangkey.ime.core.Subtype
 
 private fun isJapaneseFlickLayoutId(componentId: String): Boolean {
-    return componentId == "japanese_20key" || componentId == "japanese_flick_12key"
+    return componentId == "japanese_20key"
 }
 
 internal fun isLanguageSwipeSpace(code: Int): Boolean = when (code) {
@@ -141,7 +141,9 @@ internal fun isJapaneseKanaRowBase(code: Int): Boolean = when (code) {
     0x30CF, 0x30DE, 0x30E4, 0x30E9, 0x30EF,
     // Half-width katakana: ｱ・ｶ・ｻ・ﾀ・ﾅ・ﾊ・ﾏ・ﾔ・ﾗ・ﾜ
     0xFF71, 0xFF76, 0xFF7B, 0xFF80, 0xFF85,
-    0xFF8A, 0xFF8F, 0xFF94, 0xFF97, 0xFF9C -> true
+    0xFF8A, 0xFF8F, 0xFF94, 0xFF97, 0xFF9C,
+    // Punctuation (、。?!)
+    12289, 12290, 63, 33 -> true
     else -> false
 }
 

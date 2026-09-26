@@ -275,7 +275,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
 
             val actionKeyCodes = listOf(
                 10, -1, -2, -3, -4, -5, -7, -8, -11, -201, -202, -203, -204, -205, -206, -207, -212, -213, -227, -232, -301, 32, 44, 46,
-                12289, // 일본어 20key 2행 1열 쉼표(、) 사이드 키
                 KeyCode.JAPANESE_VIEW_NUMERIC,
                 KeyCode.JAPANESE_VIEW_SYMBOLS,
                 KeyCode.JAPANESE_SPACE,

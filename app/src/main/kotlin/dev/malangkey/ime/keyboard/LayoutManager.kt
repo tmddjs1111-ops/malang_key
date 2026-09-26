@@ -345,8 +345,7 @@ class LayoutManager(context: Context) {
                     charId.contains("cheonjiin") ||
                     charId.contains("naratgul") ||
                     charId.contains("danmoeum") ||
-                    charId == "japanese_20key" ||
-                    charId == "japanese_flick_12key"
+                    charId == "japanese_20key"
                 if (isStandaloneGrid) {
                     main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
                     return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)

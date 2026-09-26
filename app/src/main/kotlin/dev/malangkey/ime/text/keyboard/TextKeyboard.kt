@@ -78,12 +78,12 @@ class TextKeyboard(
         if (desiredTouchBounds.isEmpty() || desiredVisibleBounds.isEmpty()) return
         if (keyboardWidth.isNaN() || keyboardHeight.isNaN()) return
         val rowMarginH = abs(desiredTouchBounds.width - desiredVisibleBounds.width)
-        val rowMarginV = (keyboardHeight - desiredTouchBounds.height * heightInRows()) /
-            (rowCount - 1).coerceAtLeast(1).toFloat()
+        val stretchFactor = if (heightInRows() > 0f) keyboardHeight / (desiredTouchBounds.height * heightInRows()) else 1.0f
+        val rowMarginV = 0.0f
         var posY = 0.0f
 
         for ((r, row) in rows().withIndex()) {
-            val rowHeight = desiredTouchBounds.height * rowHeightFactor(r)
+            val rowHeight = desiredTouchBounds.height * rowHeightFactor(r) * stretchFactor
             val availableWidth = (keyboardWidth - rowMarginH) / desiredTouchBounds.width
             var requestedWidth = 0.0f
             var shrinkSum = 0.0f

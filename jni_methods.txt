@@ -1,1 +1,0 @@
-Java_com_google_android_apps_inputmethod_libs_mozc_session_MozcJni_initialize

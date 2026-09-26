@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import dev.malangkey.R
 import dev.malangkey.ime.keyboard.LayoutType
 import dev.malangkey.keyboardManager
+import dev.malangkey.lib.FlorisLocale
 import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.subtypeManager
 import org.florisboard.lib.compose.stringRes
@@ -65,23 +66,7 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                     keyboardManager.resources.anyChangedVersion.value += 1
                 },
                 headlineContent = {
-                    val localeName = preset.locale.displayName()
-                    val langOnly = preset.locale.displayLanguage()
-                    var layoutName = charactersLayout?.label ?: "Unknown"
-                    
-                    // Remove redundant language name from layout name if it exists
-                    if (layoutName.startsWith(localeName, ignoreCase = true)) {
-                        layoutName = layoutName.substring(localeName.length).trim().removePrefix("-").trim()
-                    } else if (layoutName.startsWith(langOnly, ignoreCase = true)) {
-                        layoutName = layoutName.substring(langOnly.length).trim().removePrefix("-").trim()
-                    }
-
-                    val finalLabel = if (layoutName.isEmpty() || layoutName.equals("Unknown", ignoreCase = true)) {
-                        localeName
-                    } else {
-                        "$localeName - $layoutName"
-                    }
-                    Text(text = finalLabel)
+                    Text(text = keyboardDisplayName(preset.locale, charactersLayout?.label))
                 },
                 trailingContent = {
                     Checkbox(
@@ -91,5 +76,27 @@ fun KeyboardSelectionScreen() = FlorisScreen {
                 }
             )
         }
+    }
+}
+
+/**
+ * "Language - Layout" label for a keyboard, without repeating the language inside the layout name.
+ */
+internal fun keyboardDisplayName(locale: FlorisLocale, layoutLabel: String?): String {
+    val localeName = locale.displayName()
+    val langOnly = locale.displayLanguage()
+    var layoutName = layoutLabel ?: "Unknown"
+
+    // Remove redundant language name from layout name if it exists
+    if (layoutName.startsWith(localeName, ignoreCase = true)) {
+        layoutName = layoutName.substring(localeName.length).trim().removePrefix("-").trim()
+    } else if (layoutName.startsWith(langOnly, ignoreCase = true)) {
+        layoutName = layoutName.substring(langOnly.length).trim().removePrefix("-").trim()
+    }
+
+    return if (layoutName.isEmpty() || layoutName.equals("Unknown", ignoreCase = true)) {
+        localeName
+    } else {
+        "$localeName - $layoutName"
     }
 }

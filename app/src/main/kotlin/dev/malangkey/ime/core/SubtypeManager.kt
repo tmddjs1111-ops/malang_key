@@ -109,6 +109,20 @@ class SubtypeManager(context: Context) {
         return true
     }
 
+    /**
+     * Replaces the subtype order with [orderedSubtypes], which must contain exactly the current
+     * subtypes. The language switch key and swipe gestures cycle through subtypes in this order.
+     */
+    fun reorderSubtypes(orderedSubtypes: List<Subtype>) {
+        val current = subtypes
+        if (orderedSubtypes.size != current.size ||
+            orderedSubtypes.map { it.id }.toSet() != current.map { it.id }.toSet()
+        ) {
+            return
+        }
+        persistNewSubtypeList(orderedSubtypes)
+    }
+
     fun addSubtypeAndActivate(subtype: Subtype): Boolean {
         val subtypeToAdd = subtype.copy(id = System.currentTimeMillis())
         val subtypeList = subtypes

@@ -53,6 +53,11 @@ fun KeyboardScreen() = FlorisScreen {
                 summary = "시스템에 추가할 키보드 언어와 레이아웃을 선택합니다.",
                 onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
             )
+            Preference(
+                title = "내 키보드 순서",
+                summary = "사용 중인 키보드를 끌어서 전환 순서를 정합니다.",
+                onClick = { navController.navigate(Routes.Settings.KeyboardOrder) },
+            )
             SwitchPreference(
                 prefs.keyboard.numberRow,
                 title = "숫자 행 표시",

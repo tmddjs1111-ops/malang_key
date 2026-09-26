@@ -267,7 +267,7 @@
       },
       {
         "id": "german2",
-        "label": "German (GBoard)",
+        "label": "German (Alternative)",
         "authors": [
           "M-Koushan"
         ],
@@ -1130,7 +1130,7 @@
       },
       {
         "id": "western_samsung",
-        "label": "Western (Samsung)",
+        "label": "Western (Compact)",
         "authors": [
           "nettnikl"
         ],
@@ -1215,7 +1215,7 @@
       },
       {
         "id": "western_samsung",
-        "label": "Western (Samsung)",
+        "label": "Western (Compact)",
         "authors": [
           "nettnikl"
         ],

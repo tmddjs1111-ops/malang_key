@@ -1,0 +1,13 @@
+{
+  "uniqueId": "font-noto-sans-kr",
+  "name": "Noto Sans KR (font)",
+  "developers": [
+    {
+      "name": "Adobe"
+    }
+  ],
+  "website": "https://fonts.google.com/noto/specimen/Noto+Sans+KR",
+  "licenses": [
+    "ofl-1.1"
+  ]
+}

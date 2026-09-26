@@ -1,0 +1,13 @@
+{
+  "uniqueId": "font-nanum-gothic",
+  "name": "Nanum Gothic (font)",
+  "developers": [
+    {
+      "name": "NAVER Corporation"
+    }
+  ],
+  "website": "https://fonts.google.com/specimen/Nanum+Gothic",
+  "licenses": [
+    "ofl-1.1"
+  ]
+}

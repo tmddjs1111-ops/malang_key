@@ -1,18 +1,96 @@
-﻿{
-  "id": "dev.malangkey.colors",
-  "version": "1.0.0",
-  "title": "말랑키 기본 색상 테마",
-  "description": "말랑키의 9가지 기본 색상 테마 패키지입니다.",
-  "authors": ["Malang Key"],
+{
+  "$": "ime.extension.theme",
+  "meta": {
+    "id": "dev.malangkey.colors",
+    "version": "1.0.0",
+    "title": "말랑키 기본 색상 테마",
+    "description": "말랑키의 9가지 기본 색상 테마 패키지입니다.",
+    "maintainers": [
+      "Malang Key"
+    ],
+    "license": "apache-2.0"
+  },
   "themes": [
-    { "id": "red", "label": "레드 (Red)", "isNight": false, "stylesheet": "stylesheets/red.json" },
-    { "id": "orange", "label": "오렌지 (Orange)", "isNight": false, "stylesheet": "stylesheets/orange.json" },
-    { "id": "yellow", "label": "옐로우 (Yellow)", "isNight": false, "stylesheet": "stylesheets/yellow.json" },
-    { "id": "green", "label": "그린 (Green)", "isNight": false, "stylesheet": "stylesheets/green.json" },
-    { "id": "blue", "label": "블루 (Blue)", "isNight": false, "stylesheet": "stylesheets/blue.json" },
-    { "id": "indigo", "label": "네이비 (Indigo)", "isNight": false, "stylesheet": "stylesheets/indigo.json" },
-    { "id": "purple", "label": "퍼플 (Purple)", "isNight": false, "stylesheet": "stylesheets/purple.json" },
-    { "id": "black", "label": "블랙 (Black)", "isNight": true, "stylesheet": "stylesheets/black.json" },
-    { "id": "white", "label": "화이트 (White)", "isNight": false, "stylesheet": "stylesheets/white.json" }
+    {
+      "id": "red",
+      "label": "레드 (Red)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/red.json"
+    },
+    {
+      "id": "orange",
+      "label": "오렌지 (Orange)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/orange.json"
+    },
+    {
+      "id": "yellow",
+      "label": "옐로우 (Yellow)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/yellow.json"
+    },
+    {
+      "id": "green",
+      "label": "그린 (Green)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/green.json"
+    },
+    {
+      "id": "blue",
+      "label": "블루 (Blue)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/blue.json"
+    },
+    {
+      "id": "indigo",
+      "label": "네이비 (Indigo)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/indigo.json"
+    },
+    {
+      "id": "purple",
+      "label": "퍼플 (Purple)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/purple.json"
+    },
+    {
+      "id": "black",
+      "label": "블랙 (Black)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": true,
+      "stylesheet": "stylesheets/black.json"
+    },
+    {
+      "id": "white",
+      "label": "화이트 (White)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/white.json"
+    }
   ]
 }

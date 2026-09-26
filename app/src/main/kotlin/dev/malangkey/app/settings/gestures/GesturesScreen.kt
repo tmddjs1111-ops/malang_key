@@ -89,6 +89,7 @@ fun GesturesScreen() = FlorisScreen {
                     entry(SwipeAction.DELETE_CHARACTER, "글자 삭제")
                     entry(SwipeAction.DELETE_WORD, "단어 삭제")
                     entry(SwipeAction.MOVE_CURSOR_LEFT, "커서 왼쪽 이동")
+                    entry(SwipeAction.SWITCH_TO_NEXT_SUBTYPE, "다음 언어로 전환")
                     entry(SwipeAction.SWITCH_TO_PREV_SUBTYPE, "이전 언어로 전환")
                     entry(SwipeAction.UNDO, "실행 취소")
                 },
@@ -102,6 +103,7 @@ fun GesturesScreen() = FlorisScreen {
                     entry(SwipeAction.INSERT_SPACE, "스페이스 입력")
                     entry(SwipeAction.MOVE_CURSOR_RIGHT, "커서 오른쪽 이동")
                     entry(SwipeAction.SWITCH_TO_NEXT_SUBTYPE, "다음 언어로 전환")
+                    entry(SwipeAction.SWITCH_TO_PREV_SUBTYPE, "이전 언어로 전환")
                     entry(SwipeAction.REDO, "다시 실행")
                 },
                 enabledIf = { prefs.glide.enabled isEqualTo false },

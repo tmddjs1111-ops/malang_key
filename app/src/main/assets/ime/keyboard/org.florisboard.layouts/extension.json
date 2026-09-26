@@ -384,14 +384,6 @@
         "direction": "ltr"
       },
       {
-        "id": "korean_phonetic",
-        "label": "한국어 - 두벌식(표준)",
-        "authors": [
-          "Shunnuo"
-        ],
-        "direction": "ltr"
-      },
-      {
         "id": "korean_naratgul",
         "label": "한국어 - 획추가형",
         "authors": [

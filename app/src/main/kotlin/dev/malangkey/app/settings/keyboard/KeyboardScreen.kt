@@ -58,6 +58,11 @@ fun KeyboardScreen() = FlorisScreen {
                 summary = "사용 중인 키보드를 끌어서 전환 순서를 정합니다.",
                 onClick = { navController.navigate(Routes.Settings.KeyboardOrder) },
             )
+            Preference(
+                title = "입력 및 수정",
+                summary = "자동 교정, 대문자 자동 변환 등 입력 방식을 설정합니다.",
+                onClick = { navController.navigate(Routes.Settings.Typing) },
+            )
             SwitchPreference(
                 prefs.keyboard.numberRow,
                 title = "숫자 행 표시",

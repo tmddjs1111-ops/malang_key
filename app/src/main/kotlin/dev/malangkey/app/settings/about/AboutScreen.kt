@@ -69,7 +69,7 @@ fun AboutScreen() = FlorisScreen {
             FlorisCanvasIcon(
                 modifier = Modifier.requiredSize(64.dp),
                 iconId = R.mipmap.malang_app_icon,
-                contentDescription = "FlorisBoard app icon",
+                contentDescription = "MalangKey app icon",
             )
             Text(
                 text = stringRes(R.string.malang_app_name),
@@ -112,6 +112,12 @@ fun AboutScreen() = FlorisScreen {
             title = stringRes(R.string.about__privacy_policy__title),
             summary = stringRes(R.string.about__privacy_policy__summary),
             onClick = { context.launchUrl(R.string.florisboard__privacy_policy_url) },
+        )
+        Preference(
+            icon = Icons.Outlined.Description,
+            title = "FlorisBoard 기반",
+            summary = "말랑키는 FlorisBoard(Apache 2.0)를 수정해 만든 앱입니다.",
+            onClick = { context.launchUrl("https://github.com/florisboard/florisboard") },
         )
         Preference(
             icon = Icons.Outlined.Description,

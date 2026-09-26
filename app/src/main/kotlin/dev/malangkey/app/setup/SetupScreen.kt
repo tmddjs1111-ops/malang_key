@@ -161,14 +161,14 @@ private fun FlorisScreenScope.content(
                 context, navController, scope
             ),
             footer = {
-                footer(context)
+                footer(context, navController)
             },
         )
     }
 }
 
 @Composable
-private fun footer(context: Context) {
+private fun footer(context: Context, navController: NavController) {
     Spacer(modifier = Modifier.height(16.dp))
     Row(
         modifier = Modifier
@@ -181,9 +181,9 @@ private fun footer(context: Context) {
             Text(text = stringRes(R.string.setup__footer__privacy_policy))
         }
         FlorisBulletSpacer()
-        val repositoryUrl = stringRes(R.string.florisboard__repo_url)
-        TextButton(onClick = { context.launchUrl(repositoryUrl) }) {
-            Text(text = stringRes(R.string.setup__footer__repository))
+        // App info holds the version, repository and open-source licenses.
+        TextButton(onClick = { navController.navigate(Routes.Settings.About) }) {
+            Text(text = "앱 정보 · 라이선스")
         }
     }
 }
@@ -222,8 +222,9 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
             StepText(stringRes(R.string.setup__finish_up__description_p2))
             StepButton(label = stringRes(R.string.setup__finish_up__finish_btn)) {
                 scope.launch { this@steps.prefs.internal.isImeSetUp.set(true) }
+                // 첫 실행이든 메인의 "빠른 설정"에서 들어왔든, 메인 화면 하나만 남긴다.
                 navController.navigate(Routes.Settings.Home) {
-                    popUpTo(Routes.Setup.Screen) {
+                    popUpTo(navController.graph.id) {
                         inclusive = true
                     }
                 }

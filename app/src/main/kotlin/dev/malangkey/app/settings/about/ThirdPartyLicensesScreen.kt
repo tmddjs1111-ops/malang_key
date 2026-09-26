@@ -18,15 +18,11 @@ package dev.malangkey.app.settings.about
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
-import com.mikepenz.aboutlibraries.ui.compose.m3.chipColors
-import com.mikepenz.aboutlibraries.ui.compose.m3.libraryColors
 import dev.malangkey.R
 import dev.malangkey.lib.compose.FlorisScreen
 import org.florisboard.lib.compose.florisScrollbar
@@ -47,15 +43,6 @@ fun ThirdPartyLicensesScreen() = FlorisScreen {
             modifier = Modifier
                 .fillMaxSize()
                 .florisScrollbar(lazyListState, isVertical = true),
-            colors = LibraryDefaults.libraryColors(
-                libraryBackgroundColor = MaterialTheme.colorScheme.background,
-                licenseChipColors = LibraryDefaults.chipColors(
-                    MaterialTheme.colorScheme.primaryContainer,
-                    MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                libraryContentColor = MaterialTheme.colorScheme.onBackground,
-                dialogConfirmButtonColor = MaterialTheme.colorScheme.primary,
-            ),
             lazyListState = lazyListState,
         )
     }

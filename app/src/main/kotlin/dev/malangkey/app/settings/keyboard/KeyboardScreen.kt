@@ -173,5 +173,18 @@ fun KeyboardScreen() = FlorisScreen {
             )
 
         }
+
+        MalangPreferenceGroup {
+            Preference(
+                title = "설정 백업",
+                summary = "키보드·테마 설정을 파일로 저장합니다.",
+                onClick = { navController.navigate(Routes.Settings.Backup) },
+            )
+            Preference(
+                title = "설정 복원",
+                summary = "백업 파일에서 설정을 불러옵니다.",
+                onClick = { navController.navigate(Routes.Settings.Restore) },
+            )
+        }
     }
 }

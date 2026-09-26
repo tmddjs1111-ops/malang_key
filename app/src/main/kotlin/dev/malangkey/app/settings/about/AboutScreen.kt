@@ -121,9 +121,9 @@ fun AboutScreen() = FlorisScreen {
         )
         Preference(
             icon = Icons.Outlined.Description,
-            title = stringRes(R.string.about__jmdict__title),
-            summary = stringRes(R.string.about__jmdict__summary),
-            onClick = { context.launchUrl(R.string.jmdict__project_url) },
+            title = stringRes(R.string.about__mozc__title),
+            summary = stringRes(R.string.about__mozc__summary),
+            onClick = { context.launchUrl(R.string.mozc__project_url) },
         )
         Preference(
             icon = Icons.Outlined.Description,

@@ -43,6 +43,7 @@ import org.florisboard.lib.snygg.SnyggStylesheet
  * @param selector A specific SnyggSelector to query the style for.
  * @param modifier The modifier to be applied to the Text.
  * @param text The text of the element.
+ * @param fontFamily Overrides the stylesheet font family when not `null`.
  *
  * @since 0.5.0-alpha01
  *
@@ -55,6 +56,7 @@ fun SnyggText(
     selector: SnyggSelector? = null,
     modifier: Modifier = Modifier,
     text: String,
+    fontFamily: FontFamily? = null,
 ) {
     ProvideSnyggStyle(elementName, attributes, selector) { style ->
         Text(
@@ -69,7 +71,7 @@ fun SnyggText(
             fontSize = style.fontSize(),
             fontStyle = style.fontStyle(),
             fontWeight = style.fontWeight(),
-            fontFamily = style.fontFamily(LocalSnyggPreloadedCustomFontFamilies.current),
+            fontFamily = fontFamily ?: style.fontFamily(LocalSnyggPreloadedCustomFontFamilies.current),
             letterSpacing = style.letterSpacing(),
             lineHeight = style.lineHeight(),
             textAlign = style.textAlign(),

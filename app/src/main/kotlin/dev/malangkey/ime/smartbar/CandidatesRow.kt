@@ -19,11 +19,14 @@ package dev.malangkey.ime.smartbar
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -46,9 +49,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.MPlusRoundedFontFamily
 import dev.malangkey.ime.keyboard.FlorisImeSizing
 import dev.malangkey.ime.nlp.ClipboardSuggestionCandidate
 import dev.malangkey.ime.nlp.SuggestionCandidate
+import dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider
 import dev.malangkey.ime.theme.FlorisImeUi
 import dev.malangkey.keyboardManager
 import dev.malangkey.nlpManager
@@ -189,16 +194,17 @@ private fun ExpandedCandidates(
     onCandidateLongPress: (SuggestionCandidate) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
+    // Shows every candidate, 4 per row; scrolls vertically when there are more rows than fit.
     SnyggColumn(
         elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
-        modifier = modifier,
+        modifier = modifier.verticalScroll(rememberScrollState()),
     ) {
-        for (row in candidates.take(8).chunked(4)) {
+        for (row in candidates.chunked(4)) {
             SnyggRow(
                 elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .height(FlorisImeSizing.smartbarHeight),
                 horizontalArrangement = Arrangement.Start,
             ) {
                 for ((n, candidate) in row.withIndex()) {
@@ -257,6 +263,9 @@ private fun CandidateItem(
         FlorisImeUi.SmartbarCandidateWord
     }.elementName
     val attributes = mapOf("auto-commit" to if (candidate.isEligibleForAutoCommit) 1 else 0)
+    // Japanese candidates use the same font as the Japanese keys and hide the reading (furigana).
+    val isJapanese = candidate.sourceProvider?.providerId == JapaneseLanguageProvider.ProviderId
+    val fontFamily = if (isJapanese) MPlusRoundedFontFamily else null
     val selector = if (isPressed) SnyggSelector.PRESSED else SnyggSelector.NONE
 
     SnyggRow(
@@ -309,8 +318,9 @@ private fun CandidateItem(
                 attributes = attributes,
                 selector = selector,
                 text = candidate.text.toString(),
+                fontFamily = fontFamily,
             )
-            if (candidate.secondaryText != null) {
+            if (candidate.secondaryText != null && !isJapanese) {
                 SnyggText(
                     elementName = "$elementName-secondary-text",
                     attributes = attributes,

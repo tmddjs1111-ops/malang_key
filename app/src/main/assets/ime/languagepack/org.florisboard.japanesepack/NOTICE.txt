@@ -1,12 +1,9 @@
-JMdict attribution
+Japanese conversion
 
-This product includes Japanese dictionary data from the JMdict project.
+Kana-to-kanji conversion is provided by Mozc (https://github.com/google/mozc),
+Copyright Google LLC, licensed under the BSD 3-Clause License.
 
-Copyright: Electronic Dictionary Research and Development Group (EDRDG)
-Project: https://www.edrdg.org/wiki/JMdict-EDICT_Dictionary_Project.html
-License: Creative Commons Attribution-ShareAlike 4.0 International
-License URL: https://creativecommons.org/licenses/by-sa/4.0/
-
-MalangKey converts the JMdict XML data into an indexed SQLite database and
-assigns candidate ranking scores from JMdict priority markers. The original
-dictionary entries are otherwise not translated or semantically modified.
+The Mozc open source dictionary (assets/mozc/mozc.data) is based on IPAdic
+(Copyright 2000-2003 Nara Institute of Science and Technology, with entries
+from ICOT Free Software) and the Okinawa dictionary (public domain).
+The full license texts are shown in Settings > About > Third-party licenses.

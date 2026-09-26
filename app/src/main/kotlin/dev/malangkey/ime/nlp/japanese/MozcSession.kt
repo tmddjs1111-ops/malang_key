@@ -230,7 +230,7 @@ class MozcSession(private val context: Context) {
                 result[value] = Candidate(value = value, reading = reading, id = candidate.id)
             }
         }
-        flogDebug { "Mozc '$reading' -> ${result.keys.take(10)}" }
+        flogDebug { "Mozc '$reading' -> ${result.size} candidates: ${result.keys.take(10)}" }
         return result.values.toList()
     }
 

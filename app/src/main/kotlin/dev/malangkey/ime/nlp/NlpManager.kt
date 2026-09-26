@@ -50,6 +50,9 @@ import kotlin.properties.Delegates
 
 private const val BLANK_STR_PATTERN = "^\\s*$"
 
+/** Upper bound for Japanese conversion candidates; Mozc usually returns fewer than this. */
+private const val JapaneseMaxCandidateCount = 100
+
 class NlpManager(context: Context) {
     private val blankStrRegex = Regex(BLANK_STR_PATTERN)
 
@@ -214,10 +217,18 @@ class NlpManager(context: Context) {
                     emptyList()
                 }
                 else -> {
-                    getSuggestionProvider(subtype).suggest(
+                    val provider = getSuggestionProvider(subtype)
+                    provider.suggest(
                         subtype = subtype,
                         content = content,
-                        maxCandidateCount = 8,
+                        // Japanese conversion shows the full Mozc candidate list (expandable panel).
+                        maxCandidateCount = if (provider.providerId ==
+                            dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId
+                        ) {
+                            JapaneseMaxCandidateCount
+                        } else {
+                            8
+                        },
                         allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )

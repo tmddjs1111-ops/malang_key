@@ -17,15 +17,10 @@
 package dev.malangkey.ime.nlp.japanese
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteException
-import dev.malangkey.extensionManager
 import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.editor.EditorContent
 import dev.malangkey.ime.editor.EditorRange
 import dev.malangkey.ime.nlp.BreakIteratorGroup
-import dev.malangkey.ime.nlp.LanguagePackComponent
-import dev.malangkey.ime.nlp.LanguagePackExtension
 import dev.malangkey.ime.nlp.SpellingProvider
 import dev.malangkey.ime.nlp.SpellingResult
 import dev.malangkey.ime.nlp.SuggestionCandidate
@@ -33,21 +28,18 @@ import dev.malangkey.ime.nlp.SuggestionProvider
 import dev.malangkey.ime.nlp.WordSuggestionCandidate
 import dev.malangkey.lib.devtools.flogDebug
 import dev.malangkey.lib.devtools.flogError
-import dev.malangkey.subtypeManager
 import java.io.File
-import java.io.FileOutputStream
 import java.text.Normalizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 private fun Char.isJapaneseComposingCharacter(): Boolean {
-    return this in '\u3040'..'\u309F' ||
-        this in '\u30A0'..'\u30FF' ||
-        this in '\uFF66'..'\uFF9F'
+    return this in '぀'..'ゟ' ||
+        this in '゠'..'ヿ' ||
+        this in 'ｦ'..'ﾟ'
 }
 
 internal fun determineJapaneseComposingRange(
@@ -63,22 +55,28 @@ internal fun determineJapaneseComposingRange(
     return if (start < end) EditorRange(start, end) else EditorRange.Unspecified
 }
 
+/**
+ * Kana-to-kanji conversion backed by Mozc ([MozcSession]).
+ *
+ * On top of Mozc's own learning, a small per-reading history keeps the user's recent picks first.
+ * If Mozc cannot be loaded, a tiny built-in dictionary keeps basic conversion working.
+ */
 class JapaneseLanguageProvider(val context: Context) : SpellingProvider, SuggestionProvider {
     private val historyFile by lazy { File(context.filesDir, "japanese_history.json") }
-    
+
     class JapaneseHistoryEntry(
         val word: String,
         var count: Int,
         var lastUsed: Long
     )
-    
+
     private val userHistory = mutableMapOf<String, MutableList<JapaneseHistoryEntry>>()
+
     companion object {
         const val ProviderId = "org.florisboard.nlp.providers.japanese"
 
-        private const val AssetDatabasePath =
-            "ime/languagepack/org.florisboard.japanesepack/japanese_dict.sqlite3"
-        private const val InstalledDatabaseFileName = "japanese_dict_v1.sqlite3"
+        /** Copied out of the APK by versions before Mozc; deleted on startup to free ~26 MB. */
+        private const val LegacyDatabaseFileName = "japanese_dict_v1.sqlite3"
 
         private val builtInDict = mapOf(
             "にほん" to listOf("日本"),
@@ -146,35 +144,14 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         )
     }
 
-    private val extensionManager by context.extensionManager()
-    private val subtypeManager by context.subtypeManager()
-    
-    private val allLanguagePacks: List<LanguagePackExtension>
-        get() = extensionManager.languagePacks.value
-        
-    private var __connectedActiveLanguagePacks: Set<LanguagePackExtension> = setOf()
-    private var languagePackItems: Map<String, LanguagePackComponent> = mapOf()
-    
-    private val activeLanguagePacks
-        get() = buildSet {
-            val locales = subtypeManager.subtypes.map { it.primaryLocale.localeTag() }.toSet()
-            for (languagePack in allLanguagePacks) {
-                if (languagePack.items.any { it.locale.localeTag() in locales }) {
-                    add(languagePack)
-                }
-            }
-        }
-        
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-    /** Primary converter. The SQLite / built-in dictionary below is only used if Mozc fails to load. */
     private val mozc = MozcSession(context)
 
-    override val providerId = ProviderId
+    /** Whether the most recent suggest() call came from an incognito / private field. */
+    @Volatile
+    private var isPrivateSession = false
 
-    private fun refreshLanguagePacks() {
-        scope.launch { create() }
-    }
+    override val providerId = ProviderId
 
     private fun loadHistory() {
         try {
@@ -221,28 +198,15 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
 
     override suspend fun create() {
         loadHistory()
-        // First launch copies mozc.data out of the APK, so don't block create() on it.
-        scope.launch { mozc.open() }
-        languagePackItems = buildMap {
-            for (languagePack in allLanguagePacks) {
-                for (languagePackItem in languagePack.items) {
-                    put(languagePackItem.locale.localeTag(), languagePackItem)
-                    languagePackItem.parent = languagePack
-                }
-            }
-        }.toMap()
-
-        val activeLanguagePacks = activeLanguagePacks
-        for (activeLanguagePack in activeLanguagePacks) {
-            if (!activeLanguagePack.isLoaded()) {
-                activeLanguagePack.load(context)
-            }
+        scope.launch {
+            File(context.filesDir, LegacyDatabaseFileName).delete()
+            // First launch copies mozc.data out of the APK, so don't block create() on it.
+            mozc.open()
         }
-        __connectedActiveLanguagePacks = activeLanguagePacks
     }
 
-    override suspend fun preload(subtype: Subtype) = withContext(Dispatchers.IO) {
-        // Preload any necessary resources
+    override suspend fun preload(subtype: Subtype) {
+        // Mozc is opened in create(); nothing per-subtype to load.
     }
 
     override suspend fun spell(
@@ -257,132 +221,17 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         return SpellingResult.validWord()
     }
 
-    @Transient
-    private var assetDatabase: SQLiteDatabase? = null
-
-    @Synchronized
-    private fun getOrOpenAssetDatabase(): SQLiteDatabase? {
-        if (assetDatabase?.isOpen == true) return assetDatabase
-
-        val dbFile = File(context.filesDir, InstalledDatabaseFileName)
-        repeat(2) { attempt ->
-            try {
-                if (!dbFile.exists()) {
-                    installAssetDatabase(dbFile)
-                }
-                assetDatabase = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                return assetDatabase
-            } catch (e: SQLiteException) {
-                if (attempt == 0) {
-                    dbFile.delete()
-                } else {
-                    flogError { "Failed to open bundled Japanese DB: $e" }
-                }
-            } catch (e: Exception) {
-                flogError { "Failed to install bundled Japanese DB: $e" }
-                return null
-            }
-        }
-        return null
-    }
-
-    private fun installAssetDatabase(destination: File) {
-        val temporaryFile = File(destination.parentFile, "${destination.name}.tmp")
-        temporaryFile.delete()
-        context.assets.open(AssetDatabasePath).use { input ->
-            FileOutputStream(temporaryFile).use { output ->
-                input.copyTo(output)
-                output.fd.sync()
-            }
-        }
-        if (!temporaryFile.renameTo(destination)) {
-            temporaryFile.copyTo(destination, overwrite = true)
-            temporaryFile.delete()
-        }
-    }
-
     private fun normalizeReading(text: String): String {
         val normalizedText = Normalizer.normalize(text, Normalizer.Form.NFKC)
         return buildString(normalizedText.length) {
             for (character in normalizedText) {
-                if (character in '\u30A1'..'\u30F6') {
+                if (character in 'ァ'..'ヶ') {
                     append((character.code - 0x60).toChar())
                 } else {
                     append(character)
                 }
             }
         }
-    }
-
-    private fun greedyChunking(queryText: String, database: SQLiteDatabase?): WordSuggestionCandidate? {
-        if (database == null || !database.isOpen) return null
-        
-        var remaining = queryText
-        val chunks = mutableListOf<String>()
-        var foundSomething = false
-        
-        while (remaining.isNotEmpty()) {
-            var matchFound = false
-            for (i in remaining.length downTo 1) {
-                val prefix = remaining.substring(0, i)
-                
-                val historyMatch = userHistory[prefix]?.firstOrNull()?.word
-                if (historyMatch != null) {
-                    chunks.add(historyMatch)
-                    remaining = remaining.substring(i)
-                    matchFound = true
-                    foundSomething = true
-                    break
-                }
-                
-                val builtInMatch = builtInDict[prefix]?.firstOrNull()
-                if (builtInMatch != null) {
-                    chunks.add(builtInMatch)
-                    remaining = remaining.substring(i)
-                    matchFound = true
-                    foundSomething = true
-                    break
-                }
-                
-                try {
-                    database.query(
-                        "dictionary",
-                        arrayOf("word"),
-                        "reading = ?",
-                        arrayOf(prefix),
-                        null, null,
-                        "frequency DESC",
-                        "1"
-                    ).use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            chunks.add(cursor.getString(0))
-                            remaining = remaining.substring(i)
-                            matchFound = true
-                            foundSomething = true
-                        }
-                    }
-                } catch (e: Exception) { }
-                if (matchFound) break
-            }
-            if (!matchFound) {
-                chunks.add(remaining.substring(0, 1))
-                remaining = remaining.substring(1)
-            }
-        }
-        
-        if (foundSomething && chunks.size > 1) {
-            val combined = chunks.joinToString("")
-            if (combined != queryText) {
-                return WordSuggestionCandidate(
-                    text = combined,
-                    secondaryText = queryText,
-                    confidence = 0.85,
-                    isEligibleForAutoCommit = false,
-                    sourceProvider = this@JapaneseLanguageProvider,
-                )
-            }
-        }
-        return null
     }
 
     override suspend fun suggest(
@@ -392,14 +241,8 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         allowPossiblyOffensive: Boolean,
         isPrivateSession: Boolean,
     ): List<SuggestionCandidate> {
-        if (__connectedActiveLanguagePacks != activeLanguagePacks) {
-            refreshLanguagePacks()
-        }
-        if (content.composingText.isEmpty()) {
-            return emptyList()
-        }
-        
-        if (maxCandidateCount <= 0) {
+        this.isPrivateSession = isPrivateSession
+        if (content.composingText.isEmpty() || maxCandidateCount <= 0) {
             return emptyList()
         }
 
@@ -407,134 +250,39 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         val queryText = normalizeReading(composingText)
         val suggestions = mutableListOf<SuggestionCandidate>()
 
-        userHistory[queryText]?.forEach { entry ->
-            if (suggestions.size < maxCandidateCount) {
-                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == entry.word }) {
-                    suggestions.add(WordSuggestionCandidate(
-                        text = entry.word,
-                        secondaryText = queryText,
-                        confidence = 0.98,
-                        isEligibleForAutoCommit = false,
-                        sourceProvider = this@JapaneseLanguageProvider,
-                    ))
-                }
-            }
-        }
-
-        val mozcCandidates = mozc.convert(queryText, maxCandidateCount)
-        for (candidate in mozcCandidates) {
-            if (suggestions.size >= maxCandidateCount) break
-            if (suggestions.any { (it as? WordSuggestionCandidate)?.text == candidate.value }) continue
+        fun add(word: String, confidence: Double) {
+            if (suggestions.size >= maxCandidateCount) return
+            // The raw reading is appended last by withRawReadingCandidate(), so the first
+            // candidate (used by the convert key) is always an actual conversion.
+            if (word == queryText || word == composingText) return
+            if (suggestions.any { (it as? WordSuggestionCandidate)?.text == word }) return
             suggestions.add(WordSuggestionCandidate(
-                text = candidate.value,
+                text = word,
                 secondaryText = queryText,
-                confidence = 0.9,
+                confidence = confidence,
                 isEligibleForAutoCommit = false,
                 sourceProvider = this@JapaneseLanguageProvider,
             ))
         }
-        if (mozcCandidates.isNotEmpty()) {
-            return withRawReadingCandidate(suggestions, composingText, maxCandidateCount)
+
+        if (!isPrivateSession) {
+            userHistory[queryText]?.forEach { add(it.word, confidence = 0.98) }
         }
 
-        // Fallback path (Mozc unavailable): legacy SQLite + built-in dictionary.
-        // Preserve a small set of hand-ranked everyday words where JMdict priority markers tie.
-        builtInDict[queryText]?.forEach { word ->
-            if (suggestions.size < maxCandidateCount) {
-                if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
-                    suggestions.add(WordSuggestionCandidate(
-                        text = word,
-                        secondaryText = queryText,
-                        confidence = 0.95,
-                        isEligibleForAutoCommit = false,
-                        sourceProvider = this@JapaneseLanguageProvider,
-                    ))
-                }
-            }
-        }
+        val mozcCandidates = mozc.convert(queryText, maxCandidateCount)
+        mozcCandidates.forEach { add(it.value, confidence = 0.9) }
 
-        // Prefer the versioned database bundled in this APK. The language-pack database remains
-        // available as a compatibility fallback for installations created before this bundle.
-        val languagePackExt = getLanguagePack(subtype)?.second
-        val database = getOrOpenAssetDatabase()
-            ?: languagePackExt?.japaneseDictSQLiteDatabase?.takeIf { it.isOpen }
-
-        if (database != null && database.isOpen) {
-            try {
-                fun appendCandidates(selection: String, selectionArgs: Array<String>, confidence: Double) {
-                    val remainingCount = maxCandidateCount - suggestions.size
-                    if (remainingCount <= 0) return
-
-                    database.query(
-                        "dictionary",
-                        arrayOf("reading", "word"),
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        "frequency DESC, reading ASC, word ASC",
-                        maxCandidateCount.toString(),
-                    ).use { cursor ->
-                        while (cursor.moveToNext()) {
-                            if (suggestions.size >= maxCandidateCount) break
-                            val reading = cursor.getString(0)
-                            val word = cursor.getString(1)
-                            if (suggestions.any { (it as? WordSuggestionCandidate)?.text == word }) continue
-
-                            suggestions.add(WordSuggestionCandidate(
-                                text = word,
-                                secondaryText = reading,
-                                confidence = confidence,
-                                isEligibleForAutoCommit = false,
-                                sourceProvider = this@JapaneseLanguageProvider,
-                            ))
-                        }
-                    }
-                }
-
-                appendCandidates("reading = ?", arrayOf(queryText), confidence = 0.9)
-                if (suggestions.size < maxCandidateCount) {
-                    appendCandidates(
-                        "reading >= ? AND reading < ? AND reading <> ?",
-                        arrayOf(queryText, "$queryText\uFFFF", queryText),
-                        confidence = 0.65,
-                    )
-                }
-                
-                if (suggestions.size < maxCandidateCount) {
-                    val chunkCandidate = greedyChunking(queryText, database)
-                    if (chunkCandidate != null && !suggestions.any { (it as? WordSuggestionCandidate)?.text == chunkCandidate.text }) {
-                        suggestions.add(chunkCandidate)
-                    }
-                }
-                
-                flogDebug { "Japanese DB query '$queryText' returned ${suggestions.size} candidates." }
-            } catch (e: Exception) {
-                flogError { "SQLiteException in Japanese Language Provider: composing=${content.composingText}, error='$e'" }
-            }
-        }
-
-        // Keep a tiny emergency dictionary so conversion still works if the asset cannot be opened.
-        if (database == null || !database.isOpen) {
+        if (mozcCandidates.isEmpty()) {
+            // Mozc unavailable: exact matches first, then readings that start with the input.
+            builtInDict[queryText]?.forEach { add(it, confidence = 0.8) }
             for ((reading, words) in builtInDict) {
-                if (suggestions.size >= maxCandidateCount) break
                 if (reading != queryText && reading.startsWith(queryText)) {
-                    for (word in words) {
-                        if (suggestions.size >= maxCandidateCount) break
-                        if (suggestions.none { (it as? WordSuggestionCandidate)?.text == word }) {
-                            suggestions.add(WordSuggestionCandidate(
-                                text = word,
-                                secondaryText = reading,
-                                confidence = 0.6,
-                                isEligibleForAutoCommit = false,
-                                sourceProvider = this@JapaneseLanguageProvider,
-                            ))
-                        }
-                    }
+                    words.forEach { add(it, confidence = 0.6) }
                 }
             }
         }
 
+        flogDebug { "Japanese '$queryText' -> ${suggestions.size} candidates (mozc=${mozcCandidates.size})" }
         return withRawReadingCandidate(suggestions, composingText, maxCandidateCount)
     }
 
@@ -544,13 +292,6 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         composingText: CharSequence,
         maxCandidateCount: Int,
     ): List<SuggestionCandidate> {
-        val hasRawReadingCandidate = suggestions.any {
-            (it as? WordSuggestionCandidate)?.text?.toString() == composingText.toString()
-        }
-        if (hasRawReadingCandidate) {
-            return suggestions.take(maxCandidateCount)
-        }
-
         val rawReadingCandidate = WordSuggestionCandidate(
             text = composingText,
             confidence = 0.5,
@@ -567,10 +308,12 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
 
     override suspend fun notifySuggestionAccepted(subtype: Subtype, candidate: SuggestionCandidate) {
         flogDebug { "Accepted: $candidate" }
+        // Nothing typed in a private field is remembered, neither here nor in Mozc.
+        if (isPrivateSession) return
         if (candidate is WordSuggestionCandidate && candidate.secondaryText != null) {
             val reading = candidate.secondaryText!!.toString()
             val word = candidate.text.toString()
-            
+
             val entries = userHistory.getOrPut(reading) { mutableListOf() }
             val entry = entries.find { it.word == word }
             if (entry != null) {
@@ -596,15 +339,6 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         return false
     }
 
-    fun getLanguagePack(subtype: Subtype): Pair<LanguagePackComponent, LanguagePackExtension>? {
-        val languagePackItem = languagePackItems[subtype.primaryLocale.localeTag()]
-        val languagePackExtension = languagePackItem?.parent
-        if (languagePackItem == null || languagePackExtension == null) {
-            return null
-        }
-        return Pair(languagePackItem, languagePackExtension)
-    }
-
     override suspend fun getListOfWords(subtype: Subtype): List<String> {
         return emptyList()
     }
@@ -615,8 +349,6 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
 
     override suspend fun destroy() {
         mozc.close()
-        assetDatabase?.close()
-        assetDatabase = null
         scope.cancel()
     }
 

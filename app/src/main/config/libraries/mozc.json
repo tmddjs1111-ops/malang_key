@@ -1,0 +1,15 @@
+{
+  "uniqueId": "mozc",
+  "name": "Mozc (Japanese input engine and dictionary)",
+  "developers": [
+    {
+      "name": "Google LLC",
+      "organisationUrl": "https://github.com/google/mozc"
+    }
+  ],
+  "website": "https://github.com/google/mozc",
+  "licenses": [
+    "BSD-3-Clause",
+    "ipadic"
+  ]
+}

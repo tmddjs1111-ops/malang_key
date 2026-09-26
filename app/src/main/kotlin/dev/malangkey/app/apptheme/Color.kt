@@ -30,3 +30,9 @@ val MalangText = Color(0xFF5D4037)      // 기본 텍스트 색상
 val MalangNavBg = Color(0xFFEFEBE9)     // 하단 네비게이션 배경
 val MalangNavActive = Color(0xFFD7CCC8) // 활성화된 탭 배경
 val MalangCardBg = Color(0xFFFFFFFF)    // 카드 요소 배경
+
+// 피그마 메인 화면 (Malang Key / Main)
+val MalangCream = Color(0xFFFCF5D6)         // 메인 배경, 하단 탭 아이콘/라벨
+val MalangDarkCard = Color(0xFF311D18)      // 메뉴 카드, 하단 탭 바
+val MalangDarkCardTitle = Color(0xFFFFFFF4) // 카드 제목
+val MalangDarkCardSub = Color(0xFFE5D8C6)   // 카드 부제

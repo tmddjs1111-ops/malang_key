@@ -29,7 +29,7 @@ plugins {
     alias(libs.plugins.mikepenz.aboutlibraries)
     alias(libs.plugins.kotest)
     alias(libs.plugins.kotlinx.kover)
-    id("com.google.protobuf") version "0.9.4"
+    id("com.google.protobuf") version "0.10.0"
 }
 
 val projectMinSdk: String by project

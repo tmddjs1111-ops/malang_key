@@ -27,3 +27,8 @@
 
 # @Serializable and @Polymorphic are used at runtime for polymorphic serialization.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
+
+# Mozc: libmozc.so looks up this class by its exact name and registers natives on it.
+-keep class com.google.android.apps.inputmethod.libs.mozc.session.MozcJni { *; }
+# Protobuf-lite reads message fields reflectively by name.
+-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }

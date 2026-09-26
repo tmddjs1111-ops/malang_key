@@ -1,6 +1,7 @@
 name: Build Mozc Android JNI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - '.github/workflows/build_mozc_android.yml'
@@ -36,12 +37,20 @@ jobs:
         cd mozc/src
         bazelisk build package --config oss_android --config release_build
 
+    # libmozc.so does not embed the dictionary; it loads mozc.data from a file path at runtime.
+    # Build it from the same commit so the data version matches the engine.
+    - name: Build mozc.data (dictionary)
+      run: |
+        cd mozc/src
+        bazelisk build //data_manager/oss:mozc_dataset_for_oss --config oss_android --config release_build
+
     - name: Prepare Artifacts Directory
       run: |
         mkdir -p mozc-output
         # Copy output maintaining structure
         cp -r mozc/src/bazel-bin/android/jni mozc-output/jni_libs
-        find mozc/src/bazel-bin -name "mozc.data" -exec cp {} mozc-output/ \;
+        cp mozc/src/bazel-bin/data_manager/oss/mozc.data mozc-output/mozc.data
+        git -C mozc rev-parse HEAD > mozc-output/MOZC_COMMIT.txt
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4

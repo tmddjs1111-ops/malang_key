@@ -167,6 +167,9 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
+    /** Primary converter. The SQLite / built-in dictionary below is only used if Mozc fails to load. */
+    private val mozc = MozcSession(context)
+
     override val providerId = ProviderId
 
     private fun refreshLanguagePacks() {
@@ -218,6 +221,8 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
 
     override suspend fun create() {
         loadHistory()
+        // First launch copies mozc.data out of the APK, so don't block create() on it.
+        scope.launch { mozc.open() }
         languagePackItems = buildMap {
             for (languagePack in allLanguagePacks) {
                 for (languagePackItem in languagePack.items) {
@@ -416,6 +421,23 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             }
         }
 
+        val mozcCandidates = mozc.convert(queryText, maxCandidateCount)
+        for (candidate in mozcCandidates) {
+            if (suggestions.size >= maxCandidateCount) break
+            if (suggestions.any { (it as? WordSuggestionCandidate)?.text == candidate.value }) continue
+            suggestions.add(WordSuggestionCandidate(
+                text = candidate.value,
+                secondaryText = queryText,
+                confidence = 0.9,
+                isEligibleForAutoCommit = false,
+                sourceProvider = this@JapaneseLanguageProvider,
+            ))
+        }
+        if (mozcCandidates.isNotEmpty()) {
+            return withRawReadingCandidate(suggestions, composingText, maxCandidateCount)
+        }
+
+        // Fallback path (Mozc unavailable): legacy SQLite + built-in dictionary.
         // Preserve a small set of hand-ranked everyday words where JMdict priority markers tie.
         builtInDict[queryText]?.forEach { word ->
             if (suggestions.size < maxCandidateCount) {
@@ -513,8 +535,17 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
             }
         }
 
+        return withRawReadingCandidate(suggestions, composingText, maxCandidateCount)
+    }
+
+    /** Always offers the unconverted reading as the last candidate. */
+    private fun withRawReadingCandidate(
+        suggestions: List<SuggestionCandidate>,
+        composingText: CharSequence,
+        maxCandidateCount: Int,
+    ): List<SuggestionCandidate> {
         val hasRawReadingCandidate = suggestions.any {
-            (it as? WordSuggestionCandidate)?.text?.toString() == composingText
+            (it as? WordSuggestionCandidate)?.text?.toString() == composingText.toString()
         }
         if (hasRawReadingCandidate) {
             return suggestions.take(maxCandidateCount)
@@ -553,6 +584,7 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
                 entries.removeAt(entries.lastIndex)
             }
             saveHistory()
+            scope.launch { mozc.learn(reading, word) }
         }
     }
 
@@ -582,6 +614,7 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
     }
 
     override suspend fun destroy() {
+        mozc.close()
         assetDatabase?.close()
         assetDatabase = null
         scope.cancel()

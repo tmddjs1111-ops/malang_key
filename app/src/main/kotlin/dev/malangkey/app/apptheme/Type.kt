@@ -17,9 +17,11 @@
 package dev.malangkey.app.apptheme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.malangkey.R
@@ -31,7 +33,15 @@ val JuaFontFamily = FontFamily(
 )
 val GmarketSansFontFamily = FontFamily(Font(R.font.gmarket_sans, FontWeight.Normal))
 val PretendardFontFamily = FontFamily(Font(R.font.pretendard, FontWeight.Normal))
-val NotoSansFontFamily = FontFamily(Font(R.font.noto_sans, FontWeight.Normal))
+// noto_sans.ttf is a variable font (wght 100-900) whose default instance is Thin; pin it to Regular.
+@OptIn(ExperimentalTextApi::class)
+val NotoSansFontFamily = FontFamily(
+    Font(
+        R.font.noto_sans,
+        FontWeight.Normal,
+        variationSettings = FontVariation.Settings(FontVariation.weight(400)),
+    )
+)
 val NanumGothicFontFamily = FontFamily(Font(R.font.nanum_gothic, FontWeight.Normal))
 val NanumMyeongjoFontFamily = FontFamily(Font(R.font.nanum_myeongjo, FontWeight.Normal))
 val HandwritingFontFamily = FontFamily(Font(R.font.handwriting, FontWeight.Normal))

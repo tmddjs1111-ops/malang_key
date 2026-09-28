@@ -36,3 +36,12 @@ val MalangCream = Color(0xFFFCF5D6)         // 메인 배경, 하단 탭 아이�
 val MalangDarkCard = Color(0xFF311D18)      // 메뉴 카드, 하단 탭 바
 val MalangDarkCardTitle = Color(0xFFFFFFF4) // 카드 제목
 val MalangDarkCardSub = Color(0xFFE5D8C6)   // 카드 부제
+
+// 피그마 메인 A안 (Malang Key / Main · A안) — 브랜드 팔레트
+val MalangCocoa = Color(0xFF3A211B)         // 기본 카드, 하단 탭 바
+val MalangMushroom = Color(0xFF6A4535)      // 강조 타일
+val MalangOat = Color(0xFFE9D5A8)           // 하단 탭 비활성 아이콘/라벨
+val MalangButter = Color(0xFFFBF1D4)        // 메인 배경, 활성 탭
+val MalangCardText = Color(0xFFFFF1CF)      // 카드 제목·아이콘
+val MalangCardSubLight = Color(0xFFF2DDB0)  // 카드 부제 (밝은 쪽)
+val MalangCardSubMuted = Color(0xFFD9BF8C)  // 카드 영문 부제

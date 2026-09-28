@@ -64,24 +64,23 @@ import org.florisboard.lib.compose.*
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
 import dev.malangkey.subtypeManager
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.Row
 
 val MalangJuaFont = JuaFontFamily
+/** Body font of design A; the bundled file res/font/gmarket_sans.ttf is Gowun Dodum. */
+val MalangGowunFont = GmarketSansFontFamily
 
 private enum class HomeTab { MAIN, THEME, GAME }
 
 /** 피그마 "Malang Key / Main" 카드 한 장의 내용과 아이콘 배치 (카드 기준 dp). */
-private data class MainCard(
+private data class MainTile(
     val title: String,
-    val subtitles: List<String>,
+    val subtitle: String,
     @DrawableRes val iconRes: Int,
-    val iconWidth: Int,
-    val iconHeight: Int,
-    val iconTop: Float,
-    val iconEnd: Float,
+    val accent: Boolean,
     val onClick: () -> Unit,
-    val height: Int = 124,
-    val titleSize: Int = 27,
-    val titleTop: Int = 21,
 )
 
 @Composable
@@ -100,7 +99,7 @@ fun HomeScreen() = FlorisScreen {
     content {
         Box(modifier = Modifier
             .fillMaxSize()
-            .background(MalangCream)
+            .background(MalangButter)
         ) {
             Image(
                 painter = painterResource(R.drawable.mk_main_bg_pattern),
@@ -114,7 +113,7 @@ fun HomeScreen() = FlorisScreen {
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .statusBarsPadding()
-                    .padding(top = 24.dp, bottom = 120.dp)
+                    .padding(top = 36.dp, bottom = 120.dp)
             ) {
                 when (selectedTab) {
                     HomeTab.MAIN -> MainTabContent(navController, context)
@@ -126,7 +125,9 @@ fun HomeScreen() = FlorisScreen {
             MainBottomNav(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(start = 14.dp, end = 14.dp, bottom = 24.dp),
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+                selectedTab = selectedTab,
                 onMain = { selectedTab = HomeTab.MAIN },
                 onTest = { navController.navigate(Routes.Settings.KeyboardTest) },
                 onTheme = { selectedTab = HomeTab.THEME },
@@ -167,55 +168,48 @@ private fun MainTabContent(
         )
     }
 
-    val cards = listOf(
-        MainCard(
-            title = "키보드 선택", subtitles = listOf("언어 및 종류 선택", "Keyboard Select"),
-            iconRes = R.drawable.mk_main_keyboard, iconWidth = 100, iconHeight = 100, iconTop = 37f, iconEnd = 10.5f,
-            onClick = { navController.navigate(Routes.Settings.Keyboard) },
-            height = 170, titleSize = 32, titleTop = 27,
-        ),
-        MainCard(
-            title = "소리,진동", subtitles = listOf("Sound & Haptic Feedback"),
-            iconRes = R.drawable.mk_main_sound, iconWidth = 124, iconHeight = 124, iconTop = 0f, iconEnd = 0f,
-            onClick = { navController.navigate(Routes.Settings.InputFeedback) },
-        ),
-        MainCard(
-            title = "스마트 바", subtitles = listOf("Smart Bar Settings"),
-            iconRes = R.drawable.mk_main_smartbar, iconWidth = 100, iconHeight = 51, iconTop = 35.8f, iconEnd = 14.8f,
-            onClick = { navController.navigate(Routes.Settings.Smartbar) },
-        ),
-        MainCard(
-            title = "클립 보드", subtitles = listOf("Clipboard"),
-            iconRes = R.drawable.mk_main_clipboard, iconWidth = 80, iconHeight = 80, iconTop = 15.5f, iconEnd = 28.8f,
-            onClick = { navController.navigate(Routes.Settings.Clipboard) },
-        ),
-        MainCard(
-            title = "제스처", subtitles = listOf("Gesture"),
-            iconRes = R.drawable.mk_main_gesture, iconWidth = 90, iconHeight = 90, iconTop = 6.8f, iconEnd = 23.8f,
-            onClick = { navController.navigate(Routes.Settings.Gestures) },
-        ),
-        MainCard(
-            title = "이모지", subtitles = listOf("Emoji"),
-            iconRes = R.drawable.mk_main_emoji, iconWidth = 80, iconHeight = 80, iconTop = 19.8f, iconEnd = 24.8f,
-            onClick = { navController.navigate(Routes.Settings.Media) },
-        ),
-        MainCard(
-            title = "빠른 설정", subtitles = listOf("Quick Settings"),
-            iconRes = R.drawable.mk_main_quick, iconWidth = 80, iconHeight = 80, iconTop = 20.8f, iconEnd = 28.8f,
-            onClick = { navController.navigate(Routes.Setup.Screen) },
-        ),
+    val tiles = listOf(
+        MainTile("소리·진동", "Sound & Haptic", R.drawable.mk_ic_sound, accent = false) {
+            navController.navigate(Routes.Settings.InputFeedback)
+        },
+        MainTile("스마트 바", "Smart Bar", R.drawable.mk_ic_smartbar, accent = false) {
+            navController.navigate(Routes.Settings.Smartbar)
+        },
+        MainTile("클립보드", "Clipboard", R.drawable.mk_ic_clipboard, accent = true) {
+            navController.navigate(Routes.Settings.Clipboard)
+        },
+        MainTile("제스처", "Gesture", R.drawable.mk_ic_gesture, accent = true) {
+            navController.navigate(Routes.Settings.Gestures)
+        },
+        MainTile("이모지", "Emoji", R.drawable.mk_ic_emoji, accent = false) {
+            navController.navigate(Routes.Settings.Media)
+        },
+        MainTile("빠른 설정", "Quick Settings", R.drawable.mk_ic_quick, accent = false) {
+            navController.navigate(Routes.Setup.Screen)
+        },
     )
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        cards.forEach { MainMenuCard(it) }
+        MainHeroCard(onClick = { navController.navigate(Routes.Settings.Keyboard) })
+
+        for (row in tiles.chunked(2)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                for (tile in row) {
+                    MainTileCard(tile, Modifier.weight(1f))
+                }
+            }
+        }
 
         Text(
             text = "앱 정보 · 오픈소스 라이선스",
-            color = MalangDarkCard,
+            color = MalangMushroom,
+            fontFamily = MalangGowunFont,
             fontSize = 14.sp,
             modifier = Modifier
                 .padding(top = 4.dp)
@@ -227,48 +221,67 @@ private fun MainTabContent(
 }
 
 @Composable
-private fun MainMenuCard(card: MainCard) {
-    Box(
+private fun MainHeroCard(onClick: () -> Unit) {
+    Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .widthIn(max = 300.dp)
             .fillMaxWidth()
-            .height(card.height.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MalangDarkCard)
-            .clickable(onClick = card.onClick)
+            .height(180.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(MalangCocoa)
+            .clickable(onClick = onClick)
+            .padding(start = 24.dp, top = 22.dp, end = 20.dp, bottom = 22.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.padding(start = 20.dp, top = card.titleTop.dp)) {
-            Text(
-                text = card.title,
-                color = MalangDarkCardTitle,
-                fontSize = card.titleSize.sp,
-                fontFamily = MalangJuaFont,
-            )
-            card.subtitles.forEach {
-                Text(
-                    text = it,
-                    color = MalangDarkCardSub,
-                    fontSize = 15.sp,
-                    fontFamily = MalangJuaFont,
-                )
-            }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text("키보드 선택", color = MalangCardText, fontSize = 36.sp, lineHeight = 40.sp, fontFamily = MalangJuaFont)
+            Text("언어 및 종류 선택", color = MalangCardSubLight, fontSize = 16.sp, fontFamily = MalangGowunFont)
+            Text("Keyboard Select", color = MalangCardSubMuted, fontSize = 13.sp, fontFamily = MalangGowunFont)
         }
         Image(
-            painter = painterResource(card.iconRes),
+            painter = painterResource(R.drawable.mk_main_keyboard),
             contentDescription = null,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = card.iconTop.dp, end = card.iconEnd.dp)
-                .size(card.iconWidth.dp, card.iconHeight.dp),
+            modifier = Modifier.size(124.dp),
             contentScale = ContentScale.Fit,
         )
     }
 }
 
 @Composable
+private fun MainTileCard(tile: MainTile, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .height(164.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(if (tile.accent) MalangMushroom else MalangCocoa)
+            .clickable(onClick = tile.onClick)
+            .padding(18.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Icon(
+            painter = painterResource(tile.iconRes),
+            contentDescription = null,
+            tint = MalangCardText,
+            modifier = Modifier.size(60.dp),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(tile.title, color = MalangCardText, fontSize = 24.sp, lineHeight = 28.sp, fontFamily = MalangJuaFont)
+            Text(
+                tile.subtitle,
+                color = if (tile.accent) MalangCardSubLight else MalangCardSubMuted,
+                fontSize = 13.sp,
+                fontFamily = MalangGowunFont,
+            )
+        }
+    }
+}
+
+@Composable
 private fun MainBottomNav(
     modifier: Modifier,
+    selectedTab: HomeTab,
     onMain: () -> Unit,
     onTest: () -> Unit,
     onTheme: () -> Unit,
@@ -276,46 +289,50 @@ private fun MainBottomNav(
 ) {
     Row(
         modifier = modifier
-            .widthIn(max = 363.dp)
+            .widthIn(max = 420.dp)
             .fillMaxWidth()
-            .height(70.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(MalangDarkCard),
+            .height(72.dp)
+            .shadow(elevation = 12.dp, shape = RoundedCornerShape(36.dp), ambientColor = MalangCocoa, spotColor = MalangCocoa)
+            .clip(RoundedCornerShape(36.dp))
+            .background(MalangCocoa)
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
-        MainNavItem(R.drawable.mk_main_nav_main, 29.7f, 25.7f, "main", onMain)
-        MainNavItem(R.drawable.mk_nav_test, 30.8f, 19.7f, "test", onTest)
-        MainNavItem(R.drawable.mk_nav_theme, 29.5f, 22.8f, "theme", onTheme)
-        MainNavItem(R.drawable.mk_nav_game, 30.6f, 17.9f, "game", onGame)
+        MainNavItem(R.drawable.mk_tab_home, "홈", selectedTab == HomeTab.MAIN, onMain)
+        // 테스트는 별도 화면으로 이동하므로 탭 선택 상태를 두지 않는다.
+        MainNavItem(R.drawable.mk_tab_test, "테스트", false, onTest)
+        MainNavItem(R.drawable.mk_tab_theme, "테마", selectedTab == HomeTab.THEME, onTheme)
+        MainNavItem(R.drawable.mk_tab_game, "게임", selectedTab == HomeTab.GAME, onGame)
     }
 }
 
 @Composable
-private fun RowScope.MainNavItem(
+private fun MainNavItem(
     @DrawableRes iconRes: Int,
-    iconWidth: Float,
-    iconHeight: Float,
     label: String,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val contentColor = if (selected) MalangCocoa else MalangOat
     Column(
         modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clickable(onClick = onClick),
+            .widthIn(min = 64.dp)
+            .height(56.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(if (selected) MalangButter else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically),
     ) {
-        Box(modifier = Modifier.height(26.dp), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(iconRes),
-                contentDescription = label,
-                modifier = Modifier.size(iconWidth.dp, iconHeight.dp),
-                contentScale = ContentScale.FillBounds,
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(label, color = MalangCream, fontSize = 10.sp, fontFamily = MalangJuaFont)
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(26.dp),
+        )
+        Text(label, color = contentColor, fontSize = 12.sp, fontFamily = MalangGowunFont)
     }
 }
 

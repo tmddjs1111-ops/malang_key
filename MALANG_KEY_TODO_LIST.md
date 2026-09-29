@@ -32,6 +32,10 @@
 - [ ] **상표 확인 (KIPRIS)** — "천지인" 등 자판 이름
 
 ## 🌱 3단계 — 출시 후
+- [ ] **폴더블 분리 키보드** — 펼치면 쿼티 자판을 경첩 기준으로 좌우 분리(양손 입력), 접으면 그대로(선택 가능)
+  - 감지: `androidx.window:window` 추가 → `WindowInfoTracker`/`FoldingFeature` (없으면 화면 크기 판정 `ImeFormFactor`로 대체)
+  - 창 설정은 이미 폰/태블릿 판정별로 따로 저장됨(`keyboard.windowConfig`), 분리 모드 자리 `ImeWindowMode.Fixed.THUMBS` 있음
+  - 결정 필요: 스페이스바를 양쪽에 반씩 둘지 한쪽에 둘지
 - [ ] **구글 광고 (Google AdMob)**
   - ⚠️ 키보드 입력 화면에는 광고 금지(Play 정책) → 설정 앱 화면에만
 - [ ] **테마 설정 확장** — Figma 디자인에 맞춘 테마 목록·미리보기

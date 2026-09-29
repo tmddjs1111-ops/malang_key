@@ -16,6 +16,7 @@
 
 package dev.malangkey.ime.text.keyboard
 
+import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.keyboard.Key
 import dev.malangkey.ime.keyboard.Keyboard
 import dev.malangkey.ime.keyboard.KeyboardMode
@@ -72,6 +73,9 @@ class TextKeyboard(
         extendTouchBoundariesDownwards: Boolean,
     ) {
         if (arrangement.isEmpty()) return
+        for (key in keys()) {
+            key.splitGapWidth = 0f
+        }
 
         val desiredTouchBounds = desiredKey.touchBounds
         val desiredVisibleBounds = desiredKey.visibleBounds
@@ -173,6 +177,51 @@ class TextKeyboard(
                 }
             }
             posY += rowHeight + rowMarginV
+        }
+    }
+
+    /**
+     * 자판을 가운데에서 [gap]만큼 벌려 좌우로 나눈다. [layout]을 전체 너비에서 [gap]을 뺀
+     * [layoutWidth]로 부른 직후 한 번만 호출한다. 키 위치만 옮기므로 입력할 때 드는 계산은 그대로다.
+     *
+     * 가운데를 가로지르는 스페이스바는 빈 칸을 건너 양쪽에 걸치고, 화면에는 두 조각으로 그린다.
+     * 스페이스바가 없는 줄은 빈 칸을 눌러도 가까운 쪽 키가 눌리게 가장자리 키의 터치 영역을 반씩 넓힌다.
+     */
+    fun applySplit(layoutWidth: Float, gap: Float) {
+        if (gap <= 0f) return
+        val mid = layoutWidth / 2f
+        for (row in arrangement) {
+            var lastLeft: TextKey? = null
+            var firstRight: TextKey? = null
+            var hasBridge = false
+            for (key in row) {
+                if (key.touchBounds.width <= 0f) continue
+                val code = key.computedData.code
+                val isSpace = code == KeyCode.SPACE || code == KeyCode.CJK_SPACE
+                if (isSpace && key.visibleBounds.left < mid && key.visibleBounds.right > mid) {
+                    key.touchBounds.right += gap
+                    key.visibleBounds.right += gap
+                    key.splitGapStart = mid
+                    key.splitGapWidth = gap
+                    hasBridge = true
+                    continue
+                }
+                val centerX = (key.touchBounds.left + key.touchBounds.right) / 2f
+                // 정확히 가운데에 걸친 키(예: 쿼티의 G, V)는 왼쪽에 둔다.
+                if (centerX > mid + 0.01f * key.touchBounds.width) {
+                    key.touchBounds.left += gap
+                    key.touchBounds.right += gap
+                    key.visibleBounds.left += gap
+                    key.visibleBounds.right += gap
+                    if (firstRight == null) firstRight = key
+                } else {
+                    lastLeft = key
+                }
+            }
+            if (!hasBridge) {
+                lastLeft?.let { it.touchBounds.right += gap / 2f }
+                firstRight?.let { it.touchBounds.left -= gap / 2f }
+            }
         }
     }
 

@@ -54,6 +54,7 @@ import dev.malangkey.ime.lifecycle.LifecycleInputMethodService
 import dev.malangkey.ime.nlp.NlpInlineAutofill
 import dev.malangkey.ime.theme.WallpaperChangeReceiver
 import dev.malangkey.ime.window.ImeRootView
+import dev.malangkey.ime.window.FoldState
 import dev.malangkey.ime.window.ImeWindowController
 import dev.malangkey.lib.devtools.LogTopic
 import dev.malangkey.lib.devtools.flogError
@@ -283,6 +284,7 @@ class FlorisImeService : LifecycleInputMethodService() {
 
         WindowCompat.setDecorFitsSystemWindows(window.window!!, false)
         windowController.onConfigurationChanged(resources.configuration)
+        FoldState.observe(this, lifecycleScope)
         windowController.activeWindowConfig.collectLatestIn(lifecycleScope) {
             keyboardManager.updateActiveEvaluators() // TODO: wacky solution, but works for now
         }

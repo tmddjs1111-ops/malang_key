@@ -82,6 +82,13 @@ internal fun symbolHintCodeForKey(keyboardMode: KeyboardMode, keyCode: Int): Int
 }
 
 class TextKey(override val data: AbstractKeyData) : Key(data) {
+    /**
+     * 나눈 자판에서 이 키(스페이스바)가 가로지르는 가운데 빈 칸의 시작 x와 너비(px).
+     * 나누지 않으면 너비는 0이다. [TextKeyboard.applySplit]이 정한다.
+     */
+    var splitGapStart: Float = 0f
+    var splitGapWidth: Float = 0f
+
     var computedData: KeyData = TextKeyData.UNSPECIFIED
         private set
     val computedPopups: MutablePopupSet<KeyData> = MutablePopupSet()

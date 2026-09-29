@@ -91,6 +91,9 @@ import dev.malangkey.lib.PointerMap
 import dev.malangkey.lib.devtools.LogTopic
 import dev.malangkey.lib.devtools.flogDebug
 import dev.malangkey.lib.toIntOffset
+import dev.malangkey.ime.window.ImeFormFactor
+import dev.malangkey.ime.window.FoldState
+import androidx.compose.ui.geometry.Rect
 import dev.malangkey.lib.util.ViewUtils
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.serialization.json.Json
@@ -149,6 +152,22 @@ internal fun isJapaneseKanaRowBase(code: Int): Boolean = when (code) {
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalComposeUiApi::class)
+/** 자판을 나눌 수 있는 모드. 천지인 같은 격자 자판과 숫자 패드는 나누지 않는다. */
+private val SplittableModes = setOf(
+    KeyboardMode.CHARACTERS,
+    KeyboardMode.SYMBOLS,
+    KeyboardMode.SYMBOLS2,
+    KeyboardMode.NUMERIC_ADVANCED,
+)
+
+/** 폴더블 접힘 정보가 없어도 큰 화면으로 보는 기기 종류 (태블릿 등). */
+private val LargeScreenTypes = setOf(
+    ImeFormFactor.Type.TABLET_PORTRAIT,
+    ImeFormFactor.Type.TABLET_LANDSCAPE,
+    ImeFormFactor.Type.LARGE_TABLET,
+    ImeFormFactor.Type.DESKTOP,
+)
+
 @Composable
 fun TextKeyboardLayout(
     modifier: Modifier = Modifier,
@@ -268,20 +287,37 @@ fun TextKeyboardLayout(
         val keyMarginH by remember { derivedStateOf { windowSpec.keyMarginH.toPx() } }
         val keyMarginV by remember { derivedStateOf { windowSpec.keyMarginV.toPx() } }
 
+        // 폴더블 분리 자판: 접힘 상태가 바뀌거나 설정을 바꿀 때만 다시 계산된다.
+        val isUnfolded by FoldState.isUnfolded.collectAsState()
+        val rootInsets by windowController.activeRootInsets.collectAsState()
+        val splitWhenUnfolded by prefs.keyboard.splitWhenUnfolded.collectAsState()
+        val splitWhenFolded by prefs.keyboard.splitWhenFolded.collectAsState()
+        val splitGapPercent by prefs.keyboard.splitGapPercent.collectAsState()
+        val isLargeScreen = isUnfolded || rootInsets.formFactor.typeGuess in LargeScreenTypes
+        val splitGap = if (keyboard.mode in SplittableModes &&
+            (if (isLargeScreen) splitWhenUnfolded else splitWhenFolded)
+        ) {
+            keyboardWidth * splitGapPercent.coerceIn(0, 50) / 100f
+        } else {
+            0f
+        }
+
         val desiredKey = remember(
             keyboard, keyboardWidth, keyboardHeight, keyMarginH, keyMarginV,
-            keyboardRowBaseHeight, evaluator
+            keyboardRowBaseHeight, evaluator, splitGap,
         ) {
+            val layoutWidth = keyboardWidth - splitGap
             TextKey(data = TextKeyData.UNSPECIFIED).also { desiredKey ->
                 desiredKey.touchBounds.apply {
                     width = when (keyboard.mode) {
-                        KeyboardMode.GRID_16KEY -> keyboardWidth / ((keyboard as TextKeyboard).maxKeyCountPerRow().toFloat() + 0.25f)
-                        else -> keyboardWidth / 10f
+                        KeyboardMode.GRID_16KEY -> layoutWidth / ((keyboard as TextKeyboard).maxKeyCountPerRow().toFloat() + 0.25f)
+                        else -> layoutWidth / 10f
                     }
                     height = keyboardRowBaseHeight.toPx()
                 }
                 desiredKey.visibleBounds.applyFrom(desiredKey.touchBounds).deflateBy(keyMarginH, keyMarginV)
-                keyboard.layout(keyboardWidth, keyboardHeight, desiredKey, true)
+                keyboard.layout(layoutWidth, keyboardHeight, desiredKey, true)
+                keyboard.applySplit(layoutWidth, splitGap)
             }
         }
 
@@ -388,9 +424,27 @@ private fun TextKeyButton(
     } else {
         1.0f
     }
-    var keyModifier = Modifier
-        .requiredSize(size)
-        .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() }
+    // 나눈 자판에서 가운데를 가로지르는 스페이스바는 빈 칸 양쪽에 한 조각씩 그린다.
+    val faces: List<Rect?> = if (key.splitGapWidth > 0f) {
+        val marginH = abs(desiredKey.visibleBounds.left - desiredKey.touchBounds.left)
+        val vb = key.visibleBounds
+        listOf(
+            Rect(vb.left, vb.top, key.splitGapStart - marginH, vb.bottom),
+            Rect(key.splitGapStart + key.splitGapWidth + marginH, vb.top, vb.right, vb.bottom),
+        )
+    } else {
+        listOf(null)
+    }
+    for (face in faces) {
+    var keyModifier = if (face == null) {
+        Modifier
+            .requiredSize(size)
+            .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() }
+    } else {
+        Modifier
+            .requiredSize(face.size.toDpSize())
+            .absoluteOffset { face.topLeft.toIntOffset() }
+    }
         
     if (malangConfig.isNeumorphismEnabled) {
         val elevation = if (key.isPressed) (-2).dp else 4.dp
@@ -462,6 +516,7 @@ private fun TextKeyButton(
                 contentDescription = null,
             )
         }
+    }
     }
     if (debugShowTouchBoundaries) {
         Box(

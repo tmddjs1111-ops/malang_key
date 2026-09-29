@@ -588,6 +588,21 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__space_long_press_delay",
             default = 3000,
         )
+        /** 폴더블을 펼쳤을 때(또는 태블릿에서) 쿼티 자판을 가운데에서 나눈다. */
+        val splitWhenUnfolded = boolean(
+            key = "keyboard__split_when_unfolded",
+            default = true,
+        )
+        /** 접은 상태(일반 폰 화면)에서도 자판을 나눈다. */
+        val splitWhenFolded = boolean(
+            key = "keyboard__split_when_folded",
+            default = false,
+        )
+        /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
+        val splitGapPercent = int(
+            key = "keyboard__split_gap_percent",
+            default = 20,
+        )
 
         fun keyHintConfiguration(): KeyHintConfiguration {
             return KeyHintConfiguration(

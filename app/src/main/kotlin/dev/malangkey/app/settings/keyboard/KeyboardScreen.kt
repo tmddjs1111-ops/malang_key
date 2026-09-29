@@ -124,6 +124,27 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
     )
 
     MalangSettingsSection(
+        title = "폴더블·분리 자판",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenUnfolded,
+                    title = "펼쳤을 때 자판 나누기",
+                    summary = "폴더블 폰을 펼치면 쿼티 자판을 가운데에서 나눠 양손으로 치기 쉽게 합니다. 태블릿에도 적용돼요.",
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenFolded,
+                    title = "접었을 때도 나누기",
+                    summary = "일반 폰 화면에서도 자판을 나눕니다.",
+                )
+            },
+            { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
+        ),
+    )
+
+    MalangSettingsSection(
         title = "기타 설정",
         items = listOf(
             {

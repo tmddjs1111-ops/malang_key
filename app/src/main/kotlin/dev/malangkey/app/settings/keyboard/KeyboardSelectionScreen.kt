@@ -17,65 +17,87 @@
 package dev.malangkey.app.settings.keyboard
 
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ListItem
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsTitle
+import dev.malangkey.app.apptheme.MalangToggle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import dev.malangkey.R
 import dev.malangkey.ime.keyboard.LayoutType
 import dev.malangkey.keyboardManager
 import dev.malangkey.lib.FlorisLocale
-import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.subtypeManager
-import org.florisboard.lib.compose.stringRes
 
 @Composable
-fun KeyboardSelectionScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__keyboard_selection__title)
-    previewFieldVisible = true
-
+fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 및 레이아웃", subtitle = "Keyboards") {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
+    val subtypes by subtypeManager.subtypesFlow.collectAsState()
+    val presets by keyboardManager.resources.subtypePresets.collectAsState()
+    val layouts by keyboardManager.resources.layouts.collectAsState()
 
-    content {
-        val subtypes by subtypeManager.subtypesFlow.collectAsState()
-        val presets by keyboardManager.resources.subtypePresets.collectAsState()
-        val layouts by keyboardManager.resources.layouts.collectAsState()
+    MalangInfoCard("사용할 자판을 켜세요. 여러 개를 켜면 지구본 키나 스페이스바 좌우 밀기로 바꿔 쓸 수 있어요. 마지막 하나는 끌 수 없어요.")
 
-        for (preset in presets) {
-            val isChecked = subtypes.any { it.equalsExcludingId(preset.toSubtype()) }
-            val charactersLayout = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)
-            
-            ListItem(
-                modifier = Modifier.clickable {
+    // 언어별로 묶고, 한국어를 맨 위에 둔다.
+    val byLanguage = presets
+        .groupBy { it.locale.displayName() }
+        .toList()
+        .sortedByDescending { (_, list) -> list.first().locale.language == "ko" }
+    for ((language, languagePresets) in byLanguage) {
+        MalangSettingsSection(
+            title = language,
+            items = languagePresets.map { preset ->
+                {
                     val subtype = preset.toSubtype()
-                    if (isChecked) {
-                        val existingSubtype = subtypes.find { it.equalsExcludingId(subtype) }
-                        if (existingSubtype != null && subtypes.size > 1) {
-                            subtypeManager.removeSubtype(existingSubtype)
+                    val isChecked = subtypes.any { it.equalsExcludingId(subtype) }
+                    val charactersLayout = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)
+                    val name = keyboardDisplayName(preset.locale, charactersLayout?.label)
+                        .removePrefix(preset.locale.displayName()).removePrefix(" - ")
+                        .ifEmpty { language }
+                    val toggle = {
+                        if (isChecked) {
+                            val existingSubtype = subtypes.find { it.equalsExcludingId(subtype) }
+                            if (existingSubtype != null && subtypes.size > 1) {
+                                subtypeManager.removeSubtype(existingSubtype)
+                            }
+                        } else {
+                            subtypeManager.addSubtypeAndActivate(subtype)
                         }
-                    } else {
-                        subtypeManager.addSubtypeAndActivate(subtype)
+                        // Force refresh keyboard cache
+                        keyboardManager.resources.anyChangedVersion.value += 1
                     }
-                    // Force refresh keyboard cache
-                    keyboardManager.resources.anyChangedVersion.value += 1
-                },
-                headlineContent = {
-                    Text(text = keyboardDisplayName(preset.locale, charactersLayout?.label))
-                },
-                trailingContent = {
-                    Checkbox(
-                        checked = isChecked,
-                        onCheckedChange = null,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = toggle)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            name,
+                            modifier = Modifier.weight(1f),
+                            color = MalangSettingsTitle,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        MalangToggle(checked = isChecked, onCheckedChange = { toggle() })
+                    }
                 }
-            )
-        }
+            },
+        )
     }
 }
 

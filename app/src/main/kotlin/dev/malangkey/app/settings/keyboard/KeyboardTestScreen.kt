@@ -1,6 +1,7 @@
 package dev.malangkey.app.settings.keyboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +46,9 @@ import dev.malangkey.app.apptheme.MalangDarkCard
 import dev.malangkey.app.apptheme.MalangDarkCardTitle
 import dev.malangkey.app.apptheme.MalangText
 import dev.malangkey.app.settings.MalangJuaFont
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.MalangSettingsBorder
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
 
 private data class TestMessage(val text: String, val mine: Boolean)
 
@@ -54,12 +57,13 @@ private data class TestMessage(val text: String, val mine: Boolean)
  * 현재 설정된 말랑키 키보드가 바로 올라온다.
  */
 @Composable
-fun KeyboardTestScreen() = FlorisScreen {
-    title = "키보드 테스트"
-    previewFieldVisible = false
-    scrollable = false
-
-    content {
+fun KeyboardTestScreen() = MalangSettingsScreen(
+    title = "키보드 테스트",
+    subtitle = "Keyboard Test",
+    scrollable = false,
+    showTestInput = false,
+) {
+    run {
         val messages = remember {
             mutableStateListOf(
                 TestMessage("안녕하세요! 말랑키 테스트 채팅방이에요 😊", mine = false),
@@ -85,17 +89,13 @@ fun KeyboardTestScreen() = FlorisScreen {
             input = ""
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MalangCream)
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(messages) { message -> ChatBubble(message) }
@@ -104,14 +104,15 @@ fun KeyboardTestScreen() = FlorisScreen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color.White)
+                        .background(MalangSettingsCard)
+                        .border(1.dp, MalangSettingsBorder, RoundedCornerShape(24.dp))
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
                     if (input.isEmpty()) {
@@ -160,7 +161,7 @@ private fun ChatBubble(message: TestMessage) {
             modifier = Modifier
                 .widthIn(max = 260.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(if (message.mine) MalangDarkCard else Color.White)
+                .background(if (message.mine) MalangDarkCard else MalangSettingsCard)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             color = if (message.mine) MalangDarkCardTitle else MalangText,
             fontSize = 15.sp,

@@ -50,7 +50,22 @@ import dev.malangkey.clipboardManager
 import dev.malangkey.ime.clipboard.provider.ClipboardFileStorage
 import dev.malangkey.ime.clipboard.provider.ItemType
 import dev.malangkey.lib.cache.CacheManager
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.MalangButton
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import dev.malangkey.lib.devtools.flogError
 import dev.malangkey.lib.ext.ExtensionManager
 import dev.malangkey.lib.io.FileRegistry
@@ -135,9 +150,7 @@ object Backup {
 }
 
 @Composable
-fun BackupScreen() = FlorisScreen {
-    title = stringRes(R.string.backup_and_restore__back_up__title)
-    previewFieldVisible = false
+fun BackupScreen() {
 
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -263,50 +276,43 @@ fun BackupScreen() = FlorisScreen {
         }
     }
 
-    bottomBar {
-        FlorisButtonBar {
-            ButtonBarSpacer()
-            ButtonBarTextButton(
-                onClick = {
-                    backupWorkspace?.close()
-                    navController.popBackStack()
+    MalangSettingsScreen(title = "설정 백업", subtitle = "Back Up", showTestInput = false) {
+        MalangSettingsSection(
+            title = "저장 위치",
+            items = listOf(
+                {
+                    RadioListItem(
+                        onClick = { backupDestination = Backup.Destination.FILE_SYS },
+                        selected = backupDestination == Backup.Destination.FILE_SYS,
+                        text = "휴대폰에 파일로 저장",
+                    )
                 },
-                text = stringRes(R.string.action__cancel),
-            )
-            ButtonBarButton(
-                onClick = {
-                    scope.launch { prepareAndPerformBackup() }
+                {
+                    RadioListItem(
+                        onClick = { backupDestination = Backup.Destination.SHARE_INTENT },
+                        selected = backupDestination == Backup.Destination.SHARE_INTENT,
+                        text = "다른 앱으로 공유",
+                    )
                 },
-                text = stringRes(R.string.action__back_up),
-                enabled = backupFilesSelector.atLeastOneSelected(),
-            )
-        }
-    }
-
-    content {
-        FlorisOutlinedBox(
-            modifier = Modifier.defaultFlorisOutlinedBox(),
-            title = stringRes(R.string.backup_and_restore__back_up__destination),
-        ) {
-            RadioListItem(
-                onClick = {
-                    backupDestination = Backup.Destination.FILE_SYS
-                },
-                selected = backupDestination == Backup.Destination.FILE_SYS,
-                text = stringRes(R.string.backup_and_restore__back_up__destination_file_sys),
-            )
-            RadioListItem(
-                onClick = {
-                    backupDestination = Backup.Destination.SHARE_INTENT
-                },
-                selected = backupDestination == Backup.Destination.SHARE_INTENT,
-                text = stringRes(R.string.backup_and_restore__back_up__destination_share_intent),
-            )
-        }
+            ),
+        )
         BackupFilesSelector(
             filesSelector = backupFilesSelector,
-            title = stringRes(R.string.backup_and_restore__back_up__files),
+            title = "백업할 항목",
         )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MalangButton("취소", modifier = Modifier.weight(1f), primary = false) {
+                backupWorkspace?.close()
+                navController.popBackStack()
+            }
+            MalangButton(
+                "백업하기",
+                modifier = Modifier.weight(2f),
+                enabled = backupFilesSelector.atLeastOneSelected(),
+            ) {
+                scope.launch { prepareAndPerformBackup() }
+            }
+        }
     }
 }
 
@@ -316,26 +322,30 @@ internal fun BackupFilesSelector(
     filesSelector: Backup.FilesSelector,
     title: String,
 ) {
-    FlorisOutlinedBox(
-        modifier = modifier.defaultFlorisOutlinedBox(),
-        title = title,
-    ) {
+    MalangSettingsSection(title = title, items = listOf(
+      {
         CheckboxListItem(
             onClick = { filesSelector.jetprefDatastore = !filesSelector.jetprefDatastore },
             checked = filesSelector.jetprefDatastore,
-            text = stringRes(R.string.backup_and_restore__back_up__files_jetpref_datastore),
+            text = "설정값",
         )
+      },
+      {
         CheckboxListItem(
             onClick = { filesSelector.imeKeyboard = !filesSelector.imeKeyboard },
             checked = filesSelector.imeKeyboard,
-            text = stringRes(R.string.backup_and_restore__back_up__files_ime_keyboard),
+            text = "키보드 자판 확장",
         )
+      },
+      {
         CheckboxListItem(
             onClick = { filesSelector.imeTheme = !filesSelector.imeTheme },
             checked = filesSelector.imeTheme,
-            text = stringRes(R.string.backup_and_restore__back_up__files_ime_theme),
+            text = "테마",
         )
-
+      },
+      {
+        Column {
         TriStateCheckboxListItem(
             onClick = {
                 if (
@@ -353,7 +363,7 @@ internal fun BackupFilesSelector(
                 filesSelector.updateCheckboxState()
             },
             state = filesSelector.clipboardData.value,
-            text = stringRes(R.string.backup_and_restore__back_up__files_clipboard_history),
+            text = "클립보드 기록",
         )
 
 
@@ -363,7 +373,7 @@ internal fun BackupFilesSelector(
                 filesSelector.updateCheckboxState()
             },
             checked = filesSelector.clipboardTextItems,
-            text = stringRes(R.string.backup_and_restore__back_up__files_clipboard_history__clipboard_text_items),
+            text = "글자",
             isSecondaryListItem = true,
         )
         CheckboxListItem(
@@ -372,7 +382,7 @@ internal fun BackupFilesSelector(
                 filesSelector.updateCheckboxState()
             },
             checked = filesSelector.clipboardImageItems,
-            text = stringRes(R.string.backup_and_restore__back_up__files_clipboard_history__clipboard_image_items),
+            text = "사진",
             isSecondaryListItem = true,
         )
         CheckboxListItem(
@@ -381,11 +391,12 @@ internal fun BackupFilesSelector(
                 filesSelector.updateCheckboxState()
             },
             checked = filesSelector.clipboardVideoItems,
-            text = stringRes(R.string.backup_and_restore__back_up__files_clipboard_history__clipboard_video_items),
+            text = "동영상",
             isSecondaryListItem = true,
         )
-
-    }
+        }
+      },
+    ))
 }
 
 @Composable
@@ -395,21 +406,9 @@ internal fun CheckboxListItem(
     text: String,
     isSecondaryListItem: Boolean = false
 ) {
-    JetPrefListItem(
-        modifier = Modifier.rippleClickable(onClick = onClick),
-        icon = {
-            Row {
-                if (isSecondaryListItem) {
-                    Spacer(modifier = Modifier.width(40.dp))
-                }
-                Checkbox(
-                    checked = checked,
-                    onCheckedChange = null,
-                )
-            }
-        },
-        text = text,
-    )
+    MalangSelectRow(onClick, text, indent = isSecondaryListItem) {
+        Checkbox(checked = checked, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = MalangSettingsSection))
+    }
 }
 
 @Composable
@@ -419,21 +418,9 @@ internal fun TriStateCheckboxListItem(
     text: String,
     isSecondaryListItem: Boolean = false,
 ) {
-    JetPrefListItem(
-        modifier = Modifier.rippleClickable(onClick = onClick),
-        icon = {
-            Row {
-                if (isSecondaryListItem) {
-                    Spacer(modifier = Modifier.width(40.dp))
-                }
-                TriStateCheckbox(
-                    state = state,
-                    onClick = null,
-                )
-            }
-        },
-        text = text,
-    )
+    MalangSelectRow(onClick, text, indent = isSecondaryListItem) {
+        TriStateCheckbox(state = state, onClick = null, colors = CheckboxDefaults.colors(checkedColor = MalangSettingsSection))
+    }
 }
 
 @Composable
@@ -443,15 +430,33 @@ internal fun RadioListItem(
     text: String,
     secondaryText: String? = null,
 ) {
-    JetPrefListItem(
-        modifier = Modifier.rippleClickable(onClick = onClick),
-        icon = {
-            RadioButton(
-                selected = selected,
-                onClick = null,
-            )
-        },
-        text = text,
-        secondaryText = secondaryText,
-    )
+    MalangSelectRow(onClick, text, secondaryText) {
+        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = MalangSettingsSection))
+    }
+}
+
+@Composable
+private fun MalangSelectRow(
+    onClick: () -> Unit,
+    text: String,
+    secondaryText: String? = null,
+    indent: Boolean = false,
+    control: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = if (indent) 44.dp else 8.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        control()
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(text, color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            if (secondaryText != null) {
+                Text(secondaryText, color = MalangSettingsSummary, fontSize = 13.sp)
+            }
+        }
+    }
 }

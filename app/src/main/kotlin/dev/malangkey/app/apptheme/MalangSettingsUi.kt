@@ -553,3 +553,31 @@ fun MalangInfoCard(text: String) {
         lineHeight = 19.sp,
     )
 }
+
+/** 둥근 큰 버튼. [primary]면 진한 갈색으로 채운다. */
+@Composable
+fun MalangButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    primary: Boolean = true,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .alpha(if (enabled) 1f else 0.4f)
+            .height(52.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(if (primary) MalangSettingsSection else MalangSettingsCard)
+            .border(1.dp, if (primary) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(26.dp))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = if (primary) MalangSettingsCard else MalangSettingsSection,
+            fontSize = 18.sp,
+            fontFamily = JuaFontFamily,
+        )
+    }
+}

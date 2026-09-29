@@ -52,7 +52,13 @@ import dev.malangkey.ime.clipboard.provider.ClipboardFileStorage
 import dev.malangkey.ime.clipboard.provider.ClipboardItem
 import dev.malangkey.ime.clipboard.provider.ItemType
 import dev.malangkey.lib.cache.CacheManager
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.MalangButton
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import dev.malangkey.lib.ext.ExtensionManager
 import dev.malangkey.lib.io.ZipUtils
 import dev.patrickgold.jetpref.datastore.runtime.AndroidAppDataStorage
@@ -86,9 +92,7 @@ object Restore {
 }
 
 @Composable
-fun RestoreScreen() = FlorisScreen {
-    title = stringRes(R.string.backup_and_restore__restore__title)
-    previewFieldVisible = false
+fun RestoreScreen() {
 
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -234,59 +238,30 @@ fun RestoreScreen() = FlorisScreen {
         }
     }
 
-    bottomBar {
-        FlorisButtonBar {
-            ButtonBarSpacer()
-            ButtonBarTextButton(
-                onClick = {
-                    restoreWorkspace?.close()
-                    navController.navigateUp()
+    MalangSettingsScreen(title = "설정 복원", subtitle = "Restore", showTestInput = false) {
+        MalangSettingsSection(
+            title = "복원 방식",
+            items = listOf(
+                {
+                    RadioListItem(
+                        onClick = { importStrategy = ImportStrategy.Merge },
+                        selected = importStrategy == ImportStrategy.Merge,
+                        text = "지금 설정과 합치기",
+                    )
                 },
-                text = stringRes(R.string.action__cancel),
-            )
-            ButtonBarButton(
-                onClick = {
-                    restoreScope.launch(Dispatchers.Main) {
-                        try {
-                            performRestore()
-                            context.showLongToast(R.string.backup_and_restore__restore__success)
-                            navController.navigateUp()
-                        } catch (e: Throwable) {
-                            e.printStackTrace()
-                            context.showLongToast(
-                                R.string.backup_and_restore__restore__failure,
-                                "error_message" to e.localizedMessage,
-                            )
-                        }
-                    }
+                {
+                    RadioListItem(
+                        onClick = { importStrategy = ImportStrategy.Erase },
+                        selected = importStrategy == ImportStrategy.Erase,
+                        text = "지금 설정을 지우고 덮어쓰기",
+                    )
                 },
-                text = stringRes(R.string.action__restore),
-                enabled = restoreWorkspace != null && restoreWorkspace?.restoreErrorId == null,
-            )
-        }
-    }
-
-    content {
-        FlorisOutlinedBox(
-            modifier = Modifier.defaultFlorisOutlinedBox(),
-            title = stringRes(R.string.backup_and_restore__restore__mode),
-        ) {
-            RadioListItem(
-                onClick = {
-                    importStrategy = ImportStrategy.Merge
-                },
-                selected = importStrategy == ImportStrategy.Merge,
-                text = stringRes(R.string.backup_and_restore__restore__mode_merge),
-            )
-            RadioListItem(
-                onClick = {
-                    importStrategy = ImportStrategy.Erase
-                },
-                selected = importStrategy == ImportStrategy.Erase,
-                text = stringRes(R.string.backup_and_restore__restore__mode_erase_and_overwrite),
-            )
-        }
-        FlorisOutlinedButton(
+            ),
+        )
+        MalangButton(
+            "백업 파일 선택",
+            modifier = Modifier.fillMaxWidth(),
+            primary = false,
             onClick = {
                 runCatching {
                     restoreDataFromFileSystemLauncher.launch("*/*")
@@ -297,10 +272,6 @@ fun RestoreScreen() = FlorisScreen {
                     )
                 }
             },
-            modifier = Modifier
-                .padding(vertical = 16.dp)
-                .align(Alignment.CenterHorizontally),
-            text = stringRes(R.string.action__select_file),
         )
         val workspace = restoreWorkspace
         if (workspace == null) {
@@ -308,14 +279,11 @@ fun RestoreScreen() = FlorisScreen {
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(horizontal = 16.dp),
-                text = stringRes(R.string.state__no_file_selected),
-                fontStyle = FontStyle.Italic,
+                text = "선택한 파일이 없어요.",
+                color = MalangSettingsSummary,
             )
         } else {
-            FlorisOutlinedBox(
-                modifier = Modifier.defaultFlorisOutlinedBox(),
-                title = stringRes(R.string.backup_and_restore__restore__metadata),
-            ) {
+            MalangSettingsSection(title = "선택한 백업 파일", items = listOf({ Column {
                 Preference(
                     icon = Icons.Default.Code,
                     title = workspace.metadata.packageName,
@@ -366,13 +334,39 @@ fun RestoreScreen() = FlorisScreen {
                         )
                     }
                 }
-            }
+            } }))
             if (workspace.restoreErrorId == null) {
                 BackupFilesSelector(
                     filesSelector = restoreFilesSelector,
-                    title = stringRes(R.string.backup_and_restore__restore__files),
+                    title = "복원할 항목",
                 )
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MalangButton("취소", modifier = Modifier.weight(1f), primary = false) {
+                restoreWorkspace?.close()
+                navController.navigateUp()
+            }
+            MalangButton(
+                "복원하기",
+                modifier = Modifier.weight(2f),
+                enabled = restoreWorkspace != null && restoreWorkspace?.restoreErrorId == null,
+                onClick = {
+                    restoreScope.launch(Dispatchers.Main) {
+                        try {
+                            performRestore()
+                            context.showLongToast(R.string.backup_and_restore__restore__success)
+                            navController.navigateUp()
+                        } catch (e: Throwable) {
+                            e.printStackTrace()
+                            context.showLongToast(
+                                R.string.backup_and_restore__restore__failure,
+                                "error_message" to e.localizedMessage,
+                            )
+                        }
+                    }
+                },
+            )
         }
     }
 }

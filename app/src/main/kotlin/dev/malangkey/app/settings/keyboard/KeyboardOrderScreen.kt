@@ -17,6 +17,8 @@
 package dev.malangkey.app.settings.keyboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -51,33 +52,38 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.keyboard.LayoutType
 import dev.malangkey.keyboardManager
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.JuaFontFamily
+import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangSettingsBorder
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.subtypeManager
 
-private val ItemHeight = 64.dp
+private val ItemHeight = 68.dp
 
 /**
  * Lists the enabled keyboards; dragging the handle changes the order in which the language
  * switch key and swipe gestures cycle through them.
  */
 @Composable
-fun KeyboardOrderScreen() = FlorisScreen {
-    title = "내 키보드 순서"
-    previewFieldVisible = true
-
+fun KeyboardOrderScreen() = MalangSettingsScreen(title = "내 키보드 순서", subtitle = "Keyboard Order") {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
 
-    content {
+    run {
         val subtypes by subtypeManager.subtypesFlow.collectAsState()
         val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
         val layouts by keyboardManager.resources.layouts.collectAsState()
-        val itemHeightPx = with(LocalDensity.current) { ItemHeight.toPx() }
+        val itemHeightPx = with(LocalDensity.current) { (ItemHeight + 8.dp).toPx() }
 
         // Local copy that follows the finger; saved once the drag ends.
         var order by remember(subtypes) { mutableStateOf(subtypes) }
@@ -92,14 +98,9 @@ fun KeyboardOrderScreen() = FlorisScreen {
             dragOffset = 0f
         }
 
-        Text(
-            text = "오른쪽 ≡ 를 끌어서 순서를 바꾸세요.\n지구본 키와 좌우 스와이프로 이 순서대로 전환됩니다.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
+        MalangInfoCard("오른쪽 ≡ 를 끌어서 순서를 바꾸세요. 지구본 키와 스페이스바 좌우 밀기로 이 순서대로 전환됩니다.")
 
-        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             order.forEachIndexed { index, subtype ->
                 key(subtype.id) {
                     val isDragging = draggingId == subtype.id
@@ -151,36 +152,37 @@ private fun KeyboardOrderItem(
     modifier: Modifier = Modifier,
     handleModifier: Modifier = Modifier,
 ) {
-    val colors = MaterialTheme.colorScheme
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(ItemHeight)
-            .padding(vertical = 4.dp)
-            .shadow(if (isDragging) 6.dp else 0.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (isDragging) colors.surfaceContainerHighest else colors.surfaceContainer),
+            .shadow(if (isDragging) 6.dp else 0.dp, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(MalangSettingsCard)
+            .border(1.dp, if (isDragging) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(20.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = "$position",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = colors.primary,
-            modifier = Modifier.padding(start = 16.dp).width(28.dp),
+            fontSize = 22.sp,
+            fontFamily = JuaFontFamily,
+            color = MalangSettingsSection,
+            modifier = Modifier.padding(start = 18.dp).width(30.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge,
+                color = MalangSettingsTitle,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (isActive) {
                 Text(
                     text = "사용 중",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.primary,
+                    fontSize = 12.sp,
+                    color = MalangSettingsSummary,
                 )
             }
         }
@@ -193,7 +195,7 @@ private fun KeyboardOrderItem(
             Icon(
                 imageVector = Icons.Default.DragHandle,
                 contentDescription = "순서 바꾸기",
-                tint = colors.onSurfaceVariant,
+                tint = MalangSettingsSummary,
             )
         }
     }

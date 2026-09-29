@@ -18,6 +18,8 @@ package dev.malangkey.lib.compose
 
 import android.app.Activity
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -34,9 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import dev.malangkey.app.FlorisPreferenceModel
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
@@ -137,6 +142,9 @@ private class FlorisScreenScopeImpl : FlorisScreenScope {
             val window = (context as Activity).window
             previewFieldController?.isVisible = previewFieldVisible
             window.statusBarColor = Color.Transparent.toArgb()
+            // 밝은 배경에서는 상태바 아이콘을 어둡게 표시
+            WindowCompat.getInsetsController(window, window.decorView)
+                .isAppearanceLightStatusBars = colorScheme.background.luminance() > 0.5f
             if (AndroidVersion.ATLEAST_API29_Q) {
                 window.navigationBarColor = Color.Transparent.toArgb()
                 window.isNavigationBarContrastEnforced = true
@@ -156,6 +164,12 @@ private class FlorisScreenScopeImpl : FlorisScreenScope {
             },
             bottomBar = bottomBar,
             floatingActionButton = fab,
+            // 상단바를 숨긴 화면은 배경을 상태바 뒤까지 그리고 직접 statusBarsPadding()을 적용한다
+            contentWindowInsets = if (topBarVisible) {
+                ScaffoldDefaults.contentWindowInsets
+            } else {
+                ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+            },
         ) { innerPadding ->
             val scrollModifier = if (scrollable) {
                 Modifier.florisVerticalScroll()

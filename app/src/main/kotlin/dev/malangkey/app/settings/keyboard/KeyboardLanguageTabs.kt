@@ -4,17 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,19 +51,17 @@ enum class KeyboardLanguageTab(val label: String, val languageCode: String?, val
 
 /**
  * 자판 목록을 언어 탭으로 나눠 보여준다. 탭을 누르면 그 언어의 자판이 열린다.
- * 한 탭 안에 지역이 여러 개면(예: 영어 미국/영국) 지역별로 [group]을 한 번씩 그리되, 지역마다
- * 자판이 하나뿐이면 한 묶음으로 그리고 각 자판 이름에 지역을 붙이게 한다.
- * 기타 탭은 언어마다 눌러서 펼치는 목록으로 보여준다.
+ * 한 탭 안에 지역이 여러 개면 지역별로 [group]을 한 번씩 그리고, 기타 탭은 언어 이름을 붙인
+ * 한 목록으로 그린다.
  *
- * @param isEnabled 자판이 켜져 있는지. 탭 이름 옆에 켜진 개수를 표시하는 데 쓴다.
- * @param group 자판 묶음을 그린다. 제목이 null이면 묶음 제목 없이, showRegion이면 자판 이름에
- *  [presetRegionLabel]을 붙여 그린다.
+ * @param isEnabled 자판이 켜져 있는지. 탭 이름 아래에 켜진 개수를 표시하는 데 쓴다.
+ * @param group 자판 묶음을 그린다. [PresetGroup.prefixOf]가 주는 글자를 자판 이름 앞에 붙인다.
  */
 @Composable
 fun KeyboardLanguageTabs(
     presets: List<SubtypePreset>,
     isEnabled: (SubtypePreset) -> Boolean,
-    group: @Composable (title: String?, presets: List<SubtypePreset>, showRegion: Boolean) -> Unit,
+    group: @Composable (PresetGroup) -> Unit,
 ) {
     var selectedName by rememberSaveable { mutableStateOf(KeyboardLanguageTab.KOREAN.name) }
     val selected = KeyboardLanguageTab.valueOf(selectedName)
@@ -97,28 +88,40 @@ fun KeyboardLanguageTabs(
         val byRegion = tabPresets.groupBy { it.locale.displayName() }
         when {
             tabPresets.isEmpty() -> Text("이 언어의 자판이 아직 없어요.", color = MalangSettingsSummary, fontSize = 14.sp)
-            selected == KeyboardLanguageTab.OTHER -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                for ((language, languagePresets) in byRegion.toSortedMap()) {
-                    ExpandableLanguage(
-                        title = language,
-                        count = languagePresets.count(isEnabled),
-                    ) {
-                        group(null, languagePresets, false)
-                    }
-                }
-            }
-            byRegion.size == 1 -> group(null, tabPresets, false)
-            byRegion.values.all { it.size == 1 } -> group(null, tabPresets, true)
+            // 기타: 언어가 많고 대부분 자판이 하나뿐이라 펼치기 없이 "언어 · 자판" 한 목록으로 보여준다.
+            selected == KeyboardLanguageTab.OTHER -> group(
+                PresetGroup(
+                    title = null,
+                    presets = tabPresets.sortedBy { it.locale.displayName() },
+                    isLongList = true,
+                    prefixOf = { it.locale.displayName() },
+                )
+            )
+            byRegion.size == 1 -> group(PresetGroup(null, tabPresets))
             else -> for ((region, regionPresets) in byRegion) {
-                group(region, regionPresets, false)
+                group(PresetGroup(region, regionPresets))
             }
         }
     }
 }
 
-/** 자판 이름 앞에 붙이는 지역 이름 (예: 미국). 지역이 없으면 언어 이름. */
-fun presetRegionLabel(preset: SubtypePreset): String =
-    preset.locale.displayCountry().ifBlank { preset.locale.displayName() }
+/**
+ * 한 번에 그릴 자판 묶음.
+ *
+ * @param title 묶음 제목. 없으면 null.
+ * @param isLongList 기타 탭처럼 항목이 아주 많은 목록. 미리보기처럼 무거운 표시는 생략한다.
+ * @param prefixOf 자판 이름 앞에 붙일 글자(예: 언어 이름). 붙이지 않으면 null.
+ */
+class PresetGroup(
+    val title: String?,
+    val presets: List<SubtypePreset>,
+    val isLongList: Boolean = false,
+    val prefixOf: (SubtypePreset) -> String? = { null },
+) {
+    /** "언어 · 자판" 또는 자판 이름만. */
+    fun label(preset: SubtypePreset, layoutName: String): String =
+        prefixOf(preset)?.let { "$it · $layoutName" } ?: layoutName
+}
 
 @Composable
 private fun LanguageTabChip(
@@ -154,55 +157,6 @@ private fun LanguageTabChip(
                 maxLines = 1,
                 style = TextStyle(fontSize = 10.sp, lineHeight = 10.sp, lineHeightStyle = centered),
             )
-        }
-    }
-}
-
-/** 눌러서 펼치고 접는 언어 한 줄 (기타 탭). */
-@Composable
-private fun ExpandableLanguage(
-    title: String,
-    count: Int,
-    content: @Composable () -> Unit,
-) {
-    var expanded by rememberSaveable(title) { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(MalangSettingsCard)
-                .border(1.dp, MalangSettingsBorder, RoundedCornerShape(18.dp))
-                .clickable { expanded = !expanded }
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                title,
-                modifier = Modifier.weight(1f),
-                color = MalangSettingsTitle,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            if (count > 0) {
-                Box(
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MalangSettingsSection)
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                ) {
-                    Text("${count}개 사용", color = MalangSettingsCard, fontSize = 11.sp)
-                }
-            }
-            Icon(
-                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "접기" else "펼치기",
-                tint = MalangSettingsSummary,
-            )
-        }
-        if (expanded) {
-            content()
         }
     }
 }

@@ -53,17 +53,17 @@ fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 �
     MalangInfoCard("사용할 자판을 켜세요. 여러 개를 켜면 지구본 키나 스페이스바 좌우 밀기로 바꿔 쓸 수 있어요. 마지막 하나는 끌 수 없어요.")
 
     val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
-    KeyboardLanguageTabs(presets, isEnabled) { region, groupPresets, showRegion ->
+    KeyboardLanguageTabs(presets, isEnabled) { group ->
         MalangSettingsSection(
-            title = region,
-            items = groupPresets.map { preset ->
+            title = group.title,
+            items = group.presets.map { preset ->
                 {
                     val subtype = preset.toSubtype()
                     val isChecked = subtypes.any { it.equalsExcludingId(subtype) }
                     val charactersLayout = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)
                     val layoutName = keyboardDisplayName(preset.locale, charactersLayout?.label)
                         .substringAfterLast(" - ")
-                    val name = if (showRegion) "${presetRegionLabel(preset)} · $layoutName" else layoutName
+                    val name = group.label(preset, layoutName)
                     val toggle = {
                         if (isChecked) {
                             val existingSubtype = subtypes.find { it.equalsExcludingId(subtype) }

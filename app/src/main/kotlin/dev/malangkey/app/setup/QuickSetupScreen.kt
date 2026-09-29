@@ -58,9 +58,9 @@ import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangTestInputBar
+import dev.malangkey.app.apptheme.MalangToggle
 import dev.malangkey.app.settings.keyboard.KeyboardLanguageTabs
 import dev.malangkey.app.settings.keyboard.keyboardDisplayName
-import dev.malangkey.app.settings.keyboard.presetRegionLabel
 import dev.malangkey.ime.core.SubtypePreset
 import dev.malangkey.app.settings.smartbar.MalangSlotsEditor
 import dev.malangkey.app.settings.theme.applyMalangTheme
@@ -215,31 +215,43 @@ private fun ColumnScope.LanguageStep() {
     MalangInfoCard("쓰고 싶은 자판을 모두 골라주세요. 여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
 
     val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
-    KeyboardLanguageTabs(presets, isEnabled) { region, groupPresets, showRegion ->
-        if (region != null) {
-            Text(region, color = MalangSettingsSection, fontSize = 20.sp, fontFamily = JuaFontFamily)
+    fun toggle(preset: SubtypePreset) {
+        val subtype = preset.toSubtype()
+        val existing = subtypes.find { it.equalsExcludingId(subtype) }
+        if (existing != null) {
+            // 마지막 하나는 지우지 않는다.
+            if (subtypes.size > 1) subtypeManager.removeSubtype(existing)
+        } else {
+            subtypeManager.addSubtypeAndActivate(subtype)
         }
-        PreviewGrid(groupPresets) { preset, modifier ->
-            val subtype = remember(preset) { preset.toSubtype() }
-            val checked = subtypes.any { it.equalsExcludingId(subtype) }
-            val layoutLabel = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)?.label
-            val layoutName = keyboardDisplayName(preset.locale, layoutLabel)
-                .substringAfterLast(" - ")
-            val name = if (showRegion) "${presetRegionLabel(preset)} · $layoutName" else layoutName
-            PreviewCard(
-                title = name,
-                checked = checked,
-                modifier = modifier,
-                onClick = {
-                    if (checked) {
-                        val existing = subtypes.find { it.equalsExcludingId(subtype) }
-                        // 마지막 하나는 지우지 않는다.
-                        if (existing != null && subtypes.size > 1) subtypeManager.removeSubtype(existing)
-                    } else {
-                        subtypeManager.addSubtypeAndActivate(subtype)
-                    }
-                    keyboardManager.resources.anyChangedVersion.value += 1
+        keyboardManager.resources.anyChangedVersion.value += 1
+    }
+
+    fun layoutName(preset: SubtypePreset): String {
+        val layoutLabel = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)?.label
+        return keyboardDisplayName(preset.locale, layoutLabel).substringAfterLast(" - ")
+    }
+
+    KeyboardLanguageTabs(presets, isEnabled) { group ->
+        if (group.title != null) {
+            Text(group.title, color = MalangSettingsSection, fontSize = 20.sp, fontFamily = JuaFontFamily)
+        }
+        if (group.isLongList) {
+            // 항목이 많은 목록은 미리보기 없이 켜고 끄는 줄만 보여준다.
+            MalangSettingsSection(
+                items = group.presets.map { preset ->
+                    { CheckRow(group.label(preset, layoutName(preset)), isEnabled(preset)) { toggle(preset) } }
                 },
+            )
+            return@KeyboardLanguageTabs
+        }
+        PreviewGrid(group.presets) { preset, modifier ->
+            val subtype = remember(preset) { preset.toSubtype() }
+            PreviewCard(
+                title = group.label(preset, layoutName(preset)),
+                checked = isEnabled(preset),
+                modifier = modifier,
+                onClick = { toggle(preset) },
             ) {
                 KeyboardPreview(subtype = subtype, palette = activePalette)
             }
@@ -446,4 +458,18 @@ private fun ThemeStep() {
         fontSize = 13.sp,
         lineHeight = 19.sp,
     )
+}
+
+@Composable
+private fun CheckRow(title: String, checked: Boolean, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        MalangToggle(checked = checked, onCheckedChange = { onToggle() })
+    }
 }

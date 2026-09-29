@@ -42,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.R
@@ -108,17 +109,30 @@ fun HomeScreen() = FlorisScreen {
                 contentScale = ContentScale.Crop,
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .statusBarsPadding()
-                    .padding(top = 36.dp, bottom = 120.dp)
-            ) {
-                when (selectedTab) {
-                    HomeTab.MAIN -> MainTabContent(navController, context)
-                    HomeTab.THEME -> ThemeTabContent(navController)
-                    HomeTab.GAME -> ComingSoonTab("게임", "Game")
+            if (selectedTab == HomeTab.MAIN) {
+                // 메인 탭은 스크롤 없이 한 화면에 맞춘다 (하단 탭바 높이 72 + 여백 28 + 간격 12)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(top = 16.dp, bottom = 112.dp)
+                ) {
+                    MainTabContent(navController, context)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .statusBarsPadding()
+                        .padding(top = 36.dp, bottom = 120.dp)
+                ) {
+                    when (selectedTab) {
+                        HomeTab.MAIN -> Unit
+                        HomeTab.THEME -> ThemeTabContent(navController)
+                        HomeTab.GAME -> ComingSoonTab("게임", "Game")
+                    }
                 }
             }
 
@@ -138,7 +152,7 @@ fun HomeScreen() = FlorisScreen {
 }
 
 @Composable
-private fun MainTabContent(
+private fun ColumnScope.MainTabContent(
     navController: androidx.navigation.NavController,
     context: android.content.Context
 ) {
@@ -191,17 +205,25 @@ private fun MainTabContent(
 
     Column(
         modifier = Modifier
+            .weight(1f)
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        MainHeroCard(onClick = { navController.navigate(Routes.Settings.Keyboard) })
+        // 카드 높이는 남은 화면 높이를 피그마 비율(히어로 180 : 타일 164)로 나눠 정한다
+        MainHeroCard(
+            modifier = Modifier.weight(180f),
+            onClick = { navController.navigate(Routes.Settings.Keyboard) },
+        )
 
         for (row in tiles.chunked(2)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.weight(164f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 for (tile in row) {
-                    MainTileCard(tile, Modifier.weight(1f))
+                    MainTileCard(tile, Modifier.weight(1f).fillMaxHeight())
                 }
             }
         }
@@ -220,60 +242,78 @@ private fun MainTabContent(
     }
 }
 
+/**
+ * 피그마 기준 카드 크기 대비 실제 카드 크기의 비율. 아이콘·글자·여백을 함께 키우거나 줄여
+ * 화면 크기가 달라도 카드 안 배치가 유지되게 한다.
+ */
+private fun cardScale(width: Dp, height: Dp, designWidth: Dp, designHeight: Dp): Float =
+    minOf(width / designWidth, height / designHeight).coerceIn(0.55f, 1.3f)
+
 @Composable
-private fun MainHeroCard(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
+private fun MainHeroCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    BoxWithConstraints(
+        modifier = modifier
             .fillMaxWidth()
-            .height(180.dp)
             .clip(RoundedCornerShape(28.dp))
             .background(MalangCocoa)
-            .clickable(onClick = onClick)
-            .padding(start = 24.dp, top = 22.dp, end = 20.dp, bottom = 22.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .clickable(onClick = onClick),
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+        val s = cardScale(maxWidth, maxHeight, designWidth = 372.dp, designHeight = 180.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 24.dp * s, top = 16.dp * s, end = 20.dp * s, bottom = 16.dp * s),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("키보드 선택", color = MalangCardText, fontSize = 36.sp, lineHeight = 40.sp, fontFamily = MalangJuaFont)
-            Text("언어 및 종류 선택", color = MalangCardSubLight, fontSize = 16.sp, fontFamily = MalangGowunFont)
-            Text("Keyboard Select", color = MalangCardSubMuted, fontSize = 13.sp, fontFamily = MalangGowunFont)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp * s),
+            ) {
+                Text("키보드 선택", color = MalangCardText, fontSize = 36.sp * s, lineHeight = 40.sp * s, fontFamily = MalangJuaFont, maxLines = 1)
+                Text("언어 및 종류 선택", color = MalangCardSubLight, fontSize = 16.sp * s, fontFamily = MalangGowunFont, maxLines = 1)
+                Text("Keyboard Select", color = MalangCardSubMuted, fontSize = 13.sp * s, fontFamily = MalangGowunFont, maxLines = 1)
+            }
+            Image(
+                painter = painterResource(R.drawable.mk_main_keyboard),
+                contentDescription = null,
+                modifier = Modifier.size(124.dp * s),
+                contentScale = ContentScale.Fit,
+            )
         }
-        Image(
-            painter = painterResource(R.drawable.mk_main_keyboard),
-            contentDescription = null,
-            modifier = Modifier.size(124.dp),
-            contentScale = ContentScale.Fit,
-        )
     }
 }
 
 @Composable
 private fun MainTileCard(tile: MainTile, modifier: Modifier = Modifier) {
-    Column(
+    BoxWithConstraints(
         modifier = modifier
-            .height(164.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(if (tile.accent) MalangMushroom else MalangCocoa)
-            .clickable(onClick = tile.onClick)
-            .padding(18.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .clickable(onClick = tile.onClick),
     ) {
-        Icon(
-            painter = painterResource(tile.iconRes),
-            contentDescription = null,
-            tint = MalangCardText,
-            modifier = Modifier.size(60.dp),
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(tile.title, color = MalangCardText, fontSize = 24.sp, lineHeight = 28.sp, fontFamily = MalangJuaFont)
-            Text(
-                tile.subtitle,
-                color = if (tile.accent) MalangCardSubLight else MalangCardSubMuted,
-                fontSize = 13.sp,
-                fontFamily = MalangGowunFont,
+        val s = cardScale(maxWidth, maxHeight, designWidth = 180.dp, designHeight = 164.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(18.dp * s),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Icon(
+                painter = painterResource(tile.iconRes),
+                contentDescription = null,
+                tint = MalangCardText,
+                modifier = Modifier.size(60.dp * s),
             )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp * s)) {
+                Text(tile.title, color = MalangCardText, fontSize = 24.sp * s, lineHeight = 28.sp * s, fontFamily = MalangJuaFont, maxLines = 1)
+                Text(
+                    tile.subtitle,
+                    color = if (tile.accent) MalangCardSubLight else MalangCardSubMuted,
+                    fontSize = 13.sp * s,
+                    fontFamily = MalangGowunFont,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }

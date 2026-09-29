@@ -17,125 +17,108 @@
 package dev.malangkey.app.settings.about
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.BuildConfig
 import dev.malangkey.R
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
+import dev.malangkey.app.apptheme.JuaFontFamily
+import dev.malangkey.app.apptheme.MalangDarkCard
+import dev.malangkey.app.apptheme.MalangNavRow
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.clipboardManager
-import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.lib.util.launchUrl
-import dev.patrickgold.jetpref.datastore.ui.Preference
-import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisCanvasIcon
-import org.florisboard.lib.compose.stringRes
 
 @Composable
-fun AboutScreen() = FlorisScreen {
-    title = stringRes(R.string.about__title)
-
+fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", subtitle = "About", showTestInput = false) {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val clipboardManager by context.clipboardManager()
 
     val appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
 
-    content {
-        Column(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 32.dp)
-        ) {
-            FlorisCanvasIcon(
-                modifier = Modifier.requiredSize(64.dp),
-                iconId = R.mipmap.malang_app_icon,
-                contentDescription = "MalangKey app icon",
-            )
-            Text(
-                text = stringRes(R.string.malang_app_name),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 16.dp),
-            )
-        }
-        Preference(
-            icon = Icons.Outlined.Info,
-            title = stringRes(R.string.about__version__title),
-            summary = appVersion,
-            onClick = {
-                try {
-                    clipboardManager.addNewPlaintext(appVersion)
-                    Toast.makeText(context, R.string.about__version_copied__title, Toast.LENGTH_SHORT).show()
-                } catch (e: Throwable) {
-                    Toast.makeText(
-                        context,
-                        context.stringRes(R.string.about__version_copied__error, "error_message" to e.message),
-                        Toast.LENGTH_SHORT,
-                    ).show()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        FlorisCanvasIcon(
+            modifier = Modifier.requiredSize(72.dp),
+            iconId = R.mipmap.malang_app_icon,
+            contentDescription = "말랑키 아이콘",
+        )
+        Text(
+            text = "말랑키",
+            modifier = Modifier.padding(top = 12.dp),
+            color = MalangDarkCard,
+            fontSize = 28.sp,
+            fontFamily = JuaFontFamily,
+        )
+        Text(text = "버전 $appVersion", color = MalangSettingsSummary, fontSize = 13.sp)
+    }
+
+    MalangSettingsSection(
+        title = "앱",
+        items = listOf(
+            {
+                MalangNavRow(title = "버전", summary = "$appVersion · 눌러서 복사") {
+                    try {
+                        clipboardManager.addNewPlaintext(appVersion)
+                        Toast.makeText(context, "버전을 복사했어요.", Toast.LENGTH_SHORT).show()
+                    } catch (e: Throwable) {
+                        Toast.makeText(context, "복사하지 못했어요: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
-        )
-        Preference(
-            icon = Icons.Default.History,
-            title = stringRes(R.string.about__changelog__title),
-            summary = stringRes(R.string.about__changelog__summary),
-            onClick = { context.launchUrl(R.string.florisboard__changelog_url, "version" to BuildConfig.VERSION_NAME) },
-        )
-        Preference(
-            icon = Icons.Default.Code,
-            title = stringRes(R.string.about__repository__title),
-            summary = stringRes(R.string.about__repository__summary),
-            onClick = { context.launchUrl(R.string.florisboard__repo_url) },
-        )
-        Preference(
-            icon = Icons.Outlined.Policy,
-            title = stringRes(R.string.about__privacy_policy__title),
-            summary = stringRes(R.string.about__privacy_policy__summary),
-            onClick = { context.launchUrl(R.string.florisboard__privacy_policy_url) },
-        )
-        Preference(
-            icon = Icons.Outlined.Description,
-            title = "FlorisBoard 기반",
-            summary = "말랑키는 FlorisBoard(Apache 2.0)를 수정해 만든 앱입니다.",
-            onClick = { context.launchUrl("https://github.com/florisboard/florisboard") },
-        )
-        Preference(
-            icon = Icons.Outlined.Description,
-            title = stringRes(R.string.about__project_license__title),
-            summary = stringRes(R.string.about__project_license__summary, "license_name" to "Apache 2.0"),
-            onClick = { navController.navigate(Routes.Settings.ProjectLicense) },
-        )
-        Preference(
-            icon = Icons.Outlined.Description,
-            title = stringRes(R.string.about__mozc__title),
-            summary = stringRes(R.string.about__mozc__summary),
-            onClick = { context.launchUrl(R.string.mozc__project_url) },
-        )
-        Preference(
-            icon = Icons.Outlined.Description,
-            title = stringRes(id = R.string.about__third_party_licenses__title),
-            summary = stringRes(id = R.string.about__third_party_licenses__summary),
-            onClick = { navController.navigate(Routes.Settings.ThirdPartyLicenses) },
-        )
-    }
+            {
+                MalangNavRow(title = "개인정보처리방침") {
+                    context.launchUrl(R.string.florisboard__privacy_policy_url)
+                }
+            },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "오픈소스",
+        items = listOf(
+            {
+                MalangNavRow(
+                    title = "FlorisBoard 기반",
+                    summary = "말랑키는 FlorisBoard(Apache 2.0)를 수정해 만든 앱입니다.",
+                ) {
+                    context.launchUrl("https://github.com/florisboard/florisboard")
+                }
+            },
+            {
+                MalangNavRow(title = "말랑키 라이선스", summary = "Apache 2.0") {
+                    navController.navigate(Routes.Settings.ProjectLicense)
+                }
+            },
+            {
+                MalangNavRow(title = "Mozc", summary = "일본어 입력 엔진 (BSD 3-Clause)") {
+                    context.launchUrl(R.string.mozc__project_url)
+                }
+            },
+            {
+                MalangNavRow(title = "오픈소스 라이선스", summary = "앱에 쓰인 라이브러리와 글꼴") {
+                    navController.navigate(Routes.Settings.ThirdPartyLicenses)
+                }
+            },
+        ),
+    )
 }

@@ -41,6 +41,7 @@ import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
 import dev.malangkey.app.apptheme.JuaFontFamily
+import dev.malangkey.app.apptheme.MalangButton
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangDarkCard
 import dev.malangkey.app.apptheme.MalangInfoCard
@@ -178,9 +179,9 @@ fun QuickSetupScreen() = FlorisScreen {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (stepIndex > 0) {
-                    WizardButton("이전", primary = false, modifier = Modifier.weight(1f)) { stepIndex-- }
+                    MalangButton("이전", primary = false, modifier = Modifier.weight(1f)) { stepIndex-- }
                 }
-                WizardButton(
+                MalangButton(
                     if (isLast) "시작하기" else "다음",
                     primary = true,
                     modifier = Modifier.weight(if (stepIndex > 0) 2f else 1f),
@@ -192,26 +193,6 @@ fun QuickSetupScreen() = FlorisScreen {
                 MalangTestInputBar()
             }
         }
-    }
-}
-
-@Composable
-private fun WizardButton(label: String, primary: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(
-        modifier = modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(26.dp))
-            .background(if (primary) MalangSettingsSection else MalangSettingsCard)
-            .border(1.dp, if (primary) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(26.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            label,
-            color = if (primary) MalangSettingsCard else MalangSettingsSection,
-            fontSize = 18.sp,
-            fontFamily = JuaFontFamily,
-        )
     }
 }
 

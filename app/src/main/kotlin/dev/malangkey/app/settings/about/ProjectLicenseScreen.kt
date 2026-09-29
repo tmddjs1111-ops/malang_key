@@ -28,7 +28,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import dev.malangkey.R
-import dev.malangkey.lib.compose.FlorisScreen
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.lib.io.FlorisRef
 import dev.malangkey.lib.io.loadTextAsset
 import org.florisboard.lib.compose.florisHorizontalScroll
@@ -36,13 +43,15 @@ import org.florisboard.lib.compose.florisVerticalScroll
 import org.florisboard.lib.compose.stringRes
 
 @Composable
-fun ProjectLicenseScreen() = FlorisScreen {
-    title = stringRes(R.string.about__project_license__title)
-    scrollable = false
-
+fun ProjectLicenseScreen() = MalangSettingsScreen(
+    title = "말랑키 라이선스",
+    subtitle = "Apache License 2.0",
+    scrollable = false,
+    showTestInput = false,
+) {
     val context = LocalContext.current
 
-    content {
+    run {
         // Forcing LTR because the Apache 2.0 License shipped and displayed
         // is hard to read if rendered in RTL. Also it is in English so forcing
         // LTR here makes most sense.
@@ -50,6 +59,9 @@ fun ProjectLicenseScreen() = FlorisScreen {
             SelectionContainer(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MalangSettingsCard)
+                    .padding(12.dp)
                     .florisVerticalScroll()
                     .florisHorizontalScroll(),
             ) {
@@ -62,6 +74,7 @@ fun ProjectLicenseScreen() = FlorisScreen {
                     text = licenseText,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
+                    color = MalangSettingsTitle,
                     softWrap = false,
                 )
             }

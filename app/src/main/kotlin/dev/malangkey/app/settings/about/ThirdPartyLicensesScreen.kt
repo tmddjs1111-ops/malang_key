@@ -24,24 +24,29 @@ import androidx.compose.ui.Modifier
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import dev.malangkey.R
-import dev.malangkey.lib.compose.FlorisScreen
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import dev.malangkey.app.apptheme.MalangSettingsScreen
 import org.florisboard.lib.compose.florisScrollbar
 import org.florisboard.lib.compose.stringRes
 
 @Composable
-fun ThirdPartyLicensesScreen() = FlorisScreen {
-    title = stringRes(R.string.about__third_party_licenses__title)
-    scrollable = false
-    iconSpaceReserved = false
-
+fun ThirdPartyLicensesScreen() = MalangSettingsScreen(
+    title = "오픈소스 라이선스",
+    subtitle = "Open Source Licenses",
+    scrollable = false,
+    showTestInput = false,
+) {
     val lazyListState = rememberLazyListState()
     val libs by produceLibraries()
 
-    content {
+    run {
         LibrariesContainer(
             libraries = libs,
             modifier = Modifier
                 .fillMaxSize()
+                .clip(RoundedCornerShape(20.dp))
                 .florisScrollbar(lazyListState, isVertical = true),
             lazyListState = lazyListState,
         )

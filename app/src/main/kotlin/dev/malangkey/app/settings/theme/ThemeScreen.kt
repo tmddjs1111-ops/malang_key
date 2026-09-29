@@ -55,6 +55,13 @@ import dev.malangkey.R
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.ime.theme.ThemeManager
 import dev.malangkey.app.FlorisPreferenceModel
+import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.MalangButton
+import dev.malangkey.app.apptheme.MalangSettingsBorder
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.ime.theme.ThemeMode
 import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.lib.ext.ExtensionComponentName
@@ -138,66 +145,36 @@ val ColorCreamBeige = Color(0xFFFFF5ED)
 val ColorDarkChocolate = Color(0xFF4E342E)
 
 @Composable
-fun ThemeScreen() = FlorisScreen {
-    title = "키보드 테마 선택"
-    previewFieldVisible = true
-    scrollable = false
-
-    content {
-        val florisPrefs = prefs
+fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = "Keyboard Theme", scrollable = false) {
+    val florisPrefs by FlorisPreferenceStore
+    run {
         val dayThemeId by florisPrefs.theme.dayThemeId.collectAsState()
         val nightThemeId by florisPrefs.theme.nightThemeId.collectAsState()
         val currentMode by florisPrefs.theme.mode.collectAsState()
         val coroutineScope = rememberCoroutineScope()
 
-        // 덮어쓰는 전체 배경 (Cream Beige)
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = ColorCreamBeige
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-            ) {
-                Text(
-                    text = "원하는 디자인을 선택하세요! 🎨",
-                    color = ColorDarkChocolate,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
-                )
-
+        run {
+            run {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(malangThemes) { themeInfo ->
-                        val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
-                        // 테마 모드에 따라 선택된 테마 판별
-                        val isSelected = if (themeInfo.isNight) {
-                            (currentMode == ThemeMode.ALWAYS_NIGHT || currentMode == ThemeMode.FOLLOW_SYSTEM) && nightThemeId == themeCompName
-                        } else {
-                            (currentMode == ThemeMode.ALWAYS_DAY || currentMode == ThemeMode.FOLLOW_SYSTEM) && dayThemeId == themeCompName
-                        }
+                        val isSelected = isMalangThemeSelected(themeInfo, currentMode, dayThemeId, nightThemeId)
 
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(30.dp))
-                                .background(if (isSelected) ColorDarkChocolate else Color.White)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(if (isSelected) MalangSettingsSection else MalangSettingsCard)
                                 .clickable {
                                     coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo) }
                                 }
-                                .border(
-                                    width = if (isSelected) 3.dp else 2.dp,
-                                    color = if (isSelected) ColorDarkChocolate else ColorDarkChocolate.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(30.dp)
-                                )
-                                .padding(vertical = 24.dp, horizontal = 12.dp),
+                                .border(1.dp, if (isSelected) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(24.dp))
+                                .padding(vertical = 20.dp, horizontal = 12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
@@ -220,9 +197,9 @@ fun ThemeScreen() = FlorisScreen {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = themeInfo.name,
-                                style = androidx.compose.material3.MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 fontSize = 16.sp,
-                                color = if (isSelected) Color.White else ColorDarkChocolate
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MalangSettingsCard else MalangSettingsTitle
                             )
                         }
                     }
@@ -235,11 +212,11 @@ fun ThemeScreen() = FlorisScreen {
                             ) {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    "🎨 실시간 키보드 색상 커스텀",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                                    color = MalangText.copy(alpha = 0.8f),
+                                    "커스텀 색상",
+                                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+                                    color = MalangSettingsSection,
                                     fontFamily = MalangJuaFont,
-                                    fontSize = 18.sp
+                                    fontSize = 23.sp
                                 )
                             }
                         }
@@ -304,7 +281,10 @@ fun ThemeScreen() = FlorisScreen {
                         }
 
                         item(span = { GridItemSpan(2) }) {
-                            androidx.compose.material3.Button(
+                            MalangButton(
+                                "기본 커스텀 색으로 되돌리기",
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                primary = false,
                                 onClick = {
                                     coroutineScope.launch {
                                         florisPrefs.malang.customKeyboardBgColor.set(Color(0xFFFCF5D6))
@@ -316,11 +296,7 @@ fun ThemeScreen() = FlorisScreen {
                                         florisPrefs.malang.customRealEnterKeyTextColor.set(Color(0xFFFFFFFF))
                                     }
                                 },
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = ColorDarkChocolate)
-                            ) {
-                                Text("기본 커스텀 설정으로 되돌리기", color = Color.White, fontFamily = MalangJuaFont, fontSize = 16.sp)
-                            }
+                            )
                         }
                     }
                 }
@@ -342,9 +318,9 @@ fun ColorSwatchCard(
     
     Box(
         modifier = modifier
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .background(MalangSettingsCard)
+            .border(1.dp, MalangSettingsBorder, RoundedCornerShape(24.dp))
             .clickable { showDialog = true }
             .padding(16.dp),
         contentAlignment = Alignment.Center

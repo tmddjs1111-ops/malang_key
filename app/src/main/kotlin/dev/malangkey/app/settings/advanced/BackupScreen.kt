@@ -447,7 +447,7 @@ private fun MalangSelectRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = if (indent) 44.dp else 8.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+            .padding(start = if (indent) 44.dp else 8.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         control()

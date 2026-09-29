@@ -58,7 +58,10 @@ import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangTestInputBar
+import dev.malangkey.app.settings.keyboard.KeyboardLanguageTabs
 import dev.malangkey.app.settings.keyboard.keyboardDisplayName
+import dev.malangkey.app.settings.keyboard.presetRegionLabel
+import dev.malangkey.ime.core.SubtypePreset
 import dev.malangkey.app.settings.smartbar.MalangSlotsEditor
 import dev.malangkey.app.settings.theme.applyMalangTheme
 import dev.malangkey.app.settings.theme.isMalangThemeSelected
@@ -211,19 +214,18 @@ private fun ColumnScope.LanguageStep() {
 
     MalangInfoCard("쓰고 싶은 자판을 모두 골라주세요. 여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
 
-    // 한국어 자판을 먼저 보여준다.
-    val byLanguage = presets
-        .groupBy { it.locale.displayName() }
-        .toList()
-        .sortedByDescending { (_, list) -> list.first().locale.language == "ko" }
-    for ((language, languagePresets) in byLanguage) {
-        Text(language, color = MalangSettingsSection, fontSize = 20.sp, fontFamily = JuaFontFamily)
-        PreviewGrid(languagePresets) { preset, modifier ->
+    val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
+    KeyboardLanguageTabs(presets, isEnabled) { region, groupPresets, showRegion ->
+        if (region != null) {
+            Text(region, color = MalangSettingsSection, fontSize = 20.sp, fontFamily = JuaFontFamily)
+        }
+        PreviewGrid(groupPresets) { preset, modifier ->
             val subtype = remember(preset) { preset.toSubtype() }
             val checked = subtypes.any { it.equalsExcludingId(subtype) }
             val layoutLabel = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)?.label
-            val name = keyboardDisplayName(preset.locale, layoutLabel)
+            val layoutName = keyboardDisplayName(preset.locale, layoutLabel)
                 .substringAfterLast(" - ")
+            val name = if (showRegion) "${presetRegionLabel(preset)} · $layoutName" else layoutName
             PreviewCard(
                 title = name,
                 checked = checked,

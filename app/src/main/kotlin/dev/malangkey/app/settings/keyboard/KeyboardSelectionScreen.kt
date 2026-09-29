@@ -35,6 +35,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import dev.malangkey.ime.core.SubtypePreset
 import dev.malangkey.ime.keyboard.LayoutType
 import dev.malangkey.keyboardManager
 import dev.malangkey.lib.FlorisLocale
@@ -51,22 +52,18 @@ fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 �
 
     MalangInfoCard("사용할 자판을 켜세요. 여러 개를 켜면 지구본 키나 스페이스바 좌우 밀기로 바꿔 쓸 수 있어요. 마지막 하나는 끌 수 없어요.")
 
-    // 언어별로 묶고, 한국어를 맨 위에 둔다.
-    val byLanguage = presets
-        .groupBy { it.locale.displayName() }
-        .toList()
-        .sortedByDescending { (_, list) -> list.first().locale.language == "ko" }
-    for ((language, languagePresets) in byLanguage) {
+    val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
+    KeyboardLanguageTabs(presets, isEnabled) { region, groupPresets, showRegion ->
         MalangSettingsSection(
-            title = language,
-            items = languagePresets.map { preset ->
+            title = region,
+            items = groupPresets.map { preset ->
                 {
                     val subtype = preset.toSubtype()
                     val isChecked = subtypes.any { it.equalsExcludingId(subtype) }
                     val charactersLayout = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)
-                    val name = keyboardDisplayName(preset.locale, charactersLayout?.label)
-                        .removePrefix(preset.locale.displayName()).removePrefix(" - ")
-                        .ifEmpty { language }
+                    val layoutName = keyboardDisplayName(preset.locale, charactersLayout?.label)
+                        .substringAfterLast(" - ")
+                    val name = if (showRegion) "${presetRegionLabel(preset)} · $layoutName" else layoutName
                     val toggle = {
                         if (isChecked) {
                             val existingSubtype = subtypes.find { it.equalsExcludingId(subtype) }

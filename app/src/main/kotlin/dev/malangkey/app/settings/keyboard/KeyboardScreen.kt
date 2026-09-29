@@ -17,179 +17,191 @@
 package dev.malangkey.app.settings.keyboard
 
 import androidx.compose.runtime.Composable
-import dev.malangkey.R
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
-import dev.malangkey.app.enumDisplayEntriesOf
-import dev.malangkey.ime.input.CapitalizationBehavior
+import dev.malangkey.app.apptheme.MalangChoiceDialog
+import dev.malangkey.app.apptheme.MalangChoiceRow
+import dev.malangkey.app.apptheme.MalangNavRow
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSliderRow
+import dev.malangkey.app.apptheme.MalangSwitchRow
+import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.keyboard.SpaceBarMode
-import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
-import dev.malangkey.ime.smartbar.IncognitoDisplayMode
 import dev.malangkey.ime.text.key.KeyHintMode
-import dev.malangkey.ime.text.key.UtilityKeyAction
-import dev.malangkey.lib.compose.FlorisScreen
-import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
-import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
-import dev.patrickgold.jetpref.datastore.ui.ListPreference
-import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.patrickgold.jetpref.datastore.ui.PreferenceGroup
-import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
-import dev.patrickgold.jetpref.datastore.ui.listPrefEntries
-import org.florisboard.lib.compose.stringRes
-import dev.malangkey.app.apptheme.MalangPreferenceGroup
+import dev.patrickgold.jetpref.datastore.model.PreferenceData
+import dev.patrickgold.jetpref.datastore.model.collectAsState
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalJetPrefDatastoreUi::class)
+private val HintModeEntries = listOf(
+    KeyHintMode.HINT_PRIORITY to "힌트 우선",
+    KeyHintMode.ACCENT_PRIORITY to "악센트 우선",
+    KeyHintMode.SMART_PRIORITY to "스마트 우선",
+)
+
 @Composable
-fun KeyboardScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__keyboard__title)
-    previewFieldVisible = true
-
+fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
+    val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
+    val numberRow by prefs.keyboard.numberRow.collectAsState()
 
-    content {
-        MalangPreferenceGroup {
-            Preference(
-                title = "키보드 언어 및 레이아웃",
-                summary = "시스템에 추가할 키보드 언어와 레이아웃을 선택합니다.",
-                onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
-            )
-            Preference(
-                title = "내 키보드 순서",
-                summary = "사용 중인 키보드를 끌어서 전환 순서를 정합니다.",
-                onClick = { navController.navigate(Routes.Settings.KeyboardOrder) },
-            )
-            Preference(
-                title = "입력 및 수정",
-                summary = "자동 교정, 대문자 자동 변환 등 입력 방식을 설정합니다.",
-                onClick = { navController.navigate(Routes.Settings.Typing) },
-            )
-            SwitchPreference(
-                prefs.keyboard.numberRow,
-                title = "숫자 행 표시",
-                summary = "키보드 상단에 숫자 키 행을 항상 표시합니다.",
-            )
-            ListPreference(
-                listPref = prefs.keyboard.hintedNumberRowMode,
-                switchPref = prefs.keyboard.hintedNumberRowEnabled,
-                title = "힌트 숫자 행 모드",
-                summarySwitchDisabled = "비활성화됨",
-                entries = listPrefEntries {
-                    entry(KeyHintMode.DISABLED, "사용 안 함")
-                    entry(KeyHintMode.HINT_PRIORITY, "힌트 우선")
-                    entry(KeyHintMode.ACCENT_PRIORITY, "악센트 우선")
-                    entry(KeyHintMode.SMART_PRIORITY, "스마트 우선")
-                },
-                enabledIf = { prefs.keyboard.numberRow.isFalse() }
-            )
-            ListPreference(
-                listPref = prefs.keyboard.hintedSymbolsMode,
-                switchPref = prefs.keyboard.hintedSymbolsEnabled,
-                title = "힌트 기호 모드",
-                summarySwitchDisabled = "비활성화됨",
-                entries = listPrefEntries {
-                    entry(KeyHintMode.DISABLED, "사용 안 함")
-                    entry(KeyHintMode.HINT_PRIORITY, "힌트 우선")
-                    entry(KeyHintMode.ACCENT_PRIORITY, "악센트 우선")
-                    entry(KeyHintMode.SMART_PRIORITY, "스마트 우선")
-                },
-            )
+    MalangSettingsSection(
+        title = "키보드 언어 및 레이아웃",
+        items = listOf(
+            {
+                MalangNavRow(
+                    title = "키보드 언어 및 레이아웃",
+                    summary = "시스템에 추가할 언어와 레이아웃을 선택합니다.",
+                    onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
+                )
+            },
+            {
+                MalangNavRow(
+                    title = "내 키보드 순서",
+                    summary = "사용 중인 키보드를 끌어서 전환 순서를 정합니다.",
+                    onClick = { navController.navigate(Routes.Settings.KeyboardOrder) },
+                )
+            },
+            {
+                MalangNavRow(
+                    title = "입력 및 수정",
+                    summary = "자동 교정, 대문자 자동 변환 등 입력 방식을 설정합니다.",
+                    onClick = { navController.navigate(Routes.Settings.Typing) },
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.numberRow,
+                    title = "숫자 행 표시",
+                    summary = "키보드 상단에 숫자 키 행을 표시합니다.",
+                )
+            },
+            {
+                HintModeRow(
+                    title = "힌트 숫자 행 모드",
+                    enabledPref = prefs.keyboard.hintedNumberRowEnabled,
+                    modePref = prefs.keyboard.hintedNumberRowMode,
+                    enabled = !numberRow,
+                )
+            },
+            {
+                HintModeRow(
+                    title = "힌트 기호 모드",
+                    enabledPref = prefs.keyboard.hintedSymbolsEnabled,
+                    modePref = prefs.keyboard.hintedSymbolsMode,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.spaceBarMode,
+                    title = "스페이스바 표시 모드",
+                    entries = listOf(
+                        SpaceBarMode.NOTHING to "빈 공간",
+                        SpaceBarMode.CURRENT_LANGUAGE to "현재 언어 표시",
+                        SpaceBarMode.SPACE_BAR_KEY to "스페이스바 텍스트 표시",
+                    ),
+                )
+            },
+        ),
+    )
 
-            ListPreference(
-                prefs.keyboard.spaceBarMode,
-                title = "스페이스바 표시 모드",
-                entries = listPrefEntries {
-                    entry(SpaceBarMode.NOTHING, "빈 공간")
-                    entry(SpaceBarMode.CURRENT_LANGUAGE, "현재 언어 표시")
-                    entry(SpaceBarMode.SPACE_BAR_KEY, "스페이스바 텍스트 표시")
-                },
-            )
+    MalangSettingsSection(
+        title = "레이아웃 및 크기",
+        items = listOf(
+            { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "키 글자 크기 (세로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "키 글자 크기 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.keySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
+            { MalangSliderRow(prefs.keyboard.keySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
+        ),
+    )
 
-        }
+    MalangSettingsSection(
+        title = "기타 설정",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.popupEnabled,
+                    title = "키 팝업 활성화",
+                    summary = "키를 누를 때 팝업을 표시합니다.",
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.mergeHintPopupsEnabled,
+                    title = "힌트 팝업 병합",
+                    summary = "힌트와 키 팝업을 하나로 합칩니다.",
+                )
+            },
+            {
+                MalangValueDialogRow(
+                    prefs.keyboard.longPressDelay,
+                    title = "길게 누르기 지연 시간",
+                    min = 100,
+                    max = 700,
+                    step = 10,
+                    unit = "ms",
+                )
+            },
+        ),
+    )
 
-        MalangPreferenceGroup(title = "레이아웃 및 크기") {
-            DialogSliderPreference(
-                prefs.keyboard.heightFactorPortrait,
-                title = "키보드 높이 (세로 화면)",
-                valueLabel = { "$it%" },
-                min = 50,
-                max = 150,
-                stepIncrement = 1,
-            )
-            DialogSliderPreference(
-                prefs.keyboard.heightFactorLandscape,
-                title = "키보드 높이 (가로 화면)",
-                valueLabel = { "$it%" },
-                min = 50,
-                max = 150,
-                stepIncrement = 1,
-            )
-            DialogSliderPreference(
-                prefs.keyboard.fontSizeMultiplierPortrait,
-                title = "키 글자 크기 (세로 화면)",
-                valueLabel = { "$it%" },
-                min = 50,
-                max = 150,
-                stepIncrement = 1,
-            )
-            DialogSliderPreference(
-                prefs.keyboard.fontSizeMultiplierLandscape,
-                title = "키 글자 크기 (가로 화면)",
-                valueLabel = { "$it%" },
-                min = 50,
-                max = 150,
-                stepIncrement = 1,
-            )
-            DialogSliderPreference(
-                prefs.keyboard.keySpacingHorizontal,
-                title = "키 가로 간격",
-                valueLabel = { "$it%" },
-                min = 0,
-                max = 200,
-                stepIncrement = 5,
-            )
-            DialogSliderPreference(
-                prefs.keyboard.keySpacingVertical,
-                title = "키 세로 간격",
-                valueLabel = { "$it%" },
-                min = 0,
-                max = 200,
-                stepIncrement = 5,
-            )
-        }
+    MalangSettingsSection(
+        title = "백업 및 복원",
+        items = listOf(
+            {
+                MalangNavRow(
+                    title = "설정 백업",
+                    summary = "키보드·테마 설정을 파일로 저장합니다.",
+                    onClick = { navController.navigate(Routes.Settings.Backup) },
+                )
+            },
+            {
+                MalangNavRow(
+                    title = "설정 복원",
+                    summary = "백업 파일에서 설정을 불러옵니다.",
+                    onClick = { navController.navigate(Routes.Settings.Restore) },
+                )
+            },
+        ),
+    )
+}
 
-        MalangPreferenceGroup(title = "기타 설정") {
-            SwitchPreference(
-                prefs.keyboard.popupEnabled,
-                title = "키 팝업 활성화",
-                summary = "키를 누를 때 팝업을 표시합니다.",
-            )
-            SwitchPreference(
-                prefs.keyboard.mergeHintPopupsEnabled,
-                title = "힌트 팝업 병합",
-                summary = "힌트와 키 팝업을 하나로 합칩니다.",
-            )
-            DialogSliderPreference(
-                prefs.keyboard.longPressDelay,
-                title = "길게 누르기 지연 시간",
-                valueLabel = { "${it}ms" },
-                min = 100,
-                max = 700,
-                stepIncrement = 10,
-            )
-
-        }
-
-        MalangPreferenceGroup {
-            Preference(
-                title = "설정 백업",
-                summary = "키보드·테마 설정을 파일로 저장합니다.",
-                onClick = { navController.navigate(Routes.Settings.Backup) },
-            )
-            Preference(
-                title = "설정 복원",
-                summary = "백업 파일에서 설정을 불러옵니다.",
-                onClick = { navController.navigate(Routes.Settings.Restore) },
-            )
-        }
+/**
+ * 스위치로 켜고 끄며, 행을 누르면 모드를 고르는 다이얼로그가 뜬다.
+ * 설명 줄에는 선택된 모드(예: 스마트 우선)를 보여준다.
+ */
+@Composable
+private fun HintModeRow(
+    title: String,
+    enabledPref: PreferenceData<Boolean>,
+    modePref: PreferenceData<KeyHintMode>,
+    enabled: Boolean = true,
+) {
+    val mode by modePref.collectAsState()
+    val scope = rememberCoroutineScope()
+    var open by remember { mutableStateOf(false) }
+    MalangSwitchRow(
+        enabledPref,
+        title = title,
+        summary = HintModeEntries.firstOrNull { it.first == mode }?.second ?: "사용 안 함",
+        enabled = enabled,
+        onRowClick = { open = true },
+    )
+    if (open) {
+        MalangChoiceDialog(
+            title = title,
+            entries = HintModeEntries,
+            selected = mode,
+            onSelect = { scope.launch { modePref.set(it) } },
+            onDismiss = { open = false },
+        )
     }
 }

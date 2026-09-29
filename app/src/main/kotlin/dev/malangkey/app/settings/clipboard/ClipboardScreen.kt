@@ -19,12 +19,26 @@ package dev.malangkey.app.settings.clipboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,311 +46,318 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.malangkey.R
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.JuaFontFamily
+import dev.malangkey.app.apptheme.MalangChoiceRow
+import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangSettingsBorder
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
+import dev.malangkey.app.apptheme.MalangSwitchRow
+import dev.malangkey.app.apptheme.MalangValueDialogRow
+import dev.malangkey.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
+import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
+import dev.malangkey.ime.clipboard.QuickPhraseTriggerKey
 import dev.patrickgold.jetpref.datastore.model.collectAsState
-import dev.patrickgold.jetpref.datastore.ui.ExperimentalJetPrefDatastoreUi
-import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.malangkey.app.apptheme.MalangPreferenceGroup
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.florisboard.lib.compose.stringRes
 
-@OptIn(ExperimentalJetPrefDatastoreUi::class, ExperimentalMaterial3Api::class)
+private const val QuickPhraseSlots = 15
+
+private val TriggerKeyEntries = listOf(
+    QuickPhraseTriggerKey.PERIOD to "마침표(.)",
+    QuickPhraseTriggerKey.COMMA to "쉼표(,)",
+    QuickPhraseTriggerKey.ENTER to "엔터(Enter)",
+)
+
+private val SyncEntries = listOf(
+    ClipboardSyncBehavior.ALL_EVENTS to "복사·지우기 모두",
+    ClipboardSyncBehavior.ONLY_SET_EVENTS to "복사만",
+    ClipboardSyncBehavior.ONLY_CLEAR_EVENTS to "지우기만",
+    ClipboardSyncBehavior.NO_EVENTS to "동기화 안 함",
+)
+
+private val GridColumnEntries = listOf(CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO to "자동") +
+    (1..5).map { it to "${it}줄" }
+
 @Composable
-fun ClipboardScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__clipboard__title)
-    previewFieldVisible = true
+fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = "Clipboard") {
+    val prefs by FlorisPreferenceStore
+    val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
+    val historyEnabled by prefs.clipboard.historyEnabled.collectAsState()
+    val autoCleanOld by prefs.clipboard.historyAutoCleanOldEnabled.collectAsState()
+    val autoCleanSensitive by prefs.clipboard.historyAutoCleanSensitiveEnabled.collectAsState()
+    val sizeLimitEnabled by prefs.clipboard.historySizeLimitEnabled.collectAsState()
+    val suggestionEnabled by prefs.clipboard.suggestionEnabled.collectAsState()
+    val useInternal by prefs.clipboard.useInternalClipboard.collectAsState()
 
-    content {
-        val prefs = this.prefs
-        val scope = rememberCoroutineScope()
-        
-        // 1. 그리드 설정 데이터 읽기
-        val gridRowsPref by prefs.clipboard.quickPhrasesGridRows.collectAsState()
-        val quickPhrasesJson by prefs.clipboard.quickPhrases.collectAsState()
-        val quickPhraseTriggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
-        
-        val quickPhrases = remember(quickPhrasesJson) {
-            try {
-                Json.decodeFromString<List<String>>(quickPhrasesJson)
-            } catch (e: Exception) {
-                List(15) { "" }
-            }
-        }
-        
-        var showEditDialog by remember { mutableStateOf(false) }
-        var editingIndex by remember { mutableIntStateOf(-1) }
-        var editingText by remember { mutableStateOf("") }
+    val triggerKeyName = TriggerKeyEntries.first { it.first == triggerKey }.second
+    MalangInfoCard("키보드에서 $triggerKeyName 키를 길게 누르면 상용구 표가 뜨고, 원하는 칸에서 손을 떼면 바로 입력됩니다. 모든 키보드 레이아웃에서 동작해요.")
 
-        // 상용구 저장 공통 로직
-        val savePhrases: (List<String>) -> Unit = { list ->
-            scope.launch {
-                val fullList = list.toMutableList()
-                while (fullList.size < 15) {
-                    fullList.add("")
-                }
-                prefs.clipboard.quickPhrases.set(Json.encodeToString(fullList))
-            }
-        }
-
-        // 소개 카드 배너
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            )
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "상용구 기능 안내",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
+    MalangSettingsSection(
+        title = "상용구",
+        items = listOf(
+            { MalangChoiceRow(prefs.clipboard.quickPhraseTriggerKey, "상용구 호출 키", TriggerKeyEntries) },
+            {
+                MalangChoiceRow(
+                    prefs.clipboard.quickPhrasesGridRows,
+                    title = "상용구 표 크기",
+                    entries = listOf(3, 4, 5).map { it to "$it x 3" },
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                val triggerKeyName = when (quickPhraseTriggerKey) {
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.PERIOD -> "마침표(.)"
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.COMMA -> "쉼표(,)"
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.ENTER -> "엔터(Enter)"
-                }
-                Text(
-                    text = "키보드 화면에서 $triggerKeyName 키를 길게 누르면 아래 설정된 상용구 그리드 팝업이 뜨며, 터치를 떼는 순간 즉시 붙여넣어집니다. (모든 키보드 레이아웃에서 동작)",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    lineHeight = 18.sp
-                )
-            }
-        }
+            },
+            { QuickPhraseGridEditor() },
+        ),
+    )
 
-        // 1. 상용구 동작 키 설정
-        MalangPreferenceGroup(title = "호출 키 설정") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                listOf(
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.PERIOD to "마침표(.)",
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.COMMA to "쉼표(,)",
-                    dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.ENTER to "엔터(Enter)"
-                ).forEach { (triggerKey, label) ->
-                    val isSelected = quickPhraseTriggerKey == triggerKey
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                prefs.clipboard.quickPhraseTriggerKey.set(triggerKey)
+    MalangSettingsSection(
+        title = "클립보드 기록",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.clipboard.historyEnabled,
+                    title = "클립보드 기록 사용",
+                    summary = "복사한 내용을 모아두고 키보드에서 다시 붙여넣을 수 있습니다.",
+                )
+            },
+            { MalangSwitchRow(prefs.clipboard.historySizeLimitEnabled, "기록 개수 제한", enabled = historyEnabled) },
+            {
+                MalangValueDialogRow(
+                    prefs.clipboard.historySizeLimit,
+                    title = "최대 기록 개수",
+                    min = 5,
+                    max = 100,
+                    step = 5,
+                    unit = "개",
+                    enabled = historyEnabled && sizeLimitEnabled,
+                )
+            },
+            { MalangSwitchRow(prefs.clipboard.historyAutoCleanOldEnabled, "오래된 기록 자동 삭제", enabled = historyEnabled) },
+            {
+                MalangValueDialogRow(
+                    prefs.clipboard.historyAutoCleanOldAfter,
+                    title = "오래된 기록 삭제 시점",
+                    min = 1,
+                    max = 120,
+                    step = 1,
+                    unit = "분",
+                    enabled = historyEnabled && autoCleanOld,
+                    valueLabel = { "${it}분 후" },
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.clipboard.historyAutoCleanSensitiveEnabled,
+                    title = "민감한 기록 자동 삭제",
+                    summary = "비밀번호처럼 민감하게 표시된 항목을 빨리 지웁니다.",
+                    enabled = historyEnabled,
+                )
+            },
+            {
+                MalangValueDialogRow(
+                    prefs.clipboard.historyAutoCleanSensitiveAfter,
+                    title = "민감한 기록 삭제 시점",
+                    min = 5,
+                    max = 300,
+                    step = 5,
+                    unit = "초",
+                    enabled = historyEnabled && autoCleanSensitive,
+                    valueLabel = { "${it}초 후" },
+                )
+            },
+            { MalangSwitchRow(prefs.clipboard.historyHideOnPaste, "붙여넣으면 기록 창 닫기", enabled = historyEnabled) },
+            { MalangSwitchRow(prefs.clipboard.historyHideOnNextTextField, "다른 입력칸으로 가면 기록 창 닫기", enabled = historyEnabled) },
+            {
+                MalangChoiceRow(
+                    prefs.clipboard.historyNumGridColumnsPortrait,
+                    title = "기록 표시 열 수 (세로 화면)",
+                    entries = GridColumnEntries,
+                    enabled = historyEnabled,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.clipboard.historyNumGridColumnsLandscape,
+                    title = "기록 표시 열 수 (가로 화면)",
+                    entries = GridColumnEntries,
+                    enabled = historyEnabled,
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.clipboard.clearPrimaryClipAffectsHistoryIfUnpinned,
+                    title = "클립보드를 비우면 기록에서도 삭제",
+                    summary = "고정하지 않은 항목만 함께 지워집니다.",
+                    enabled = historyEnabled,
+                )
+            },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "붙여넣기 추천",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.clipboard.suggestionEnabled,
+                    title = "방금 복사한 내용 추천",
+                    summary = "최근에 복사한 내용을 스마트바에 띄워 바로 붙여넣습니다.",
+                )
+            },
+            {
+                MalangValueDialogRow(
+                    prefs.clipboard.suggestionTimeout,
+                    title = "추천 유지 시간",
+                    min = 10,
+                    max = 300,
+                    step = 10,
+                    unit = "초",
+                    enabled = suggestionEnabled,
+                    valueLabel = { "복사 후 ${it}초" },
+                )
+            },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "고급",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.clipboard.useInternalClipboard,
+                    title = "말랑키 전용 클립보드 사용",
+                    summary = "시스템 클립보드 대신 키보드 안의 클립보드를 씁니다.",
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.clipboard.syncToFloris,
+                    title = "시스템 → 말랑키 동기화",
+                    entries = SyncEntries,
+                    enabled = useInternal,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.clipboard.syncToSystem,
+                    title = "말랑키 → 시스템 동기화",
+                    entries = SyncEntries,
+                    enabled = useInternal,
+                )
+            },
+        ),
+    )
+}
+
+/** 상용구 표 미리보기. 칸을 누르면 문구를 입력하거나 지울 수 있다. */
+@Composable
+private fun QuickPhraseGridEditor() {
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val columns by prefs.clipboard.quickPhrasesGridRows.collectAsState()
+    val quickPhrasesJson by prefs.clipboard.quickPhrases.collectAsState()
+    val quickPhrases = remember(quickPhrasesJson) {
+        runCatching { Json.decodeFromString<List<String>>(quickPhrasesJson) }
+            .getOrDefault(emptyList())
+            .let { it + List((QuickPhraseSlots - it.size).coerceAtLeast(0)) { "" } }
+    }
+    var editingIndex by remember { mutableIntStateOf(-1) }
+    var editingText by remember { mutableStateOf("") }
+
+    fun save(index: Int, text: String) {
+        val updated = quickPhrases.toMutableList()
+        updated[index] = text
+        scope.launch { prefs.clipboard.quickPhrases.set(Json.encodeToString(updated)) }
+    }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("상용구 편집", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("칸을 눌러 문구를 넣거나 바꿀 수 있어요.", color = MalangSettingsSummary, fontSize = 13.sp)
+        for (r in 0 until 3) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (c in 0 until columns) {
+                    val index = r * columns + c
+                    val phrase = quickPhrases.getOrElse(index) { "" }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (phrase.isNotEmpty()) MalangSettingsSection else Color.Transparent)
+                            .border(1.dp, MalangSettingsBorder, RoundedCornerShape(12.dp))
+                            .clickable {
+                                editingIndex = index
+                                editingText = phrase
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary 
-                                             else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary 
-                                           else MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f)
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = label,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        // 2. 그리드 구조 설정 그룹
-        MalangPreferenceGroup(title = "그리드 크기 설정") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                listOf(3, 4, 5).forEach { cols ->
-                    val isSelected = gridRowsPref == cols
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                prefs.clipboard.quickPhrasesGridRows.set(cols)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary 
-                                             else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary 
-                                           else MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "$cols x 3",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        // 2. 인터랙티브 상용구 예시 그리드 (WYSIWYG Editor)
-        MalangPreferenceGroup(title = "상용구 예시 그리드 (클릭하여 편집)") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    for (r in 0 until 3) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            for (c in 0 until gridRowsPref) {
-                                val index = r * gridRowsPref + c
-                                val phrase = quickPhrases.getOrNull(index) ?: ""
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(55.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (phrase.isNotEmpty()) MaterialTheme.colorScheme.primaryContainer 
-                                            else Color.Transparent
-                                        )
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (phrase.isNotEmpty()) MaterialTheme.colorScheme.primary 
-                                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable {
-                                            editingIndex = index
-                                            editingText = phrase
-                                            showEditDialog = true
-                                        }
-                                        .padding(4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (phrase.isNotEmpty()) {
-                                        Text(
-                                            text = phrase,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                            textAlign = TextAlign.Center,
-                                            lineHeight = 14.sp
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "+",
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 3. 인플레이스 편집 다이얼로그
-        if (showEditDialog) {
-            AlertDialog(
-                onDismissRequest = { showEditDialog = false },
-                title = {
-                    Text(
-                        text = "${(editingIndex / gridRowsPref) + 1}행 ${(editingIndex % gridRowsPref) + 1}열 문구 설정",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = editingText,
-                            onValueChange = { editingText = it },
-                            label = { Text("상용구 입력") },
-                            placeholder = { Text("감사합니다!, 지금 가요 등") },
+                            text = phrase.ifEmpty { "+" },
+                            color = if (phrase.isNotEmpty()) MalangSettingsCard else MalangSettingsSummary,
+                            fontSize = if (phrase.isNotEmpty()) 11.sp else 16.sp,
+                            lineHeight = 14.sp,
                             maxLines = 2,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                            )
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
                         )
                     }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val updatedList = quickPhrases.toMutableList()
-                            updatedList[editingIndex] = editingText.trim()
-                            savePhrases(updatedList)
-                            showEditDialog = false
-                        }
-                    ) {
-                        Text("저장", fontWeight = FontWeight.Bold)
-                    }
-                },
-                dismissButton = {
-                    Row {
-                        if (quickPhrases.getOrNull(editingIndex)?.isNotEmpty() == true) {
-                            TextButton(
-                                onClick = {
-                                    val updatedList = quickPhrases.toMutableList()
-                                    updatedList[editingIndex] = ""
-                                    savePhrases(updatedList)
-                                    showEditDialog = false
-                                },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("지우기")
-                            }
-                        }
-                        TextButton(
-                            onClick = { showEditDialog = false }
-                        ) {
-                            Text("취소")
-                        }
-                    }
                 }
-            )
+            }
         }
+    }
+
+    if (editingIndex >= 0) {
+        val index = editingIndex
+        AlertDialog(
+            onDismissRequest = { editingIndex = -1 },
+            containerColor = MalangSettingsCard,
+            title = {
+                Text(
+                    "${index / columns + 1}행 ${index % columns + 1}열 상용구",
+                    color = MalangSettingsTitle,
+                    fontFamily = JuaFontFamily,
+                    fontSize = 20.sp,
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = editingText,
+                    onValueChange = { editingText = it },
+                    placeholder = { Text("예: 감사합니다!, 지금 가요") },
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MalangSettingsSection,
+                        unfocusedBorderColor = MalangSettingsBorder,
+                        cursorColor = MalangSettingsSection,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    save(index, editingText.trim())
+                    editingIndex = -1
+                }) { Text("저장", color = MalangSettingsSection, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                Row {
+                    if (quickPhrases.getOrElse(index) { "" }.isNotEmpty()) {
+                        TextButton(onClick = {
+                            save(index, "")
+                            editingIndex = -1
+                        }) { Text("지우기", color = Color(0xFFB3261E)) }
+                    }
+                    TextButton(onClick = { editingIndex = -1 }) { Text("취소", color = MalangSettingsSummary) }
+                }
+            },
+        )
     }
 }

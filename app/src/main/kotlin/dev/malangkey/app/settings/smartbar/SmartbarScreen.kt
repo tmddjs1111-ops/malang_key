@@ -58,12 +58,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.malangkey.R
 import dev.malangkey.app.FlorisPreferenceStore
-import dev.malangkey.app.enumDisplayEntriesOf
 import dev.malangkey.ime.keyboard.computeImageVector
 import dev.malangkey.ime.keyboard.computeLabel
-import dev.malangkey.ime.smartbar.CandidatesDisplayMode
 import dev.malangkey.ime.smartbar.ExtendedActionsPlacement
 import dev.malangkey.ime.smartbar.SmartbarLayout
 import dev.malangkey.ime.smartbar.quickaction.QuickAction
@@ -71,53 +68,111 @@ import dev.malangkey.ime.smartbar.quickaction.keyData
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.keyboard.TextKeyData
 import dev.malangkey.keyboardManager
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.MalangChoiceRow
+import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangSettingsBg
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
+import dev.malangkey.app.apptheme.MalangSwitchRow
+import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.patrickgold.jetpref.datastore.model.collectAsState
-import dev.patrickgold.jetpref.datastore.ui.DialogSliderPreference
-import dev.patrickgold.jetpref.datastore.ui.ListPreference
-import dev.patrickgold.jetpref.datastore.ui.Preference
-import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
-import dev.malangkey.app.apptheme.MalangPreferenceGroup
 import kotlinx.coroutines.launch
-import org.florisboard.lib.compose.stringRes
 import org.florisboard.lib.snygg.ui.SnyggIcon
 
 @Composable
-fun SmartbarScreen() = FlorisScreen {
-    title = stringRes(R.string.settings__smartbar__title)
-    previewFieldVisible = true
+fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = "Smart Bar") {
+    val prefs by FlorisPreferenceStore
+    val enabled by prefs.smartbar.enabled.collectAsState()
+    val layout by prefs.smartbar.layout.collectAsState()
 
-    content {
-        MalangPreferenceGroup {
-            DialogSliderPreference(
-                pref = prefs.smartbar.malangSlotsCount,
-                title = "상단바 슬롯 개수",
-                summary = { _ -> "3개에서 6개 사이로 설정할 수 있습니다." },
-                min = 3,
-                max = 6,
-                stepIncrement = 1,
-                valueLabel = { "$it 칸" },
-            )
+    MalangSettingsSection(
+        title = "스마트 바",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.smartbar.enabled,
+                    title = "스마트 바 사용",
+                    summary = "키보드 위에 자주 쓰는 기능 버튼 줄을 표시합니다.",
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.smartbar.layout,
+                    title = "표시 방식",
+                    entries = listOf(
+                        SmartbarLayout.MALANG_SLOTS to "말랑 슬롯 (추천)",
+                        SmartbarLayout.SUGGESTIONS_ONLY to "추천 단어만",
+                        SmartbarLayout.ACTIONS_ONLY to "기능 버튼만",
+                        SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED to "추천 단어 + 기능 버튼 (한 줄)",
+                        SmartbarLayout.SUGGESTIONS_ACTIONS_EXTENDED to "추천 단어 + 기능 버튼 (두 줄)",
+                    ),
+                    enabled = enabled,
+                )
+            },
+        ),
+    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+    when (layout) {
+        SmartbarLayout.MALANG_SLOTS -> MalangSettingsSection(
+            title = "말랑 슬롯",
+            items = listOf(
+                {
+                    MalangValueDialogRow(
+                        prefs.smartbar.malangSlotsCount,
+                        title = "슬롯 개수",
+                        min = 3,
+                        max = 6,
+                        step = 1,
+                        unit = "칸",
+                        enabled = enabled,
+                    )
+                },
+                {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Text("슬롯 편집", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어갑니다.",
+                            modifier = Modifier.padding(top = 6.dp),
+                            color = MalangSettingsSummary,
+                            fontSize = 13.sp,
+                        )
+                        MalangSlotsEditor()
+                    }
+                },
+            ),
+        )
+        SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED -> MalangSettingsSection(
+            title = "표시 방식 옵션",
+            items = listOf(
+                { MalangSwitchRow(prefs.smartbar.flipToggles, "펼치기 버튼 위치 바꾸기", enabled = enabled) },
+                { MalangSwitchRow(prefs.smartbar.sharedActionsExpandWithAnimation, "펼칠 때 애니메이션", enabled = enabled) },
+            ),
+        )
+        SmartbarLayout.SUGGESTIONS_ACTIONS_EXTENDED -> MalangSettingsSection(
+            title = "표시 방식 옵션",
+            items = listOf(
+                { MalangSwitchRow(prefs.smartbar.flipToggles, "펼치기 버튼 위치 바꾸기", enabled = enabled) },
+                {
+                    MalangChoiceRow(
+                        prefs.smartbar.extendedActionsPlacement,
+                        title = "기능 버튼 줄 위치",
+                        entries = listOf(
+                            ExtendedActionsPlacement.ABOVE_CANDIDATES to "추천 단어 위",
+                            ExtendedActionsPlacement.BELOW_CANDIDATES to "추천 단어 아래",
+                            ExtendedActionsPlacement.OVERLAY_APP_UI to "앱 화면 위에 겹치기",
+                        ),
+                        enabled = enabled,
+                    )
+                },
+            ),
+        )
+        else -> Unit
+    }
 
-            Text(
-                text = "슬롯 편집",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Text(
-                text = "아래 슬롯을 클릭하여 기능을 제거하거나 추가하세요.",
-                fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            MalangSlotsEditor()
-        }
+    if (layout != SmartbarLayout.MALANG_SLOTS && layout != SmartbarLayout.SUGGESTIONS_ONLY) {
+        MalangInfoCard("기능 버튼의 종류와 순서는 키보드 스마트 바의 기능 편집 버튼에서 바꿀 수 있어요.")
     }
 }
 
@@ -159,16 +214,14 @@ fun MalangSlotsEditor() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
-            .background(Color.Black.copy(alpha = 0.03f), RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .padding(top = 12.dp)
     ) {
         // Current Slots Preview
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(72.dp)
-                .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
+                .background(MalangSettingsSection, RoundedCornerShape(12.dp))
                 .padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -230,7 +283,7 @@ fun MalangSlotsEditor() {
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White)
+                                .background(MalangSettingsBg)
                                 .clickable {
                                     val newList = malangSlots.toMutableList()
                                     var index = -1

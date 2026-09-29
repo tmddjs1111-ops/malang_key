@@ -53,6 +53,7 @@ import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.key.KeyType
 import dev.malangkey.ime.text.key.UtilityKeyAction
 import dev.malangkey.ime.text.keyboard.TextKeyData
+import dev.malangkey.ime.text.keyboard.TextKeyboard
 import dev.malangkey.ime.text.keyboard.TextKeyboardCache
 import dev.malangkey.lib.devtools.LogTopic
 import dev.malangkey.lib.devtools.flogError
@@ -284,6 +285,26 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 lastCharactersEvaluator.value = computingEvaluator
             }
         }
+    }
+
+    /**
+     * 설정 화면의 자판 미리보기용: [subtype]의 글자 자판을 새로 계산하고 키 라벨까지 채워서 돌려준다.
+     * 입력 중인 키보드 상태에는 영향을 주지 않는다.
+     */
+    suspend fun computePreviewKeyboard(subtype: Subtype): TextKeyboard {
+        val keyboard = layoutManager.computeKeyboardAsync(KeyboardMode.CHARACTERS, subtype).await()
+        val evaluator = ComputingEvaluatorImpl(
+            version = -1,
+            keyboard = keyboard,
+            editorInfo = FlorisEditorInfo.Unspecified,
+            state = KeyboardState.new(),
+            subtype = subtype,
+        )
+        for (key in keyboard.keys()) {
+            key.compute(evaluator)
+            key.computeLabelsAndDrawables(evaluator)
+        }
+        return keyboard
     }
 
     fun reevaluateInputShiftState() {

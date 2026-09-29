@@ -21,6 +21,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,7 +58,6 @@ import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangTestInputBar
-import dev.malangkey.app.apptheme.MalangToggle
 import dev.malangkey.app.settings.keyboard.keyboardDisplayName
 import dev.malangkey.app.settings.smartbar.MalangSlotsEditor
 import dev.malangkey.app.settings.theme.applyMalangTheme
@@ -204,8 +207,9 @@ private fun ColumnScope.LanguageStep() {
     val subtypes by subtypeManager.subtypesFlow.collectAsState()
     val presets by keyboardManager.resources.subtypePresets.collectAsState()
     val layouts by keyboardManager.resources.layouts.collectAsState()
+    val activePalette = rememberActivePreviewPalette()
 
-    MalangInfoCard("여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요. 나중에 키보드 설정에서 언제든 바꿀 수 있어요.")
+    MalangInfoCard("쓰고 싶은 자판을 모두 골라주세요. 여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
 
     // 한국어 자판을 먼저 보여준다.
     val byLanguage = presets
@@ -213,43 +217,94 @@ private fun ColumnScope.LanguageStep() {
         .toList()
         .sortedByDescending { (_, list) -> list.first().locale.language == "ko" }
     for ((language, languagePresets) in byLanguage) {
-        MalangSettingsSection(
-            title = language,
-            items = languagePresets.map { preset ->
-                {
-                    val subtype = preset.toSubtype()
-                    val checked = subtypes.any { it.equalsExcludingId(subtype) }
-                    val layoutLabel = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)?.label
-                    val name = keyboardDisplayName(preset.locale, layoutLabel)
-                        .removePrefix(preset.locale.displayName()).removePrefix(" - ")
-                        .ifEmpty { language }
-                    CheckRow(name, checked) {
-                        if (checked) {
-                            val existing = subtypes.find { it.equalsExcludingId(subtype) }
-                            // 마지막 하나는 지우지 않는다.
-                            if (existing != null && subtypes.size > 1) subtypeManager.removeSubtype(existing)
-                        } else {
-                            subtypeManager.addSubtypeAndActivate(subtype)
-                        }
-                        keyboardManager.resources.anyChangedVersion.value += 1
+        Text(language, color = MalangSettingsSection, fontSize = 20.sp, fontFamily = JuaFontFamily)
+        PreviewGrid(languagePresets) { preset, modifier ->
+            val subtype = remember(preset) { preset.toSubtype() }
+            val checked = subtypes.any { it.equalsExcludingId(subtype) }
+            val layoutLabel = layouts[LayoutType.CHARACTERS]?.get(preset.preferred.characters)?.label
+            val name = keyboardDisplayName(preset.locale, layoutLabel)
+                .substringAfterLast(" - ")
+            PreviewCard(
+                title = name,
+                checked = checked,
+                modifier = modifier,
+                onClick = {
+                    if (checked) {
+                        val existing = subtypes.find { it.equalsExcludingId(subtype) }
+                        // 마지막 하나는 지우지 않는다.
+                        if (existing != null && subtypes.size > 1) subtypeManager.removeSubtype(existing)
+                    } else {
+                        subtypeManager.addSubtypeAndActivate(subtype)
                     }
-                }
-            },
-        )
+                    keyboardManager.resources.anyChangedVersion.value += 1
+                },
+            ) {
+                KeyboardPreview(subtype = subtype, palette = activePalette)
+            }
+        }
     }
 }
 
+/** 카드를 두 줄씩 배치한다. */
 @Composable
-private fun CheckRow(title: String, checked: Boolean, onToggle: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun <T> PreviewGrid(items: List<T>, card: @Composable (T, Modifier) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        for (row in items.chunked(2)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                for (item in row) {
+                    card(item, Modifier.weight(1f))
+                }
+                if (row.size < 2) Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** 제목·체크 표시와 키보드 미리보기가 들어간 선택 카드. */
+@Composable
+private fun PreviewCard(
+    title: String,
+    checked: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    preview: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(MalangSettingsCard)
+            .border(
+                width = if (checked) 2.dp else 1.dp,
+                color = if (checked) MalangSettingsSection else MalangSettingsBorder,
+                shape = RoundedCornerShape(18.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        MalangToggle(checked = checked, onCheckedChange = { onToggle() })
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title,
+                modifier = Modifier.weight(1f),
+                color = MalangSettingsTitle,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            Box(
+                modifier = Modifier
+                    .size(22.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (checked) MalangSettingsSection else Color.Transparent)
+                    .border(1.5.dp, if (checked) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (checked) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = MalangSettingsCard, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        preview()
     }
 }
 
@@ -361,46 +416,26 @@ private fun ClipboardStep() {
 @Composable
 private fun ThemeStep() {
     val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val mode by prefs.theme.mode.collectPrefAsState()
     val dayThemeId by prefs.theme.dayThemeId.collectPrefAsState()
     val nightThemeId by prefs.theme.nightThemeId.collectPrefAsState()
-    val themes = malangThemes.filter { it.compId != "custom" }
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    val themes = remember { malangThemes.filter { it.compId != "custom" } }
+    val palettes = remember(context) {
+        themes.associateWith { loadPreviewPalette(context, it.extId, it.compId) ?: DefaultPreviewPalette }
+    }
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        for (row in themes.chunked(2)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                for (theme in row) {
-                    val selected = isMalangThemeSelected(theme, mode, dayThemeId, nightThemeId)
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (selected) MalangSettingsSection else MalangSettingsCard)
-                            .border(1.dp, if (selected) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(20.dp))
-                            .clickable { scope.launch { applyMalangTheme(prefs, theme) } }
-                            .padding(horizontal = 14.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(theme.displayColor)
-                                .border(1.dp, Color.Black.copy(alpha = 0.1f), CircleShape)
-                        )
-                        Spacer(modifier = Modifier.size(10.dp))
-                        Text(
-                            theme.name,
-                            color = if (selected) MalangSettingsCard else MalangSettingsTitle,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                        )
-                    }
-                }
-                if (row.size < 2) Spacer(modifier = Modifier.weight(1f))
-            }
+    PreviewGrid(themes) { theme, modifier ->
+        PreviewCard(
+            title = theme.name,
+            checked = isMalangThemeSelected(theme, mode, dayThemeId, nightThemeId),
+            modifier = modifier,
+            onClick = { scope.launch { applyMalangTheme(prefs, theme) } },
+        ) {
+            KeyboardPreview(subtype = activeSubtype, palette = palettes.getValue(theme))
         }
     }
     Text(

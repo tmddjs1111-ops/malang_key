@@ -139,7 +139,7 @@ private fun MalangSettingsHeader(title: String, subtitle: String) {
 }
 
 @Composable
-private fun MalangTestInputBar() {
+fun MalangTestInputBar() {
     var text by remember { mutableStateOf("") }
     Box(
         modifier = Modifier

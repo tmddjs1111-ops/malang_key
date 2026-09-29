@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import dev.malangkey.R
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.ime.theme.ThemeManager
+import dev.malangkey.app.FlorisPreferenceModel
 import dev.malangkey.ime.theme.ThemeMode
 import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.lib.ext.ExtensionComponentName
@@ -95,6 +96,43 @@ val malangThemes = listOf(
     MalangThemeInfo("dev.malangkey.colors", "white", "기본 화이트", Color(0xFFFAFAFA)),
     MalangThemeInfo("dev.malangkey.colors", "custom", "커스텀", Color(0xFFE0E0E0))
 )
+
+/** 테마를 키보드에 적용한다. 커스텀이 아닌 테마는 키 모양 효과를 기본값으로 되돌린다. */
+suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThemeInfo) {
+    val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
+    if (themeInfo.compId == "custom") {
+        prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
+        prefs.theme.dayThemeId.set(themeCompName)
+        return
+    }
+    if (themeInfo.isNight) {
+        prefs.theme.mode.set(ThemeMode.ALWAYS_NIGHT)
+        prefs.theme.nightThemeId.set(themeCompName)
+    } else {
+        prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
+        prefs.theme.dayThemeId.set(themeCompName)
+    }
+    prefs.malang.keyCornerRadius.set(6)
+    prefs.malang.isGlassmorphismEnabled.set(false)
+    prefs.malang.glassmorphismTransparency.set(0.3f)
+    prefs.malang.isNeumorphismEnabled.set(false)
+    prefs.malang.squircleShapeEnabled.set(false)
+}
+
+/** 현재 적용된 테마인지 여부. */
+fun isMalangThemeSelected(
+    themeInfo: MalangThemeInfo,
+    mode: ThemeMode,
+    dayThemeId: ExtensionComponentName,
+    nightThemeId: ExtensionComponentName,
+): Boolean {
+    val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
+    return if (themeInfo.isNight) {
+        (mode == ThemeMode.ALWAYS_NIGHT || mode == ThemeMode.FOLLOW_SYSTEM) && nightThemeId == themeCompName
+    } else {
+        (mode == ThemeMode.ALWAYS_DAY || mode == ThemeMode.FOLLOW_SYSTEM) && dayThemeId == themeCompName
+    }
+}
 
 val ColorCreamBeige = Color(0xFFFFF5ED)
 val ColorDarkChocolate = Color(0xFF4E342E)
@@ -152,26 +190,7 @@ fun ThemeScreen() = FlorisScreen {
                                 .clip(RoundedCornerShape(30.dp))
                                 .background(if (isSelected) ColorDarkChocolate else Color.White)
                                 .clickable {
-                                    coroutineScope.launch {
-                                        if (themeInfo.compId == "custom") {
-                                            florisPrefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
-                                            florisPrefs.theme.dayThemeId.set(ExtensionComponentName("dev.malangkey.colors", "custom"))
-                                        } else {
-                                            if (themeInfo.isNight) {
-                                                florisPrefs.theme.mode.set(ThemeMode.ALWAYS_NIGHT)
-                                                florisPrefs.theme.nightThemeId.set(themeCompName)
-                                            } else {
-                                                florisPrefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
-                                                florisPrefs.theme.dayThemeId.set(themeCompName)
-                                            }
-                                            
-                                            florisPrefs.malang.keyCornerRadius.set(6)
-                                            florisPrefs.malang.isGlassmorphismEnabled.set(false)
-                                            florisPrefs.malang.glassmorphismTransparency.set(0.3f)
-                                            florisPrefs.malang.isNeumorphismEnabled.set(false)
-                                            florisPrefs.malang.squircleShapeEnabled.set(false)
-                                        }
-                                    }
+                                    coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo) }
                                 }
                                 .border(
                                     width = if (isSelected) 3.dp else 2.dp,

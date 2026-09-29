@@ -199,7 +199,12 @@ private fun ColumnScope.MainTabContent(
             navController.navigate(Routes.Settings.Media)
         },
         MainTile("빠른 설정", "Quick Settings", R.drawable.mk_ic_quick, accent = false) {
-            navController.navigate(Routes.Setup.Screen)
+            // 키보드가 이미 켜져 있고 선택돼 있으면 바로 간단 설정으로 간다.
+            if (isFlorisBoardEnabled && isFlorisBoardSelected) {
+                navController.navigate(Routes.Setup.Quick)
+            } else {
+                navController.navigate(Routes.Setup.Screen)
+            }
         },
     )
 

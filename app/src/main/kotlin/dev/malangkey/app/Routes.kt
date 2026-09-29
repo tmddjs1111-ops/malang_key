@@ -79,6 +79,7 @@ import dev.malangkey.app.settings.theme.ThemeManagerScreen
 import dev.malangkey.app.settings.theme.ThemeManagerScreenAction
 import dev.malangkey.app.settings.theme.ThemeScreen
 import dev.malangkey.app.settings.typing.TypingScreen
+import dev.malangkey.app.setup.QuickSetupScreen
 import dev.malangkey.app.setup.SetupScreen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -105,6 +106,9 @@ object Routes {
     object Setup {
         @Serializable
         object Screen
+
+        @Serializable
+        object Quick
     }
 
     object Settings {
@@ -298,6 +302,7 @@ object Routes {
             },
         ) {
             composable<Setup.Screen> { SetupScreen() }
+            composable<Setup.Quick> { QuickSetupScreen() }
 
             composableWithDeepLink(Settings.Home::class) { HomeScreen() }
 

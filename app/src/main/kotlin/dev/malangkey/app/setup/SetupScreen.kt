@@ -218,9 +218,11 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
             id = Steps.FinishUp.id,
             title = stringRes(R.string.setup__finish_up__title),
         ) {
-            StepText(stringRes(R.string.setup__finish_up__description_p1))
-            StepText(stringRes(R.string.setup__finish_up__description_p2))
-            StepButton(label = stringRes(R.string.setup__finish_up__finish_btn)) {
+            StepText("말랑키가 준비됐어요! 자판, 소리, 스마트 바, 테마를 1분 안에 골라볼까요? 귀찮으면 건너뛰고 기본값으로 바로 써도 괜찮아요.")
+            StepButton(label = "간단 설정 시작") {
+                navController.navigate(Routes.Setup.Quick)
+            }
+            TextButton(onClick = {
                 scope.launch { this@steps.prefs.internal.isImeSetUp.set(true) }
                 // 첫 실행이든 메인의 "빠른 설정"에서 들어왔든, 메인 화면 하나만 남긴다.
                 navController.navigate(Routes.Settings.Home) {
@@ -228,6 +230,8 @@ private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
                         inclusive = true
                     }
                 }
+            }) {
+                Text("건너뛰기")
             }
         }
     )

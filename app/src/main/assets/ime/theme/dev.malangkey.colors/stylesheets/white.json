@@ -37,5 +37,6 @@
   "clipboard-item-actions": { "background": "var(--bg)", "foreground": "var(--key-fg)", "shape": "var(--shape)", "shadow-elevation": "4dp" },
   "clipboard-item-action": { "foreground": "var(--key-fg)" },
   "clipboard-item-action-icon": { "foreground": "var(--key-fg)" },
-  "clipboard-item-action-text": { "foreground": "var(--key-fg)" }
+  "clipboard-item-action-text": { "foreground": "var(--key-fg)" },
+  "smartbar-candidate-word": { "padding": "10dp 0dp", "margin": "4dp" }
 }

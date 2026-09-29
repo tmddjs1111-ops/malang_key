@@ -55,7 +55,10 @@ import dev.malangkey.ime.dictionary.UserDictionaryDao
 import dev.malangkey.ime.dictionary.UserDictionaryEntry
 import dev.malangkey.ime.dictionary.UserDictionaryValidation
 import dev.malangkey.lib.FlorisLocale
-import dev.malangkey.lib.compose.FlorisScreen
+import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangNavRow
+import dev.malangkey.app.apptheme.MalangSettingsScreen
+import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.lib.compose.Validation
 import dev.malangkey.lib.rememberValidationResult
 import dev.malangkey.lib.util.launchActivity
@@ -81,18 +84,10 @@ enum class UserDictionaryType(val id: String) {
 }
 
 @Composable
-fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
-    title = stringRes(when (type) {
-        UserDictionaryType.FLORIS -> R.string.settings__udm__title_floris
-        UserDictionaryType.SYSTEM -> R.string.settings__udm__title_system
-    })
-    previewFieldVisible = false
-    scrollable = false
-
+fun UserDictionaryScreen(type: UserDictionaryType) {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val dictionaryManager = DictionaryManager.default()
-    val scope = rememberCoroutineScope()
 
     var currentLocale by remember { mutableStateOf<FlorisLocale?>(null) }
     var languageList by remember { mutableStateOf(emptyList<FlorisLocale>()) }
@@ -107,16 +102,11 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
     }
 
     fun getDisplayNameForLocale(locale: FlorisLocale): String {
-        return if (locale == AllLanguagesLocale) {
-            context.stringRes(R.string.settings__udm__all_languages)
-        } else {
-            locale.displayName()
-        }
+        return if (locale == AllLanguagesLocale) "모든 언어" else locale.displayName()
     }
 
     fun buildUi() {
         if (currentLocale != null) {
-            //subtitle = getDisplayNameForLocale(currentLocale)
             val locale = if (currentLocale == AllLanguagesLocale) null else currentLocale
             wordList = userDictionaryDao()?.queryAll(locale) ?: emptyList()
             if (wordList.isEmpty()) {
@@ -124,7 +114,6 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
             }
         }
         if (currentLocale == null) {
-            //subtitle = null
             languageList = userDictionaryDao()
                 ?.queryLanguageList()
                 ?.sortedBy { it?.displayLanguage() }
@@ -144,16 +133,16 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
                 UserDictionaryType.SYSTEM -> dictionaryManager.systemUserDictionaryDatabase()
             }
             if (db == null) {
-                context.showLongToastSync("Database handle is null, failed to import")
+                context.showLongToastSync("사전을 열 수 없어 가져오지 못했어요.")
                 return@rememberLauncherForActivityResult
             }
             runCatching {
                 db.importCombinedList(context, uri)
             }.onSuccess {
                 buildUi()
-                context.showLongToastSync(R.string.settings__udm__dictionary_import_success)
+                context.showLongToastSync("사전을 가져왔어요.")
             }.onFailure { error ->
-                context.showLongToastSync("Error: ${error.localizedMessage}")
+                context.showLongToastSync("오류: ${error.localizedMessage}")
             }
         },
     )
@@ -169,235 +158,190 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
                 UserDictionaryType.SYSTEM -> dictionaryManager.systemUserDictionaryDatabase()
             }
             if (db == null) {
-                context.showLongToastSync("Database handle is null, failed to export")
+                context.showLongToastSync("사전을 열 수 없어 내보내지 못했어요.")
                 return@rememberLauncherForActivityResult
             }
             runCatching {
                 db.exportCombinedList(context, uri)
             }.onSuccess {
-                context.showLongToastSync(R.string.settings__udm__dictionary_export_success)
+                context.showLongToastSync("사전을 내보냈어요.")
             }.onFailure { error ->
-                context.showLongToastSync("Error: ${error.localizedMessage}")
+                context.showLongToastSync("오류: ${error.localizedMessage}")
             }
         },
     )
 
-    navigationIcon {
-        FlorisIconButton(
-            onClick = {
-                if (currentLocale != null) {
-                    currentLocale = null
-                    buildUi()
-                } else {
-                    navController.popBackStack()
-                }
-            },
-            icon = if (currentLocale != null) {
-                Icons.Default.Close
-            } else {
-                Icons.AutoMirrored.Filled.ArrowBack
-            },
-        )
+    fun closeLanguage() {
+        currentLocale = null
+        buildUi()
     }
 
-    actions {
-        var expanded by remember { mutableStateOf(false) }
-        FlorisIconButton(
-            onClick = { expanded = !expanded },
-            icon = Icons.Default.MoreVert,
-        )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            DropdownMenuItem(
-                onClick = {
-                    importDictionary.launch("*/*")
-                    expanded = false
-                },
-                text = { Text(text = stringRes(R.string.action__import)) },
-            )
-            DropdownMenuItem(
-                onClick = {
-                    exportDictionary.launch("my-personal-dictionary.clb")
-                    expanded = false
-                },
-                text = { Text(text = stringRes(R.string.action__export)) },
-            )
-            if (type == UserDictionaryType.SYSTEM) {
-                DropdownMenuItem(
-                    onClick = {
-                        context.launchActivity { it.action = SystemUserDictionaryUiIntentAction }
-                        expanded = false
-                    },
-                    text = { Text(text = stringRes(R.string.settings__udm__open_system_manager_ui)) },
-                )
-            }
-        }
-    }
-
-    floatingActionButton {
-        ExtendedFloatingActionButton(
-            onClick = { userDictionaryEntryForDialog = UserDictionaryEntryToAdd },
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text(text = stringRes(R.string.settings__udm__dialog__title_add)) },
-        )
-    }
-
-    content {
-        BackHandler(currentLocale != null) {
-            currentLocale = null
-            buildUi()
-        }
+    MalangSettingsScreen(
+        title = when (type) {
+            UserDictionaryType.FLORIS -> "말랑키 사전"
+            UserDictionaryType.SYSTEM -> "시스템 사전"
+        },
+        subtitle = currentLocale?.let { getDisplayNameForLocale(it) } ?: "User Dictionary",
+        onBack = { if (currentLocale != null) closeLanguage() else navController.popBackStack() },
+    ) {
+        BackHandler(currentLocale != null) { closeLanguage() }
 
         LaunchedEffect(Unit) {
             dictionaryManager.loadUserDictionariesIfNecessary()
             buildUi()
         }
 
-        LazyColumn {
-            if (languageList.isEmpty()) {
-                item {
-                    Text(
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                        text = stringRes(R.string.settings__udm__no_words_in_dictionary),
-                        fontStyle = FontStyle.Italic,
-                    )
-                }
-            }
-            if (currentLocale == null) {
-                items(languageList) { language ->
-                    JetPrefListItem(
-                        modifier = Modifier.rippleClickable {
-                            scope.launch {
-                                // Delay makes UI ripple visible and experience better
-                                delay(150)
-                                currentLocale = language
-                                buildUi()
-                            }
-                        },
-                        text = getDisplayNameForLocale(language),
-                    )
-                }
-            } else {
-                items(wordList) { wordEntry ->
-                    JetPrefListItem(
-                        modifier = Modifier.rippleClickable {
-                            userDictionaryEntryForDialog = wordEntry
-                        },
-                        text = wordEntry.word,
-                        secondaryText = stringRes(
-                            if (wordEntry.shortcut != null) {
-                                R.string.settings__udm__word_summary_freq_shortcut
-                            } else {
-                                R.string.settings__udm__word_summary_freq
-                            },
-                            "freq" to wordEntry.freq,
-                            "shortcut" to wordEntry.shortcut,
-                        ),
-                    )
-                }
-            }
-        }
-
-        val wordEntry = userDictionaryEntryForDialog
-        if (wordEntry != null) {
-            var showValidationErrors by rememberSaveable { mutableStateOf(false) }
-            val isAddWord = wordEntry === UserDictionaryEntryToAdd
-            var word by rememberSaveable { mutableStateOf(wordEntry.word) }
-            val wordValidation = rememberValidationResult(UserDictionaryValidation.Word, word)
-            var freq by rememberSaveable { mutableStateOf(wordEntry.freq.toString()) }
-            val freqValidation = rememberValidationResult(UserDictionaryValidation.Freq, freq)
-            var shortcut by rememberSaveable { mutableStateOf(wordEntry.shortcut ?: "") }
-            val shortcutValidation = rememberValidationResult(UserDictionaryValidation.Shortcut, shortcut)
-            var locale by rememberSaveable { mutableStateOf(wordEntry.locale ?: "") }
-            val localeValidation = rememberValidationResult(UserDictionaryValidation.Locale, locale)
-
-            JetPrefAlertDialog(
-                title = stringRes(if (isAddWord) {
-                    R.string.settings__udm__dialog__title_add
-                } else {
-                    R.string.settings__udm__dialog__title_edit
-                }),
-                confirmLabel = stringRes(if (isAddWord) {
-                    R.string.action__add
-                } else {
-                    R.string.action__apply
-                }),
-                onConfirm = {
-                    val isInvalid = wordValidation.isInvalid() ||
-                        freqValidation.isInvalid() ||
-                        shortcutValidation.isInvalid() ||
-                        localeValidation.isInvalid()
-                    if (isInvalid) {
-                        showValidationErrors = true
-                    } else {
-                        val entry = UserDictionaryEntry(
-                            id = wordEntry.id,
-                            word = word.trim(),
-                            freq = freq.toInt(10),
-                            shortcut = shortcut.trim().takeIf { it.isNotBlank() },
-                            locale = locale.trim().takeIf { it.isNotBlank() }?.let {
-                                // Normalize tag
-                                FlorisLocale.fromTag(it).localeTag()
-                            },
-                        )
-                        if (isAddWord) {
-                            userDictionaryDao()?.insert(entry)
-                        } else {
-                            userDictionaryDao()?.update(entry)
-                        }
-                        userDictionaryEntryForDialog = null
-                        buildUi()
+        MalangSettingsSection(
+            items = listOfNotNull<@Composable () -> Unit>(
+                {
+                    MalangNavRow(title = "단어 추가", summary = "단어와 줄임말을 새로 등록합니다.") {
+                        userDictionaryEntryForDialog = UserDictionaryEntryToAdd
                     }
                 },
-                dismissLabel = stringRes(R.string.action__cancel),
-                onDismiss = {
-                    userDictionaryEntryForDialog = null
-                },
-                neutralLabel = if (isAddWord) {
-                    null
+                { MalangNavRow(title = "파일에서 가져오기") { importDictionary.launch("*/*") } },
+                { MalangNavRow(title = "파일로 내보내기") { exportDictionary.launch("my-personal-dictionary.clb") } },
+                if (type == UserDictionaryType.SYSTEM) {
+                    {
+                        MalangNavRow(title = "안드로이드 사전 설정 열기") {
+                            context.launchActivity { it.action = SystemUserDictionaryUiIntentAction }
+                        }
+                    }
                 } else {
-                    stringRes(R.string.action__delete)
+                    null
                 },
-                onNeutral = {
-                    userDictionaryDao()?.delete(wordEntry)
+            ),
+        )
+
+        val selectedLocale = currentLocale
+        when {
+            selectedLocale == null && languageList.isEmpty() -> MalangInfoCard("아직 등록된 단어가 없어요.")
+            selectedLocale == null -> MalangSettingsSection(
+                title = "언어",
+                items = languageList.map { language ->
+                    {
+                        MalangNavRow(title = getDisplayNameForLocale(language)) {
+                            currentLocale = language
+                            buildUi()
+                        }
+                    }
+                },
+            )
+            else -> MalangSettingsSection(
+                title = "단어 ${wordList.size}개",
+                items = wordList.map { wordEntry ->
+                    {
+                        MalangNavRow(
+                            title = wordEntry.word,
+                            summary = buildString {
+                                append("빈도 ${wordEntry.freq}")
+                                wordEntry.shortcut?.let { append(" · 줄임말 $it") }
+                            },
+                        ) {
+                            userDictionaryEntryForDialog = wordEntry
+                        }
+                    }
+                },
+            )
+        }
+    }
+
+    val wordEntry = userDictionaryEntryForDialog
+    if (wordEntry != null) {
+        var showValidationErrors by rememberSaveable { mutableStateOf(false) }
+        val isAddWord = wordEntry === UserDictionaryEntryToAdd
+        var word by rememberSaveable { mutableStateOf(wordEntry.word) }
+        val wordValidation = rememberValidationResult(UserDictionaryValidation.Word, word)
+        var freq by rememberSaveable { mutableStateOf(wordEntry.freq.toString()) }
+        val freqValidation = rememberValidationResult(UserDictionaryValidation.Freq, freq)
+        var shortcut by rememberSaveable { mutableStateOf(wordEntry.shortcut ?: "") }
+        val shortcutValidation = rememberValidationResult(UserDictionaryValidation.Shortcut, shortcut)
+        var locale by rememberSaveable { mutableStateOf(wordEntry.locale ?: "") }
+        val localeValidation = rememberValidationResult(UserDictionaryValidation.Locale, locale)
+
+        JetPrefAlertDialog(
+            title = stringRes(if (isAddWord) {
+                R.string.settings__udm__dialog__title_add
+            } else {
+                R.string.settings__udm__dialog__title_edit
+            }),
+            confirmLabel = stringRes(if (isAddWord) {
+                R.string.action__add
+            } else {
+                R.string.action__apply
+            }),
+            onConfirm = {
+                val isInvalid = wordValidation.isInvalid() ||
+                    freqValidation.isInvalid() ||
+                    shortcutValidation.isInvalid() ||
+                    localeValidation.isInvalid()
+                if (isInvalid) {
+                    showValidationErrors = true
+                } else {
+                    val entry = UserDictionaryEntry(
+                        id = wordEntry.id,
+                        word = word.trim(),
+                        freq = freq.toInt(10),
+                        shortcut = shortcut.trim().takeIf { it.isNotBlank() },
+                        locale = locale.trim().takeIf { it.isNotBlank() }?.let {
+                            // Normalize tag
+                            FlorisLocale.fromTag(it).localeTag()
+                        },
+                    )
+                    if (isAddWord) {
+                        userDictionaryDao()?.insert(entry)
+                    } else {
+                        userDictionaryDao()?.update(entry)
+                    }
                     userDictionaryEntryForDialog = null
                     buildUi()
-                },
-            ) {
-                Column {
-                    DialogProperty(text = stringRes(R.string.settings__udm__dialog__word_label)) {
-                        JetPrefTextField(
-                            value = word,
-                            onValueChange = { word = it },
-                        )
-                        Validation(showValidationErrors, wordValidation)
-                    }
-                    DialogProperty(text = stringRes(
-                        R.string.settings__udm__dialog__freq_label,
-                        "f_min" to FREQUENCY_MIN, "f_max" to FREQUENCY_MAX,
-                    )) {
-                        JetPrefTextField(
-                            value = freq,
-                            onValueChange = { freq = it },
-                        )
-                        Validation(showValidationErrors, freqValidation)
-                    }
-                    DialogProperty(text = stringRes(R.string.settings__udm__dialog__shortcut_label)) {
-                        JetPrefTextField(
-                            value = shortcut,
-                            onValueChange = { shortcut = it },
-                        )
-                        Validation(showValidationErrors, shortcutValidation)
-                    }
-                    DialogProperty(text = stringRes(R.string.settings__udm__dialog__locale_label)) {
-                        JetPrefTextField(
-                            value = locale,
-                            onValueChange = { locale = it },
-                        )
-                        Validation(showValidationErrors, localeValidation)
-                    }
+                }
+            },
+            dismissLabel = stringRes(R.string.action__cancel),
+            onDismiss = {
+                userDictionaryEntryForDialog = null
+            },
+            neutralLabel = if (isAddWord) {
+                null
+            } else {
+                stringRes(R.string.action__delete)
+            },
+            onNeutral = {
+                userDictionaryDao()?.delete(wordEntry)
+                userDictionaryEntryForDialog = null
+                buildUi()
+            },
+        ) {
+            Column {
+                DialogProperty(text = stringRes(R.string.settings__udm__dialog__word_label)) {
+                    JetPrefTextField(
+                        value = word,
+                        onValueChange = { word = it },
+                    )
+                    Validation(showValidationErrors, wordValidation)
+                }
+                DialogProperty(text = stringRes(
+                    R.string.settings__udm__dialog__freq_label,
+                    "f_min" to FREQUENCY_MIN, "f_max" to FREQUENCY_MAX,
+                )) {
+                    JetPrefTextField(
+                        value = freq,
+                        onValueChange = { freq = it },
+                    )
+                    Validation(showValidationErrors, freqValidation)
+                }
+                DialogProperty(text = stringRes(R.string.settings__udm__dialog__shortcut_label)) {
+                    JetPrefTextField(
+                        value = shortcut,
+                        onValueChange = { shortcut = it },
+                    )
+                    Validation(showValidationErrors, shortcutValidation)
+                }
+                DialogProperty(text = stringRes(R.string.settings__udm__dialog__locale_label)) {
+                    JetPrefTextField(
+                        value = locale,
+                        onValueChange = { locale = it },
+                    )
+                    Validation(showValidationErrors, localeValidation)
                 }
             }
         }

@@ -14,37 +14,23 @@
  * limitations under the License.
  */
 
+
 package dev.malangkey.app.settings.typing
 
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.drawable.Drawable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import dev.malangkey.R
+import dev.malangkey.app.apptheme.MalangNavRow
 import dev.malangkey.lib.util.launchActivity
 import org.florisboard.lib.android.AndroidSettings
-import org.florisboard.lib.compose.FlorisCanvasIcon
-import org.florisboard.lib.compose.FlorisErrorCard
-import org.florisboard.lib.compose.FlorisSimpleCard
-import org.florisboard.lib.compose.FlorisWarningCard
 import org.florisboard.lib.compose.observeAsState
-import org.florisboard.lib.compose.stringRes
 
+/** 시스템에 설정된 맞춤법 검사기를 보여주고, 누르면 시스템 설정을 연다. */
 @Composable
-fun SpellCheckerServiceSelector(florisSpellCheckerEnabled: MutableState<Boolean>) {
+fun SpellCheckerRow() {
     val context = LocalContext.current
 
     val systemSpellCheckerId by AndroidSettings.Secure.observeAsState(
@@ -55,73 +41,29 @@ fun SpellCheckerServiceSelector(florisSpellCheckerEnabled: MutableState<Boolean>
         key = "spell_checker_enabled",
         foregroundOnly = true,
     )
-    val systemSpellCheckerPkgName = remember(systemSpellCheckerId) {
+    val spellCheckerLabel = remember(systemSpellCheckerId) {
         runCatching {
-            ComponentName.unflattenFromString(systemSpellCheckerId!!)!!.packageName
-        }.getOrDefault("null")
+            val pkgName = ComponentName.unflattenFromString(systemSpellCheckerId!!)!!.packageName
+            val pm = context.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(pkgName, 0)).toString()
+        }.getOrNull()
     }
-    val openSystemSpellCheckerSettings = {
-        val componentToLaunch = ComponentName(
-            "com.android.settings",
-            "com.android.settings.Settings\$SpellCheckersSettingsActivity",
-        )
-        context.launchActivity {
-            it.addCategory(Intent.CATEGORY_DEFAULT)
-            it.component = componentToLaunch
-        }
-    }
-    florisSpellCheckerEnabled.value =
-        systemSpellCheckerEnabled == "1" &&
-        systemSpellCheckerPkgName == context.packageName
 
-    Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-        if (systemSpellCheckerEnabled == "1") {
-            if (systemSpellCheckerId == null) {
-                FlorisWarningCard(
-                    text = stringRes(R.string.pref__spelling__active_spellchecker__summary_none),
-                    onClick = openSystemSpellCheckerSettings,
-                )
-            } else {
-                var spellCheckerIcon: Drawable?
-                var spellCheckerLabel = "Unknown"
-                try {
-                    val pm = context.packageManager
-                    val remoteAppInfo = pm.getApplicationInfo(systemSpellCheckerPkgName, 0)
-                    spellCheckerIcon = pm.getApplicationIcon(remoteAppInfo)
-                    spellCheckerLabel = pm.getApplicationLabel(remoteAppInfo).toString()
-                } catch (e: Exception) {
-                    spellCheckerIcon = null
-                }
-                FlorisSimpleCard(
-                    icon = {
-                        if (spellCheckerIcon != null) {
-                            FlorisCanvasIcon(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .requiredSize(32.dp),
-                                drawable = spellCheckerIcon,
-                            )
-                        } else {
-                            Icon(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .requiredSize(32.dp),
-                                imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    text = spellCheckerLabel,
-                    secondaryText = systemSpellCheckerPkgName,
-                    contentPadding = PaddingValues(all = 8.dp),
-                    onClick = openSystemSpellCheckerSettings,
+    MalangNavRow(
+        title = "맞춤법 검사기",
+        summary = when {
+            systemSpellCheckerEnabled != "1" -> "시스템에서 꺼져 있어요. 눌러서 켤 수 있어요."
+            spellCheckerLabel == null -> "선택된 검사기가 없어요. 눌러서 고를 수 있어요."
+            else -> "사용 중: $spellCheckerLabel"
+        },
+        onClick = {
+            context.launchActivity {
+                it.addCategory(Intent.CATEGORY_DEFAULT)
+                it.component = ComponentName(
+                    "com.android.settings",
+                    "com.android.settings.Settings\$SpellCheckersSettingsActivity",
                 )
             }
-        } else {
-            FlorisErrorCard(
-                text = stringRes(R.string.pref__spelling__active_spellchecker__summary_disabled),
-                onClick = openSystemSpellCheckerSettings,
-            )
-        }
-    }
+        },
+    )
 }

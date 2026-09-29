@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -76,12 +77,19 @@ val MalangSettingsSummary = Color(0xFF866A5F)
 fun MalangSettingsScreen(
     title: String,
     subtitle: String,
+    /** 뒤로가기 버튼 동작. null이면 이전 화면으로 돌아간다. */
+    onBack: (() -> Unit)? = null,
+    /** 헤더 오른쪽에 둘 버튼(메뉴 등). */
+    headerActions: @Composable RowScope.() -> Unit = {},
+    /** false면 본문이 스스로 스크롤을 관리한다(LazyColumn 등). */
+    scrollable: Boolean = true,
+    showTestInput: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) = FlorisScreen {
     this.title = title
     topBarVisible = false
     previewFieldVisible = false
-    scrollable = false
+    this.scrollable = false
 
     content {
         Column(
@@ -89,23 +97,30 @@ fun MalangSettingsScreen(
                 .fillMaxSize()
                 .background(MalangSettingsBg)
         ) {
-            MalangSettingsHeader(title, subtitle)
+            MalangSettingsHeader(title, subtitle, onBack, headerActions)
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                    .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 content = content,
             )
-            MalangTestInputBar()
+            if (showTestInput) {
+                MalangTestInputBar()
+            }
         }
     }
 }
 
 @Composable
-private fun MalangSettingsHeader(title: String, subtitle: String) {
+private fun MalangSettingsHeader(
+    title: String,
+    subtitle: String,
+    onBack: (() -> Unit)?,
+    actions: @Composable RowScope.() -> Unit,
+) {
     val navController = LocalNavController.current
     Column(modifier = Modifier.statusBarsPadding()) {
         Row(
@@ -121,13 +136,14 @@ private fun MalangSettingsHeader(title: String, subtitle: String) {
                 modifier = Modifier
                     .size(37.4.dp, 36.dp)
                     .clip(CircleShape)
-                    .clickable { navController.popBackStack() },
+                    .clickable { onBack?.invoke() ?: navController.popBackStack() },
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(title, color = MalangDarkCard, fontSize = 24.sp, lineHeight = 28.sp, fontFamily = JuaFontFamily, maxLines = 1)
                 Text(subtitle, color = MalangSettingsSummary, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1)
             }
+            actions()
         }
         Box(
             modifier = Modifier

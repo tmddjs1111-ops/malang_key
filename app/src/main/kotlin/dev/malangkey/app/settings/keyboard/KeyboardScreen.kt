@@ -116,10 +116,28 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
         items = listOf(
             { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "키 글자 크기 (세로 화면)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "키 글자 크기 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "전체 글자 배율 (세로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "전체 글자 배율 (가로 화면)", min = 50, max = 150) },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "쿼티 자판 (두벌식·영어)",
+        items = listOf(
+            { MalangSliderRow(prefs.malang.keyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
+            { MalangSliderRow(prefs.malang.keyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.keySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
             { MalangSliderRow(prefs.keyboard.keySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "격자 자판 (천지인·연타형·20키)",
+        items = listOf(
+            { MalangSliderRow(prefs.malang.gridKeyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
+            { MalangSliderRow(prefs.malang.gridKeyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.gridKeySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
+            { MalangSliderRow(prefs.keyboard.gridKeySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
         ),
     )
 

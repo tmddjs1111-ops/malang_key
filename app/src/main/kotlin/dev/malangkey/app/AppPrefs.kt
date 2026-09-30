@@ -560,6 +560,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__key_spacing_horizontal",
             default = 100,
         )
+        /** 격자 자판(천지인·연타형·20키) 전용 키 간격. 위 두 값은 쿼티 자판에 쓴다. */
+        val gridKeySpacingVertical = int(
+            key = "keyboard__grid_key_spacing_vertical",
+            default = 100,
+        )
+        val gridKeySpacingHorizontal = int(
+            key = "keyboard__grid_key_spacing_horizontal",
+            default = 100,
+        )
         val popupEnabled = boolean(
             key = "keyboard__popup_enabled",
             default = false,
@@ -784,6 +793,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val keyHintFontSizeMultiplier = int(
             key = "malang__key_hint_font_size_multiplier",
             default = 80,
+        )
+        /** 격자 자판(천지인·연타형·20키) 전용 글자·힌트 크기. 위 두 값은 쿼티 자판에 쓴다. */
+        val gridKeyFontSizeMultiplier = int(
+            key = "malang__grid_key_font_size_multiplier",
+            default = 100,
+        )
+        val gridKeyHintFontSizeMultiplier = int(
+            key = "malang__grid_key_hint_font_size_multiplier",
+            default = 100,
         )
         val keyBorderThickness = int(
             key = "malang__key_border_thickness",

@@ -141,7 +141,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val isRealEnterKeyBgCustom = isCustomThemeSelected && customRealEnterKeyBgColor != Color.Unspecified
         val isRealEnterKeyTextCustom = isCustomThemeSelected && customRealEnterKeyTextColor != Color.Unspecified
         val isFontCustom = keyboardFontFamily != "system"
-        val isKeyLayoutCustom = keyFontSizeMultiplier != 100 || keyHintFontSizeMultiplier != 100 || keyBorderThickness > 0
+        // 글자·힌트 크기는 자판 종류(쿼티/격자)마다 달라서 TextKeyboardLayout에서 키마다 적용한다.
+        val isKeyLayoutCustom = keyBorderThickness > 0
         
         if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
             val editor = baseStylesheet.edit()
@@ -214,10 +215,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     val radius = keyCornerRadius.toFloat().dp
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
                 }
-                if (keyFontSizeMultiplier != 100) {
-                    val baseSize = 20f
-                    propEditor.properties["font-size"] = SnyggSpSizeValue((baseSize * keyFontSizeMultiplier / 100f).sp)
-                }
                 if (keyBorderThickness > 0) {
                     propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
                     propEditor.properties["border-color"] = org.florisboard.lib.snygg.value.SnyggStaticColorValue(Color.White.copy(alpha = keyBorderOpacity / 100f))
@@ -240,12 +237,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
             }
             
-            val keyHintRule = SnyggRule.fromOrNull("key-hint")
-            if (keyHintRule != null && keyHintFontSizeMultiplier != 100) {
-                val propEditor = editor.rules.getOrPut(keyHintRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
-                val baseHintSize = 12f
-                propEditor.properties["font-size"] = SnyggSpSizeValue((baseHintSize * keyHintFontSizeMultiplier / 100f).sp)
-            }
             
             if (isKeyTextCustom) {
                 val smartbarElements = listOf(

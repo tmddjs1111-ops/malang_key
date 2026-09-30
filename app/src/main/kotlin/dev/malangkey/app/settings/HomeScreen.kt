@@ -485,7 +485,7 @@ private fun ThemeTabContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("메인 폰트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("쿼티 글자 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
             Text("${keyFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
         }
         Slider(
@@ -505,7 +505,7 @@ private fun ThemeTabContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("힌트 폰트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
+            Text("쿼티 힌트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
             Text("${keyHintFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
         }
         Slider(
@@ -606,6 +606,8 @@ private fun ThemeTabContent(
                         prefs.malang.keyboardFontFamily.set("jua")
                         prefs.malang.keyFontSizeMultiplier.set(100)
                         prefs.malang.keyHintFontSizeMultiplier.set(80)
+                        prefs.malang.gridKeyFontSizeMultiplier.set(100)
+                        prefs.malang.gridKeyHintFontSizeMultiplier.set(100)
                         prefs.malang.keyBorderThickness.set(0)
                         prefs.malang.keyBorderOpacity.set(20)
                     }

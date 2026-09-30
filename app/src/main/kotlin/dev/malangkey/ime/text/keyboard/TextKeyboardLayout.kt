@@ -94,6 +94,8 @@ import dev.malangkey.lib.toIntOffset
 import dev.malangkey.ime.window.ImeFormFactor
 import dev.malangkey.ime.window.FoldState
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.Density
+import androidx.compose.runtime.CompositionLocalProvider
 import dev.malangkey.lib.util.ViewUtils
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.serialization.json.Json
@@ -152,6 +154,24 @@ internal fun isJapaneseKanaRowBase(code: Int): Boolean = when (code) {
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalComposeUiApi::class)
+/**
+ * 키 글자와 힌트의 크기 배율 (1 = 테마에 정한 크기). 쿼티와 격자 자판이 따로 갖는다.
+ */
+private data class KeyTextScale(val label: Float, val hint: Float, val isGrid: Boolean)
+
+/** 안쪽 글자를 [scale]배로 그린다. 글자 크기 자체를 바꾸므로 확대해도 흐려지지 않는다. */
+@Composable
+private fun WithFontScale(scale: Float, content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    if (scale == 1f) {
+        content()
+        return
+    }
+    CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * scale)) {
+        content()
+    }
+}
+
 /** 자판을 나눌 수 있는 모드. 천지인 같은 격자 자판과 숫자 패드는 나누지 않는다. */
 private val SplittableModes = setOf(
     KeyboardMode.CHARACTERS,
@@ -284,8 +304,29 @@ fun TextKeyboardLayout(
 
         val windowController = LocalWindowController.current
         val windowSpec by windowController.activeWindowSpec.collectAsState()
-        val keyMarginH by remember { derivedStateOf { windowSpec.keyMarginH.toPx() } }
-        val keyMarginV by remember { derivedStateOf { windowSpec.keyMarginV.toPx() } }
+        // 쿼티와 격자 자판(천지인·20키 등)은 키 크기가 달라서 글자·힌트 크기와 간격을 따로 둔다.
+        val isGridLayout = keyboard.mode == KeyboardMode.GRID_16KEY
+        val gridSpacingH by prefs.keyboard.gridKeySpacingHorizontal.collectAsState()
+        val gridSpacingV by prefs.keyboard.gridKeySpacingVertical.collectAsState()
+        val keyMarginH = if (isGridLayout) {
+            windowSpec.props.calcKeyMarginH(windowSpec.constraints) * (gridSpacingH / 100f)
+        } else {
+            windowSpec.keyMarginH
+        }.toPx()
+        val keyMarginV = if (isGridLayout) {
+            windowSpec.props.calcKeyMarginV(windowSpec.constraints) * (gridSpacingV / 100f)
+        } else {
+            windowSpec.keyMarginV
+        }.toPx()
+        val qwertyLabelSize by prefs.malang.keyFontSizeMultiplier.collectAsState()
+        val qwertyHintSize by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
+        val gridLabelSize by prefs.malang.gridKeyFontSizeMultiplier.collectAsState()
+        val gridHintSize by prefs.malang.gridKeyHintFontSizeMultiplier.collectAsState()
+        val keyTextScale = KeyTextScale(
+            label = (if (isGridLayout) gridLabelSize else qwertyLabelSize) / 100f,
+            hint = (if (isGridLayout) gridHintSize else qwertyHintSize) / 100f,
+            isGrid = isGridLayout,
+        )
 
         // 폴더블 분리 자판: 접힘 상태가 바뀌거나 설정을 바꿀 때만 다시 계산된다.
         val isUnfolded by FoldState.isUnfolded.collectAsState()
@@ -375,6 +416,7 @@ fun TextKeyboardLayout(
             TextKeyButton(
                 textKey, evaluator, desiredKey,
                 debugShowTouchBoundaries,
+                keyTextScale,
             )
         }
 
@@ -404,6 +446,7 @@ private fun TextKeyButton(
     evaluator: ComputingEvaluator,
     desiredKey: TextKey,
     debugShowTouchBoundaries: Boolean,
+    textScale: KeyTextScale,
 ) = with(LocalDensity.current) {
     val attributes = mapOf(
         FlorisImeUi.Attr.Code to key.computedData.code,
@@ -488,26 +531,34 @@ private fun TextKeyButton(
                     SpaceBarMode.SPACE_BAR_KEY -> customLabel = "␣"
                 }
             }
-            SnyggText(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .scale(compactNumberRowScale)
-                    .align(if (isTelPadKey) BiasAlignment(-0.5f, 0f) else Alignment.Center),
-                text = customLabel,
-            )
+            WithFontScale(textScale.label) {
+                SnyggText(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .scale(compactNumberRowScale)
+                        .align(if (isTelPadKey) BiasAlignment(-0.5f, 0f) else Alignment.Center),
+                    text = customLabel,
+                )
+            }
         }
         key.hintedLabel?.let { hintedLabel ->
-            SnyggText(
-                elementName = FlorisImeUi.KeyHint.elementName,
-                attributes = attributes,
-                selector = selector,
-                modifier = Modifier
-                    .wrapContentSize()
-                    .scale(compactNumberRowScale)
-                    .align(if (isTelPadKey) BiasAlignment(0.5f, 0f) else Alignment.TopEnd)
-                    .padding(end = 6.dp, top = 4.dp),
-                text = hintedLabel,
-            )
+            WithFontScale(textScale.hint) {
+                SnyggText(
+                    elementName = FlorisImeUi.KeyHint.elementName,
+                    attributes = attributes,
+                    selector = selector,
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .scale(compactNumberRowScale)
+                        .align(if (isTelPadKey) BiasAlignment(0.5f, 0f) else Alignment.TopEnd)
+                        // 쿼티 키는 폭이 좁아서 힌트를 모서리에 바짝 붙여 본 글자와 겹치지 않게 한다.
+                        .padding(
+                            end = if (textScale.isGrid) 6.dp else 3.dp,
+                            top = if (textScale.isGrid) 4.dp else 2.dp,
+                        ),
+                    text = hintedLabel,
+                )
+            }
         }
         key.foregroundImageVector?.let { imageVector ->
             SnyggIcon(

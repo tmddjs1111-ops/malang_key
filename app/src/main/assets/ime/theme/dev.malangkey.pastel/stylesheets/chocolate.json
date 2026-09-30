@@ -34,5 +34,6 @@
   "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
   "smartbar": { "background": "var(--bg)" },
   "smartbar-item": { "foreground": "var(--key-fg)" },
-  "smartbar-candidate-word": { "padding": "10dp 0dp", "margin": "4dp" }
+  "smartbar-candidate-word": { "padding": "10dp 0dp", "margin": "4dp" },
+  "key-hint": { "font-size": "12sp" }
 }

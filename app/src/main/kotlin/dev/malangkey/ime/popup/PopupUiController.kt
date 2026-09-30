@@ -166,15 +166,16 @@ class PopupUiController(
         }
 
         val density = context.resources.displayMetrics.density
-        val minElemWidthPx = 28f * density
-        val maxTargetWidthPx = 36f * density
-        val targetElemWidth = (baseBounds.width * 0.5f).coerceAtLeast(minElemWidthPx).coerceAtMost(maxTargetWidthPx)
+        // 손가락에 가려도 알아보도록 칸을 넉넉히 잡는다.
+        val minElemWidthPx = 36f * density
+        val maxTargetWidthPx = 46f * density
+        val targetElemWidth = (baseBounds.width * 0.7f).coerceAtLeast(minElemWidthPx).coerceAtMost(maxTargetWidthPx)
         var elemWidth = targetElemWidth
         if (row0count * elemWidth > size.width) {
             elemWidth = size.width / row0count
         }
 
-        val elemHeight = (baseBounds.height * 0.55f).coerceAtLeast(28f * density).coerceAtMost(34f * density)
+        val elemHeight = (baseBounds.height * 0.7f).coerceAtLeast(38f * density).coerceAtMost(44f * density)
         val extWidth = row0count * elemWidth
         val numRows = if (row1count > 0) 2 else 1
         val extHeight = numRows * elemHeight
@@ -186,7 +187,8 @@ class PopupUiController(
             keyCenterX - (extWidth - elemWidth / 2.0f)
         }
         val x = idealX.coerceIn(0f, (size.width - extWidth).coerceAtLeast(0f))
-        val y = key.visibleBounds.top - extHeight - (4f * density)
+        // 아래에 누른 키를 가리키는 말풍선 꼬리가 들어갈 자리를 둔다.
+        val y = key.visibleBounds.top - extHeight - PopupBubbleTailHeight.value * density
 
         val extBounds = FlorisRect.new(
             left = x, top = y, right = x + extWidth, bottom = y + extHeight,
@@ -255,6 +257,7 @@ class PopupUiController(
             row1count = row1count,
             elemWidthPx = elemWidth,
             elemHeightPx = elemHeight,
+            tailCenterXPx = keyCenterX - x,
         )
         activeElementIndex = initUiIndex
     }
@@ -477,18 +480,22 @@ class PopupUiController(
         extRenderInfo?.let { renderInfo ->
             val elemWidth = renderInfo.elemWidthPx.takeIf { it > 0f } ?: renderInfo.baseBounds.width
             val elemHeight = renderInfo.elemHeightPx.takeIf { it > 0f } ?: (renderInfo.baseBounds.height * 0.4f)
-            PopupExtBox(
-                modifier = Modifier
-                    .requiredSize(renderInfo.bounds.size.toDpSize())
-                    .absoluteOffset { renderInfo.bounds.topLeft.toIntOffset() },
+            PopupBubble(
+                bounds = renderInfo.bounds,
+                tailCenterXPx = renderInfo.tailCenterXPx,
                 attributes = attributes,
-                elements = renderInfo.elements,
-                elemArrangement = Arrangement.Center,
-                elemWidth = elemWidth.toDp(),
-                elemHeight = elemHeight.toDp(),
-                activeElementIndex = activeElementIndex,
-                isClipboard = renderInfo.isClipboard,
-            )
+            ) {
+                PopupExtBox(
+                    modifier = Modifier.requiredSize(renderInfo.bounds.size.toDpSize()),
+                    attributes = attributes,
+                    elements = renderInfo.elements,
+                    elemArrangement = Arrangement.Center,
+                    elemWidth = elemWidth.toDp(),
+                    elemHeight = elemHeight.toDp(),
+                    activeElementIndex = activeElementIndex,
+                    isClipboard = renderInfo.isClipboard,
+                )
+            }
         }
     }
 
@@ -510,6 +517,8 @@ class PopupUiController(
         val isClipboard: Boolean = false,
         val elemWidthPx: Float = 0f,
         val elemHeightPx: Float = 0f,
+        /** 말풍선 꼬리의 가로 위치(팝업 왼쪽 기준). 음수면 꼬리를 그리지 않는다. */
+        val tailCenterXPx: Float = -1f,
     )
 
     data class Element(

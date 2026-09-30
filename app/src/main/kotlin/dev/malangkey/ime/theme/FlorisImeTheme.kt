@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.ime.keyboard.KeyboardMode
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.window.LocalWindowController
 import dev.malangkey.keyboardManager
@@ -35,7 +36,12 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.snygg.SnyggRule
 import org.florisboard.lib.snygg.SnyggPropertySetEditor
 import org.florisboard.lib.snygg.SnyggSinglePropertySetEditor
+import org.florisboard.lib.snygg.SnyggAnnotationRule
 import org.florisboard.lib.snygg.SnyggStylesheet
+import org.florisboard.lib.snygg.SnyggStylesheetEditor
+import org.florisboard.lib.snygg.value.SnyggDefinedVarValue
+import org.florisboard.lib.snygg.value.SnyggDpSizeValue
+import org.florisboard.lib.snygg.value.SnyggValue
 import org.florisboard.lib.snygg.value.SnyggTextMaxLinesValue
 import org.florisboard.lib.snygg.ui.ProvideSnyggTheme
 import org.florisboard.lib.snygg.ui.rememberSnyggTheme
@@ -339,7 +345,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             
             baseStylesheet = editor.build()
         }
-        withFunctionKeyTextSizes(baseStylesheet)
+        withBaseStyleFallbacks(baseStylesheet, isKeyShapeCustom = squircleShapeEnabled || keyCornerRadius != 6)
     }
 
     val snyggTheme = rememberSnyggTheme(stylesheet, assetResolver)
@@ -371,14 +377,50 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
 }
 
 /**
+ * 테마 스타일시트는 기본 스타일과 합쳐지지 않아서, 테마가 적지 않은 규칙은 통째로 빠진다.
+ * 그중 눈에 띄게 깨지는 기능키 글자 크기와 길게 누름 팝업을 채운다.
+ */
+private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet, isKeyShapeCustom: Boolean): SnyggStylesheet {
+    val editor = stylesheet.edit()
+    val changedKeys = applyFunctionKeyTextSizes(editor)
+    val changedPopup = applyKeyPopupBubbleStyle(editor)
+    val changedShape = !isKeyShapeCustom && applyQwertyKeyShape(editor)
+    return if (changedKeys || changedPopup || changedShape) editor.build() else stylesheet
+}
+
+/**
+ * 쿼티·기호 자판은 키 폭이 좁아서, 격자 자판에 맞춘 테마 모서리(20dp 등)를 그대로 쓰면 키가 알약처럼
+ * 뭉개진다. 이 자판들의 모서리를 줄이되, 사용자가 모서리 크기·스퀘어클을 정했으면 부르지 않는다.
+ */
+private fun applyQwertyKeyShape(editor: SnyggStylesheetEditor): Boolean {
+    var changed = false
+    for (mode in QwertyShapeModes) {
+        val rule = SnyggRule.fromOrNull("${FlorisImeUi.Key.elementName}[${FlorisImeUi.Attr.Mode}=`$mode`]") ?: continue
+        val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: continue
+        if (!propEditor.properties.containsKey("shape")) {
+            propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(QwertyKeyCorner, QwertyKeyCorner, QwertyKeyCorner, QwertyKeyCorner)
+            changed = true
+        }
+    }
+    return changed
+}
+
+private val QwertyKeyCorner = 10.dp
+private val QwertyShapeModes = listOf(
+    KeyboardMode.CHARACTERS,
+    KeyboardMode.SYMBOLS,
+    KeyboardMode.SYMBOLS2,
+    KeyboardMode.NUMERIC_ADVANCED,
+).map { it.toString() }
+
+/**
  * 기능키 글자 크기를 기본 스타일과 맞춘다.
  *
  * 테마의 `key` 규칙은 글자 키에 맞춘 큰 크기(20sp 등)를 모든 키에 준다. 기본 스타일은 '1 2 / 3 4',
  * '?123', 스페이스의 언어 이름 같은 기능키를 작게 줄여 두는데, 테마를 넣으면 이 규칙이 빠져서
  * 기능키 글자가 넘치거나 잘린다. 테마가 그 키에 글자 크기를 직접 정하지 않았을 때만 채운다.
  */
-private fun withFunctionKeyTextSizes(stylesheet: SnyggStylesheet): SnyggStylesheet {
-    val editor = stylesheet.edit()
+private fun applyFunctionKeyTextSizes(editor: SnyggStylesheetEditor): Boolean {
     var changed = false
     for ((codes, fontSize, maxLines) in FunctionKeyTextSizes) {
         for (code in codes) {
@@ -394,8 +436,56 @@ private fun withFunctionKeyTextSizes(stylesheet: SnyggStylesheet): SnyggStyleshe
             }
         }
     }
-    return if (changed) editor.build() else stylesheet
+    return changed
 }
+
+/**
+ * 길게 누름 팝업을 말풍선처럼 보이게 한다.
+ *
+ * 말랑키 테마에는 팝업 규칙이 없어서 배경·그림자·선택 표시 없이 글자만 떠 있었다. 테마 색 변수로
+ * 테두리 있는 말풍선을 만들고, 고르고 있는 글자는 포인트색으로 채운다. 테마가 직접 정한 값은 두고,
+ * 필요한 색 변수가 없는 테마(기본 테마 등)는 건드리지 않는다.
+ */
+private fun applyKeyPopupBubbleStyle(editor: SnyggStylesheetEditor): Boolean {
+    val defines = editor.rules[SnyggAnnotationRule.Defines] as? SnyggSinglePropertySetEditor ?: return false
+    if (PopupBubbleVars.any { it !in defines.properties }) return false
+
+    var changed = false
+    fun fill(ruleStr: String, vararg props: Pair<String, SnyggValue>) {
+        val rule = SnyggRule.fromOrNull(ruleStr) ?: return
+        val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: return
+        for ((name, value) in props) {
+            if (!propEditor.properties.containsKey(name)) {
+                propEditor.properties[name] = value
+                changed = true
+            }
+        }
+    }
+    fill(
+        FlorisImeUi.KeyPopupBox.elementName,
+        "background" to SnyggDefinedVarValue("--bg"),
+        "foreground" to SnyggDefinedVarValue("--key-fg"),
+        "font-size" to SnyggSpSizeValue(20.sp),
+        "shape" to SnyggRoundedCornerDpShapeValue(14.dp, 14.dp, 14.dp, 14.dp),
+        "shadow-elevation" to SnyggDpSizeValue(10.dp),
+        "border-width" to SnyggDpSizeValue(2.dp),
+        "border-color" to SnyggDefinedVarValue("--action-bg"),
+    )
+    fill(
+        FlorisImeUi.KeyPopupElement.elementName,
+        "foreground" to SnyggDefinedVarValue("--key-fg"),
+        "font-size" to SnyggSpSizeValue(20.sp),
+        "shape" to SnyggRoundedCornerDpShapeValue(10.dp, 10.dp, 10.dp, 10.dp),
+    )
+    fill(
+        "${FlorisImeUi.KeyPopupElement.elementName}:focus",
+        "background" to SnyggDefinedVarValue("--action-bg"),
+        "foreground" to SnyggDefinedVarValue("--action-fg"),
+    )
+    return changed
+}
+
+private val PopupBubbleVars = listOf("--bg", "--key-fg", "--action-bg", "--action-fg")
 
 /** 기본 스타일(FlorisImeThemeBaseStyle)의 기능키 글자 크기. (키 코드, sp, 최대 줄 수) */
 private val FunctionKeyTextSizes = listOf(

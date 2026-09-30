@@ -43,6 +43,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+private val CheonjiinVowelCodes = setOf(12643, 183, 12641)
+
 /** 미리보기에 쓰는 테마 색. [byCode]는 특정 키(엔터, 시프트 등)의 배경·글자색이다. */
 data class PreviewPalette(
     val background: Color,
@@ -50,7 +52,11 @@ data class PreviewPalette(
     val keyForeground: Color,
     val byCode: Map<Int, Pair<Color, Color>> = emptyMap(),
 ) {
-    fun colorsFor(code: Int): Pair<Color, Color> = byCode[code] ?: (keyBackground to keyForeground)
+    fun colorsFor(code: Int, isCheonjiin: Boolean = true): Pair<Color, Color> {
+        // 테마의 모음키 강조(ㅣ·ㆍ·ㅡ)는 천지인 전용이라, 같은 코드를 쓰는 연타형 ㅣㅡ 키에는 주지 않는다.
+        if (!isCheonjiin && code in CheonjiinVowelCodes) return keyBackground to keyForeground
+        return byCode[code] ?: (keyBackground to keyForeground)
+    }
 }
 
 /** 말랑키 기본 크림색 테마. */
@@ -165,6 +171,7 @@ fun KeyboardPreview(
             .padding(3.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        val isCheonjiin = subtype.layoutMap.characters.componentId.contains("cheonjiin")
         val rows = keyboard?.arrangement
             ?.map { row -> row.filter { it.flayWidthFactor > 0f } }
             ?.filter { it.isNotEmpty() }
@@ -182,7 +189,7 @@ fun KeyboardPreview(
                 if (growSum == 0f && extra > 0.01f) Spacer(modifier = Modifier.weight(extra / 2))
                 for (key in row) {
                     val width = key.flayWidthFactor + if (growSum > 0f) extra * key.flayGrow / growSum else 0f
-                    PreviewKey(key, palette, Modifier.weight(width))
+                    PreviewKey(key, palette, isCheonjiin, Modifier.weight(width))
                 }
                 if (growSum == 0f && extra > 0.01f) Spacer(modifier = Modifier.weight(extra / 2))
             }
@@ -191,8 +198,8 @@ fun KeyboardPreview(
 }
 
 @Composable
-private fun PreviewKey(key: TextKey, palette: PreviewPalette, modifier: Modifier) {
-    val (bg, fg) = remember(key, palette) { palette.colorsFor(key.computedData.code) }
+private fun PreviewKey(key: TextKey, palette: PreviewPalette, isCheonjiin: Boolean, modifier: Modifier) {
+    val (bg, fg) = remember(key, palette, isCheonjiin) { palette.colorsFor(key.computedData.code, isCheonjiin) }
     Box(
         modifier = modifier
             .fillMaxHeight()

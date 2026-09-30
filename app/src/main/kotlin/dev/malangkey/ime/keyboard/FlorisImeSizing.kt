@@ -60,11 +60,10 @@ object FlorisImeSizing {
         val keyboardManager by context.keyboardManager()
         val evaluator by keyboardManager.activeEvaluator.collectAsState()
         val lastCharactersEvaluator by keyboardManager.lastCharactersEvaluator.collectAsState()
+        // 기호·숫자 자판은 자기 줄 수대로 높이를 잡는다. 문자 자판 높이를 따라가면 숫자 줄을 켠 쿼티
+        // (약 4.8줄)만큼 늘어나는데, 기호 자판에는 이미 숫자 줄이 있어서 더 높아질 까닭이 없다.
         val keyboard = when (evaluator.keyboard.mode) {
-            KeyboardMode.CHARACTERS,
-            KeyboardMode.NUMERIC_ADVANCED,
-            KeyboardMode.SYMBOLS,
-            KeyboardMode.SYMBOLS2 -> lastCharactersEvaluator.keyboard as TextKeyboard
+            KeyboardMode.CHARACTERS -> lastCharactersEvaluator.keyboard as TextKeyboard
             else -> evaluator.keyboard as TextKeyboard
         }
         return keyboardRowBaseHeight * keyboard.heightInRows().coerceAtLeast(4.0f)

@@ -135,7 +135,7 @@ fun HomeScreen() = FlorisScreen {
                     when (selectedTab) {
                         HomeTab.MAIN -> Unit
                         HomeTab.THEME -> ThemeTabContent(navController)
-                        HomeTab.GAME -> ComingSoonTab("게임", "Game")
+                        HomeTab.GAME -> GameTabContent(navController)
                     }
                 }
             }
@@ -373,7 +373,56 @@ private fun MainNavItem(
     }
 }
 
-/** 테마/게임 탭: 차후 업데이트 예정이라 자리만 잡아둔다. */
+/** 게임 탭: 애국가 빨리치기 소개와 최고 점수, 도전 버튼. */
+@Composable
+private fun GameTabContent(navController: androidx.navigation.NavController) {
+    val prefs by FlorisPreferenceStore
+    val best by prefs.malang.anthemBestScore.collectAsState()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(MalangCocoa)
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text("애국가 빨리치기", color = MalangCardText, fontSize = 30.sp, lineHeight = 34.sp, fontFamily = MalangJuaFont)
+            Text("가사를 빠르고 정확하게 따라 쳐 보세요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
+            Text("Typing Game", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                if (best > 0) "내 최고 점수  ${best}점 · ${dev.malangkey.app.game.TypingScore.gradeOf(best)}등급" else "아직 기록이 없어요",
+                color = MalangCardText,
+                fontSize = 17.sp,
+                fontFamily = MalangJuaFont,
+            )
+        }
+        MalangSettingsSection(
+            title = "도전하기",
+            items = listOf(
+                {
+                    MalangNavRow(title = "1절 도전", summary = "1절과 후렴 · 4줄") {
+                        navController.navigate(Routes.Game.Anthem(full = false))
+                    }
+                },
+                {
+                    MalangNavRow(title = "전체 도전", summary = "1~4절과 후렴 · 16줄") {
+                        navController.navigate(Routes.Game.Anthem(full = true))
+                    }
+                },
+            ),
+        )
+        MalangInfoCard("점수 = 타수 × 정확도². 빨리 칠수록 올라가고, 오타가 나면 크게 깎여요. 결과 화면에서 점수 카드를 사진으로 저장할 수 있어요.")
+    }
+}
+
+/** 차후 업데이트 예정인 탭의 자리 표시. */
 @Composable
 private fun ComingSoonTab(title: String, subtitle: String) {
     Column(

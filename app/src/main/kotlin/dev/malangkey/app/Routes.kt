@@ -79,6 +79,7 @@ import dev.malangkey.app.settings.theme.ThemeManagerScreen
 import dev.malangkey.app.settings.theme.ThemeManagerScreenAction
 import dev.malangkey.app.settings.theme.ThemeScreen
 import dev.malangkey.app.settings.typing.TypingScreen
+import dev.malangkey.app.game.AnthemGameScreen
 import dev.malangkey.app.setup.QuickSetupScreen
 import dev.malangkey.app.setup.SetupScreen
 import kotlinx.serialization.SerialName
@@ -103,6 +104,12 @@ inline fun <reified T : Any> NavGraphBuilder.composableWithDeepLink(
 }
 
 object Routes {
+    object Game {
+        /** 애국가 빨리치기. [full]이면 1~4절 전체, 아니면 1절. */
+        @Serializable
+        data class Anthem(val full: Boolean = false)
+    }
+
     object Setup {
         @Serializable
         object Screen
@@ -303,6 +310,9 @@ object Routes {
         ) {
             composable<Setup.Screen> { SetupScreen() }
             composable<Setup.Quick> { QuickSetupScreen() }
+            composable<Game.Anthem> { entry ->
+                AnthemGameScreen(full = entry.toRoute<Game.Anthem>().full)
+            }
 
             composableWithDeepLink(Settings.Home::class) { HomeScreen() }
 

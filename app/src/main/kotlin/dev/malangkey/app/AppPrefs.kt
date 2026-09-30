@@ -839,6 +839,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__sound_enabled",
             default = false,
         )
+        /** 애국가 빨리치기 최고 점수. */
+        val anthemBestScore = int(
+            key = "malang__anthem_best_score",
+            default = 0,
+        )
     }
 
     val spelling = Spelling()

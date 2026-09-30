@@ -102,12 +102,15 @@ fun HomeScreen() = FlorisScreen {
             .fillMaxSize()
             .background(MalangButter)
         ) {
-            Image(
-                painter = painterResource(R.drawable.mk_main_bg_pattern),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize().alpha(0.5f),
-                contentScale = ContentScale.Crop,
-            )
+            // 무늬 배경은 메인 탭에만 둔다. 다른 탭은 글자가 무늬에 묻히지 않게 단색으로 둔다.
+            if (selectedTab == HomeTab.MAIN) {
+                Image(
+                    painter = painterResource(R.drawable.mk_main_bg_pattern),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().alpha(0.5f),
+                    contentScale = ContentScale.Crop,
+                )
+            }
 
             if (selectedTab == HomeTab.MAIN) {
                 // 메인 탭은 스크롤 없이 한 화면에 맞춘다 (하단 탭바 높이 72 + 여백 28 + 간격 12)

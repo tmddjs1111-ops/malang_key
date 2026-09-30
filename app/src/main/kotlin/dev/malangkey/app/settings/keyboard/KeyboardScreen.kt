@@ -193,6 +193,19 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             },
         ),
     )
+
+    MalangSettingsSection(
+        title = "앱 정보",
+        items = listOf(
+            {
+                MalangNavRow(
+                    title = "앱 정보 · 라이선스",
+                    summary = "버전, 개인정보처리방침, 오픈소스 라이선스",
+                    onClick = { navController.navigate(Routes.Settings.About) },
+                )
+            },
+        ),
+    )
 }
 
 /**

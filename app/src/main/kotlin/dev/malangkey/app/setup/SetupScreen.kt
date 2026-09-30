@@ -16,130 +16,92 @@
 
 package dev.malangkey.app.setup
 
-import android.content.Context
 import android.content.Intent
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.compose.ui.unit.sp
 import dev.malangkey.R
 import dev.malangkey.app.FlorisAppActivity
-import dev.malangkey.app.FlorisPreferenceModel
-import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
+import dev.malangkey.app.apptheme.JuaFontFamily
+import dev.malangkey.app.apptheme.MalangButton
+import dev.malangkey.app.apptheme.MalangDarkCard
+import dev.malangkey.app.apptheme.MalangSettingsBg
+import dev.malangkey.app.apptheme.MalangSettingsBorder
+import dev.malangkey.app.apptheme.MalangSettingsCard
+import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSettingsSummary
+import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.lib.compose.FlorisScreen
-import dev.malangkey.lib.compose.FlorisScreenScope
 import dev.malangkey.lib.util.InputMethodUtils
 import dev.malangkey.lib.util.launchActivity
 import dev.malangkey.lib.util.launchUrl
-import dev.patrickgold.jetpref.datastore.model.collectAsState
-import dev.patrickgold.jetpref.datastore.ui.PreferenceUiScope
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.florisboard.lib.android.AndroidVersion
-import org.florisboard.lib.compose.FlorisBulletSpacer
-import org.florisboard.lib.compose.FlorisStep
-import org.florisboard.lib.compose.FlorisStepLayout
-import org.florisboard.lib.compose.FlorisStepState
-import org.florisboard.lib.compose.stringRes
-import dev.malangkey.keyboardManager
-import dev.malangkey.subtypeManager
 
+private enum class StepState { DONE, CURRENT, WAITING }
+
+/**
+ * 처음 실행 화면: 말랑키를 켜고 고르는 두 단계를 보여주고, 끝나면 간단 설정으로 이어진다.
+ */
 @Composable
 fun SetupScreen() = FlorisScreen {
-    title = stringRes(R.string.setup__title)
+    title = ""
+    topBarVisible = false
     navigationIconVisible = false
+    previewFieldVisible = false
     scrollable = false
 
-    val navController = LocalNavController.current
-    val context = LocalContext.current
-
-    val prefs by FlorisPreferenceStore
-    val scope = rememberCoroutineScope()
-
-    val isFlorisBoardEnabled by InputMethodUtils.observeIsFlorisboardEnabled(foregroundOnly = true)
-    val isFlorisBoardSelected by InputMethodUtils.observeIsFlorisboardSelected(foregroundOnly = true)
-    val requestNotification =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            scope.launch {
-                if (isGranted) {
-                    prefs.internal.notificationPermissionState.set(NotificationPermissionState.GRANTED)
-                } else {
-                    prefs.internal.notificationPermissionState.set(NotificationPermissionState.DENIED)
-                }
-            }
-        }
-
-    content(
-        isFlorisBoardEnabled,
-        isFlorisBoardSelected,
-        context,
-        navController,
-        scope,
-    )
-}
-
-@Composable
-private fun FlorisScreenScope.content(
-    isFlorisBoardEnabled: Boolean,
-    isFlorisBoardSelected: Boolean,
-    context: Context,
-    navController: NavController,
-    scope: CoroutineScope,
-) {
-
-    val stepState = rememberSaveable(saver = FlorisStepState.Saver) {
-        val initStep = when {
-            !isFlorisBoardEnabled -> Steps.EnableIme.id
-            !isFlorisBoardSelected -> Steps.SelectIme.id
-            else -> Steps.FinishUp.id
-        }
-        FlorisStepState.new(init = initStep)
-    }
-
     content {
-        LaunchedEffect(isFlorisBoardEnabled, isFlorisBoardSelected) {
-            stepState.setCurrentAuto(
-                when {
-                    !isFlorisBoardEnabled -> Steps.EnableIme.id
-                    !isFlorisBoardSelected -> Steps.SelectIme.id
-                    else -> Steps.FinishUp.id
-                }
-            )
-        }
+        val navController = LocalNavController.current
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
 
-        // Below block allows to return from the system IME enabler activity
-        // as soon as it gets selected.
+        val isEnabled by InputMethodUtils.observeIsFlorisboardEnabled(foregroundOnly = true)
+        val isSelected by InputMethodUtils.observeIsFlorisboardSelected(foregroundOnly = true)
+        val isReady = isEnabled && isSelected
+
+        // 시스템 설정에서 말랑키를 켜는 순간 이 화면으로 돌아오게 한다.
         LaunchedEffect(Unit) {
             while (true) {
                 delay(200L)
-                val isEnabled = InputMethodUtils.isFlorisboardEnabled(context)
-                if (stepState.getCurrentAuto().value == Steps.EnableIme.id &&
-                    stepState.getCurrentManual().value == -1 &&
-                    !isFlorisBoardEnabled &&
-                    !isFlorisBoardSelected &&
-                    isEnabled
-                ) {
+                if (!isEnabled && InputMethodUtils.isFlorisboardEnabled(context)) {
                     context.launchActivity(FlorisAppActivity::class) {
                         it.flags = (Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
                             or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -148,98 +110,184 @@ private fun FlorisScreenScope.content(
                 }
             }
         }
-        FlorisStepLayout(
+
+        val finish: () -> Unit = {
+            scope.launch { prefs.internal.isImeSetUp.set(true) }
+            navController.navigate(Routes.Settings.Home) {
+                popUpTo(navController.graph.id) { inclusive = true }
+            }
+        }
+
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            stepState = stepState,
-            header = {
-                StepText(stringRes(R.string.setup__intro_message))
-                Spacer(modifier = Modifier.height(16.dp))
-            },
-            steps = steps(
-                context, navController, scope
-            ),
-            footer = {
-                footer(context, navController)
-            },
-        )
-    }
-}
-
-@Composable
-private fun footer(context: Context, navController: NavController) {
-    Spacer(modifier = Modifier.height(16.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        val privacyPolicyUrl = stringRes(R.string.florisboard__privacy_policy_url)
-        TextButton(onClick = { context.launchUrl(privacyPolicyUrl) }) {
-            Text(text = stringRes(R.string.setup__footer__privacy_policy))
-        }
-        FlorisBulletSpacer()
-        // App info holds the version, repository and open-source licenses.
-        TextButton(onClick = { navController.navigate(Routes.Settings.About) }) {
-            Text(text = "앱 정보 · 라이선스")
-        }
-    }
-}
-
-@Composable
-private fun PreferenceUiScope<FlorisPreferenceModel>.steps(
-    context: Context,
-    navController: NavController,
-    scope: CoroutineScope,
-): List<FlorisStep> {
-
-    return listOfNotNull(
-        FlorisStep(
-            id = Steps.EnableIme.id,
-            title = stringRes(R.string.setup__enable_ime__title),
+                .background(MalangSettingsBg)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            StepText(stringRes(R.string.setup__enable_ime__description))
-            StepButton(label = stringRes(R.string.setup__enable_ime__open_settings_btn)) {
-                InputMethodUtils.showImeEnablerActivity(context)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Image(
+                    painter = painterResource(R.drawable.ic_malang_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(96.dp),
+                )
+                Text(
+                    "말랑키에 오신 걸 환영해요",
+                    color = MalangDarkCard,
+                    fontSize = 28.sp,
+                    lineHeight = 34.sp,
+                    fontFamily = JuaFontFamily,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    if (isReady) "준비가 끝났어요!" else "두 단계만 거치면 바로 쓸 수 있어요.",
+                    color = MalangSettingsSummary,
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                SetupStepCard(
+                    number = 1,
+                    title = "말랑키 켜기",
+                    description = "휴대폰 설정의 키보드 목록에서 '말랑키'를 켜 주세요. 켜면 자동으로 이 화면으로 돌아와요.",
+                    state = if (isEnabled) StepState.DONE else StepState.CURRENT,
+                    buttonLabel = "설정 열기",
+                    onClick = { InputMethodUtils.showImeEnablerActivity(context) },
+                )
+                SetupStepCard(
+                    number = 2,
+                    title = "말랑키 고르기",
+                    description = "키보드 선택 창에서 '말랑키'를 골라 주세요.",
+                    state = when {
+                        isSelected -> StepState.DONE
+                        isEnabled -> StepState.CURRENT
+                        else -> StepState.WAITING
+                    },
+                    buttonLabel = "키보드 고르기",
+                    onClick = { InputMethodUtils.showImePicker(context) },
+                )
+
+                if (isReady) {
+                    Text(
+                        "자판, 소리, 스마트 바, 테마를 1분 안에 골라볼까요?\n귀찮으면 건너뛰고 기본값으로 바로 써도 괜찮아요.",
+                        modifier = Modifier.padding(top = 8.dp),
+                        color = MalangSettingsSummary,
+                        fontSize = 14.sp,
+                        lineHeight = 21.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        },
-        FlorisStep(
-            id = Steps.SelectIme.id,
-            title = stringRes(R.string.setup__select_ime__title),
-        ) {
-            StepText(stringRes(R.string.setup__select_ime__description))
-            StepButton(label = stringRes(R.string.setup__select_ime__switch_keyboard_btn)) {
-                InputMethodUtils.showImePicker(context)
-            }
-        },
-        FlorisStep(
-            id = Steps.FinishUp.id,
-            title = stringRes(R.string.setup__finish_up__title),
-        ) {
-            StepText("말랑키가 준비됐어요! 자판, 소리, 스마트 바, 테마를 1분 안에 골라볼까요? 귀찮으면 건너뛰고 기본값으로 바로 써도 괜찮아요.")
-            StepButton(label = "간단 설정 시작") {
-                navController.navigate(Routes.Setup.Quick)
-            }
-            TextButton(onClick = {
-                scope.launch { this@steps.prefs.internal.isImeSetUp.set(true) }
-                // 첫 실행이든 메인의 "빠른 설정"에서 들어왔든, 메인 화면 하나만 남긴다.
-                navController.navigate(Routes.Settings.Home) {
-                    popUpTo(navController.graph.id) {
-                        inclusive = true
+
+            if (isReady) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    MalangButton("건너뛰기", modifier = Modifier.weight(1f), primary = false, onClick = finish)
+                    MalangButton("간단 설정 시작", modifier = Modifier.weight(2f)) {
+                        navController.navigate(Routes.Setup.Quick)
                     }
                 }
-            }) {
-                Text("건너뛰기")
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FooterLink("개인정보처리방침") { context.launchUrl(R.string.florisboard__privacy_policy_url) }
+                Text("·", color = MalangSettingsSummary, fontSize = 13.sp)
+                FooterLink("앱 정보") { navController.navigate(Routes.Settings.About) }
             }
         }
-    )
+    }
 }
 
-private sealed class Steps(val id: Int) {
-    data object EnableIme : Steps(id = 1)
-    data object SelectIme : Steps(id = 2)
-    data object SelectNotification : Steps(id = 3)
-    data object FinishUp : Steps(id = 4)
+@Composable
+private fun SetupStepCard(
+    number: Int,
+    title: String,
+    description: String,
+    state: StepState,
+    buttonLabel: String,
+    onClick: () -> Unit,
+) {
+    val current = state == StepState.CURRENT
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (state == StepState.WAITING) 0.5f else 1f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MalangSettingsCard)
+            .border(
+                width = if (current) 2.dp else 1.dp,
+                color = if (current) MalangSettingsSection else MalangSettingsBorder,
+                shape = RoundedCornerShape(24.dp),
+            )
+            .padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(if (state == StepState.WAITING) MalangSettingsBorder else MalangSettingsSection),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (state == StepState.DONE) {
+                    Icon(Icons.Default.Check, contentDescription = "완료", tint = MalangSettingsCard, modifier = Modifier.size(20.dp))
+                } else {
+                    Text("$number", color = MalangSettingsCard, fontSize = 17.sp, fontFamily = JuaFontFamily)
+                }
+            }
+            Text(
+                title,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp),
+                color = MalangSettingsTitle,
+                fontSize = 20.sp,
+                fontFamily = JuaFontFamily,
+            )
+            if (state == StepState.DONE) {
+                Text("완료", color = MalangSettingsSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        if (state != StepState.DONE) {
+            Text(description, color = MalangSettingsSummary, fontSize = 14.sp, lineHeight = 21.sp)
+        }
+        if (current) {
+            MalangButton(buttonLabel, modifier = Modifier.fillMaxWidth(), onClick = onClick)
+        }
+    }
+}
+
+@Composable
+private fun FooterLink(label: String, onClick: () -> Unit) {
+    Text(
+        label,
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        color = MalangSettingsSummary,
+        fontSize = 13.sp,
+    )
 }

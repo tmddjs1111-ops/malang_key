@@ -232,18 +232,6 @@ private fun ColumnScope.MainTabContent(
                 }
             }
         }
-
-        Text(
-            text = "앱 정보 · 오픈소스 라이선스",
-            color = MalangMushroom,
-            fontFamily = MalangGowunFont,
-            fontSize = 14.sp,
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { navController.navigate(Routes.Settings.About) }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-        )
     }
 }
 

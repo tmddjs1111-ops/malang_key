@@ -174,6 +174,9 @@ private fun WithFontScale(scale: Float, content: @Composable () -> Unit) {
     }
 }
 
+/** 스페이스바 표시 설정(언어 이름·␣·없음)을 따르는 키. */
+private val SpaceKeyCodes = setOf(KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE)
+
 /** 테마가 천지인 모음키(ㅣ·ㆍ·ㅡ)를 강조할 때 쓰는 키 코드. */
 private val CheonjiinVowelStyleCodes = setOf(12643, 183, 12641)
 
@@ -545,7 +548,7 @@ private fun TextKeyButton(
         }
         (japaneseEnterLabel ?: key.label)?.let { label ->
             var customLabel = label
-            if (key.computedData.code == KeyCode.SPACE) {
+            if (key.computedData.code in SpaceKeyCodes) {
                 val prefs by FlorisPreferenceStore
                 val spaceBarMode by prefs.keyboard.spaceBarMode.collectAsState()
                 when (spaceBarMode) {

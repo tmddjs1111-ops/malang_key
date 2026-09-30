@@ -489,7 +489,7 @@ private val PopupBubbleVars = listOf("--bg", "--key-fg", "--action-bg", "--actio
 
 /** 기본 스타일(FlorisImeThemeBaseStyle)의 기능키 글자 크기. (키 코드, sp, 최대 줄 수) */
 private val FunctionKeyTextSizes = listOf(
-    Triple(listOf(KeyCode.SPACE, KeyCode.CJK_SPACE), 14, 1),
+    Triple(listOf(KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE), 14, 1),
     Triple(listOf(
         KeyCode.VIEW_CHARACTERS,
         KeyCode.VIEW_SYMBOLS,

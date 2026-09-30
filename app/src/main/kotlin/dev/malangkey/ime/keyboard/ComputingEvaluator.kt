@@ -142,7 +142,8 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
         when (data.code) {
             KeyCode.PHONE_PAUSE -> evaluator.context()?.getString(R.string.key__phone_pause)
             KeyCode.PHONE_WAIT -> evaluator.context()?.getString(R.string.key__phone_wait)
-            KeyCode.SPACE, KeyCode.CJK_SPACE -> {
+            // 일본어 스페이스도 다른 자판처럼 언어 이름을 보여준다.
+            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE -> {
                 when (evaluator.keyboard.mode) {
                     KeyboardMode.CHARACTERS,
                     KeyboardMode.GRID_16KEY -> evaluator.subtype.primaryLocale.let { locale ->
@@ -183,7 +184,6 @@ fun ComputingEvaluator.computeLabel(data: KeyData): String? {
             }
             KeyCode.JAPANESE_VIEW_NUMERIC,
             KeyCode.JAPANESE_VIEW_SYMBOLS,
-            KeyCode.JAPANESE_SPACE,
             KeyCode.JAPANESE_ENTER,
             KeyCode.JAPANESE_CONVERT,
             KeyCode.KANA_SMALL,

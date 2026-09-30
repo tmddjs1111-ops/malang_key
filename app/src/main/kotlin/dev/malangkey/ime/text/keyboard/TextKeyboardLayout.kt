@@ -174,6 +174,9 @@ private fun WithFontScale(scale: Float, content: @Composable () -> Unit) {
     }
 }
 
+/** 테마가 천지인 모음키(ㅣ·ㆍ·ㅡ)를 강조할 때 쓰는 키 코드. */
+private val CheonjiinVowelStyleCodes = setOf(12643, 183, 12641)
+
 /** 자판을 나눌 수 있는 모드. 천지인 같은 격자 자판과 숫자 패드는 나누지 않는다. */
 private val SplittableModes = setOf(
     KeyboardMode.CHARACTERS,
@@ -414,11 +417,16 @@ fun TextKeyboardLayout(
         popupUiController.keyHintConfiguration = prefs.keyboard.keyHintConfiguration()
         controller.popupUiController = popupUiController
         val debugShowTouchBoundaries by prefs.devtools.showKeyTouchBoundaries.collectAsState()
+        // 테마의 모음키 강조 규칙(key[code=ㅣ/·/ㅡ])은 천지인 전용이다. 연타형의 'ㅣㅡ' 키도
+        // 같은 ㅣ 코드를 쓰므로 천지인이 아닐 때는 그 규칙을 받지 않게 한다.
+        val activeSubtype by context.subtypeManager().value.activeSubtypeFlow.collectAsState()
+        val isCheonjiin = activeSubtype.layoutMap.characters.componentId.contains("cheonjiin")
         for (textKey in keyboard.keys()) {
             TextKeyButton(
                 textKey, evaluator, desiredKey,
                 debugShowTouchBoundaries,
                 keyTextScale,
+                useCheonjiinVowelStyle = isCheonjiin,
             )
         }
 
@@ -449,9 +457,13 @@ private fun TextKeyButton(
     desiredKey: TextKey,
     debugShowTouchBoundaries: Boolean,
     textScale: KeyTextScale,
+    useCheonjiinVowelStyle: Boolean,
 ) = with(LocalDensity.current) {
+    val styleCode = key.computedData.code.let { code ->
+        if (!useCheonjiinVowelStyle && code in CheonjiinVowelStyleCodes) KeyCode.UNSPECIFIED else code
+    }
     val attributes = mapOf(
-        FlorisImeUi.Attr.Code to key.computedData.code,
+        FlorisImeUi.Attr.Code to styleCode,
         FlorisImeUi.Attr.Mode to evaluator.keyboard.mode.toString(),
         FlorisImeUi.Attr.ShiftState to evaluator.state.inputShiftState.toString(),
     )

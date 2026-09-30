@@ -54,8 +54,20 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
     private val contentResolver = ims.contentResolver
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
+    private val keySoundPlayer = KeySoundPlayer(ims)
+
     private var systemAudioEnabled: Boolean = false
     private var systemHapticEnabled: Boolean = false
+
+    init {
+        scope.launch(Dispatchers.IO) {
+            try {
+                keySoundPlayer.load()
+            } catch (e: Exception) {
+                flogDebug { "Key sound load failed: ${e.message}" }
+            }
+        }
+    }
 
     fun updateSystemPrefsState() {
         systemAudioEnabled = systemPref(Settings.System.SOUND_EFFECTS_ENABLED)
@@ -98,21 +110,31 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         if (!prefs.malang.malangSoundEnabled.get() && prefs.inputFeedback.audioActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemAudioEnabled) return
 
-        scope.launch {
-            val isMalang = prefs.malang.malangSoundEnabled.get()
-            val volume = if (isMalang) 0.5 else (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
-            val effect = when {
-                isMalang -> AudioManager.FX_FOCUS_NAVIGATION_UP // A softer, "pop" like system sound
-                data.code == KeyCode.DELETE -> AudioManager.FX_KEYPRESS_DELETE
-                data.code == KeyCode.ENTER -> AudioManager.FX_KEYPRESS_RETURN
-                data.code == KeyCode.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
-                else -> AudioManager.FX_KEYPRESS_STANDARD
-            }
-            if (volume in 0.01..1.00) {
-                flogDebug { "Perform audio with volume=$volume and effect=$effect" }
-                audioManager.playSoundEffect(effect, volume.toFloat())
-            }
+        // 무음·진동 모드에서는 키 소리를 내지 않는다.
+        if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
+
+        // 누르는 순간 바로 들리도록 코루틴으로 넘기지 않고 이 자리에서 재생한다.
+        val isMalang = prefs.malang.malangSoundEnabled.get()
+        val volume = if (isMalang) 0.6 * factor else (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
+        if (volume !in 0.01..1.00) return
+        val sound = when {
+            isMalang -> KeySoundPlayer.Sound.MALANG
+            data.code == KeyCode.DELETE -> KeySoundPlayer.Sound.DELETE
+            data.code == KeyCode.ENTER -> KeySoundPlayer.Sound.ENTER
+            data.code == KeyCode.SPACE || data.code == KeyCode.CJK_SPACE -> KeySoundPlayer.Sound.SPACE
+            else -> KeySoundPlayer.Sound.STANDARD
         }
+        if (keySoundPlayer.play(sound, volume.toFloat())) return
+
+        // 소리 파일을 올리는 중이면 시스템 효과음으로 대신한다.
+        val effect = when (sound) {
+            KeySoundPlayer.Sound.DELETE -> AudioManager.FX_KEYPRESS_DELETE
+            KeySoundPlayer.Sound.ENTER -> AudioManager.FX_KEYPRESS_RETURN
+            KeySoundPlayer.Sound.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+            else -> AudioManager.FX_KEYPRESS_STANDARD
+        }
+        flogDebug { "Perform system audio with volume=$volume and effect=$effect" }
+        audioManager.playSoundEffect(effect, volume.toFloat())
     }
 
     private fun performHapticFeedback(data: KeyData, factor: Double) {

@@ -236,8 +236,23 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     }
                 }
             }
-            
-            
+
+            // 파스텔 테마는 천지인 모음키(ㅣ·ㆍ·ㅡ)에 흰 배경과 포인트색 글자를 따로 준다.
+            // 사용자가 키 색을 바꿨으면 이 키들도 같은 색을 따라가야 한 키만 튀지 않는다.
+            if (isKeyBgCustom || isKeyTextCustom) {
+                for (code in listOf(12643, 183, 12641)) {
+                    val vowelRule = SnyggRule.fromOrNull("key[code=$code]") ?: continue
+                    val propEditor = editor.rules.getOrPut(vowelRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                    if (isKeyBgCustom) {
+                        val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
+                        propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                    }
+                    if (isKeyTextCustom) {
+                        propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
+                    }
+                }
+            }
+
             if (isKeyTextCustom) {
                 val smartbarElements = listOf(
                     "smartbar-action-key",

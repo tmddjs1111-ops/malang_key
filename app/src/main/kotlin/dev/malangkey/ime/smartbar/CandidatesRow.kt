@@ -19,6 +19,8 @@ package dev.malangkey.ime.smartbar
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -130,7 +132,8 @@ fun CandidatesRow(
                 ) {
                     val list = when (displayMode) {
                         CandidatesDisplayMode.CLASSIC -> candidates.take(3)
-                        else -> candidates
+                        // 일본어 변환은 후보가 100개까지 온다. 한 줄에는 앞쪽만 그리고 나머지는 펼친 창에서 본다.
+                        else -> candidates.take(CollapsedRowMaxCandidates)
                     }
                     for ((n, candidate) in list.withIndex()) {
                         if (n > 0) {
@@ -186,6 +189,9 @@ fun CandidatesRow(
     }
 }
 
+/** 접힌 후보 줄에 그리는 최대 개수. 더 많은 후보는 펼친 창에서 보여준다. */
+private const val CollapsedRowMaxCandidates = 12
+
 @Composable
 private fun ExpandedCandidates(
     candidates: List<SuggestionCandidate>,
@@ -194,12 +200,11 @@ private fun ExpandedCandidates(
     onCandidateLongPress: (SuggestionCandidate) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // Shows every candidate, 4 per row; scrolls vertically when there are more rows than fit.
-    SnyggColumn(
-        elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
-        modifier = modifier.verticalScroll(rememberScrollState()),
-    ) {
-        for (row in candidates.chunked(4)) {
+    // Shows every candidate, 4 per row. Only the rows on screen are built, since Japanese
+    // conversion can return up to 100 candidates.
+    val rows = remember(candidates) { candidates.chunked(4) }
+    LazyColumn(modifier = modifier) {
+        items(rows) { row ->
             SnyggRow(
                 elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
                 modifier = Modifier

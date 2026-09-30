@@ -34,6 +34,7 @@ import dev.malangkey.keyboardManager
 import dev.malangkey.lib.util.NetworkUtils
 import dev.malangkey.subtypeManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -197,9 +198,14 @@ class NlpManager(context: Context) {
             || prefs.emoji.suggestionEnabled.get()
             || providerForcesSuggestionOn(subtypeManager.activeSubtype)
 
+    /** 아직 끝나지 않은 이전 추천 요청. 새 글자가 들어오면 취소해서 최신 입력만 계산한다. */
+    private var suggestJob: Job? = null
+
     fun suggest(subtype: Subtype, content: EditorContent) {
         val reqTime = SystemClock.uptimeMillis()
-        scope.launch {
+        // 빠르게 칠 때 지난 입력의 변환(일본어 Mozc 등)이 줄줄이 쌓여 후보가 늦게 뜨지 않도록 한다.
+        suggestJob?.cancel()
+        suggestJob = scope.launch {
             val emojiSuggestions = when {
                 prefs.emoji.suggestionEnabled.get() -> {
                     emojiSuggestionProvider.suggest(

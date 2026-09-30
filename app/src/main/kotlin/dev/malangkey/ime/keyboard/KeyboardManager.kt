@@ -569,6 +569,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.ENTER] event.
      */
     private fun handleEnter() {
+        // 일본어 자판(JIS·로마자 등 일반 엔터를 쓰는 자판 포함)은 입력 중인 가나를 먼저 그대로 확정한다.
+        if (isJapaneseSubtype() && commitJapaneseComposing()) return
         val info = editorInstance.activeInfo
         val isShiftPressed = inputEventDispatcher.isPressed(KeyCode.SHIFT)
         if (editorInstance.tryPerformEnterCommitRaw()) {
@@ -653,6 +655,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * enabled by the user.
      */
     private fun handleSpace(data: KeyData) {
+        // 일본어는 띄어 쓰지 않으므로 일반 스페이스 키도 일본어 스페이스 규칙을 따른다.
+        if (isJapaneseSubtype()) {
+            handleJapaneseSpace()
+            return
+        }
         val candidate = nlpManager.getAutoCommitCandidate()
         candidate?.let { commitCandidate(it) }
 
@@ -749,6 +756,35 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleJapaneseSmallKana() = replaceLastKana(JapaneseSmallKanaMap)
 
     /** Commits the highest-ranked Japanese conversion candidate, if one is available. */
+    private fun isJapaneseSubtype(): Boolean =
+        subtypeManager.activeSubtype.primaryLocale.language == "ja"
+
+    /**
+     * 일본어 입력 중인 가나를 변환하지 않고 그대로 확정한다. 줄바꿈이나 띄어쓰기는 넣지 않는다.
+     *
+     * @return 확정할 글자가 있었으면 true.
+     */
+    private fun commitJapaneseComposing(): Boolean {
+        val content = editorInstance.activeContent
+        if (!content.composing.isValid || content.composing.length == 0) return false
+        val composingText = content.composingText
+        if (composingText.isEmpty()) return false
+        return editorInstance.finalizeComposingText(composingText)
+    }
+
+    /** 確定 키: 입력 중이면 가나 그대로 확정하고, 아니면 보통 엔터로 동작한다. */
+    private fun handleJapaneseEnter() {
+        if (!commitJapaneseComposing()) handleEnter()
+    }
+
+    /**
+     * 일본어 스페이스: 입력 중이면 가나 그대로 확정만 하고(일본어는 띄어 쓰지 않는다),
+     * 입력 중이 아닐 때만 일본어 입력기의 기본인 전각 공백을 넣는다.
+     */
+    private fun handleJapaneseSpace() {
+        if (!commitJapaneseComposing()) editorInstance.commitText("\u3000")
+    }
+
     private fun handleJapaneseConvert() {
         nlpManager.getPrimaryCandidate(dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId)
             ?.let { commitCandidate(it) }
@@ -881,8 +917,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.KANA_HALF_KATA -> handleKanaHalfKata()
             KeyCode.JAPANESE_VIEW_NUMERIC -> enterNumericKeyboardMode(KeyboardMode.NUMERIC)
             KeyCode.JAPANESE_VIEW_SYMBOLS -> activeState.keyboardMode = KeyboardMode.SYMBOLS
-            KeyCode.JAPANESE_SPACE -> handleSpace(data)
-            KeyCode.JAPANESE_ENTER -> handleEnter()
+            KeyCode.JAPANESE_SPACE -> handleJapaneseSpace()
+            KeyCode.JAPANESE_ENTER -> handleJapaneseEnter()
             KeyCode.JAPANESE_CONVERT -> handleJapaneseConvert()
             KeyCode.JAPANESE_DAKUTEN -> handleJapaneseDakuten()
             KeyCode.JAPANESE_HANDAKUTEN -> handleJapaneseHandakuten()
@@ -919,6 +955,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.VIEW_SYMBOLS -> activeState.keyboardMode = KeyboardMode.SYMBOLS
             KeyCode.VIEW_SYMBOLS2 -> activeState.keyboardMode = KeyboardMode.SYMBOLS2
             else -> {
+                // JIS 등 일본어 자판의 스페이스는 전각 공백(U+3000) 글자 키다. 입력 중이면 가나만 확정하고
+                // 공백은 넣지 않는다 (다른 언어의 전각 공백은 원래대로 둔다).
+                if (data.code == KeyCode.CJK_SPACE && isJapaneseSubtype() && commitJapaneseComposing()) {
+                    return@batchEdit
+                }
                 if (activeState.imeUiMode == ImeUiMode.MEDIA) {
                     nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
                     editorInstance.commitText(data.asString(isForDisplay = false))

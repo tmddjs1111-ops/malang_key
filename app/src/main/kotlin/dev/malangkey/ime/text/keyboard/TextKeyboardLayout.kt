@@ -91,6 +91,8 @@ import dev.malangkey.lib.PointerMap
 import dev.malangkey.lib.devtools.LogTopic
 import dev.malangkey.lib.devtools.flogDebug
 import dev.malangkey.lib.toIntOffset
+import dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider
+import dev.malangkey.nlpManager
 import dev.malangkey.ime.window.ImeFormFactor
 import dev.malangkey.ime.window.FoldState
 import androidx.compose.ui.geometry.Rect
@@ -520,7 +522,16 @@ private fun TextKeyButton(
         modifier = keyModifier,
     ) {
         val isTelPadKey = key.computedData.type == KeyType.NUMERIC && evaluator.keyboard.mode == KeyboardMode.PHONE
-        key.label?.let { label ->
+        // 일본어 확정 키는 변환할 글자가 있을 때 '確定', 없을 때 '改行'으로 보여준다.
+        val japaneseEnterLabel = if (key.computedData.code == KeyCode.JAPANESE_ENTER) {
+            val context = LocalContext.current
+            val nlpManager by context.nlpManager()
+            val candidates by nlpManager.activeCandidatesFlow.collectAsState()
+            if (candidates.any { it.sourceProvider?.providerId == JapaneseLanguageProvider.ProviderId }) "確定" else "改行"
+        } else {
+            null
+        }
+        (japaneseEnterLabel ?: key.label)?.let { label ->
             var customLabel = label
             if (key.computedData.code == KeyCode.SPACE) {
                 val prefs by FlorisPreferenceStore

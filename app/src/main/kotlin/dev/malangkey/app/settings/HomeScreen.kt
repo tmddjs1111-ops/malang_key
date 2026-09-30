@@ -124,9 +124,10 @@ fun HomeScreen() = FlorisScreen {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
+                        // 스크롤 영역을 상태바 아래에서 시작해 글자가 시계 위로 올라가지 않게 한다.
                         .statusBarsPadding()
-                        .padding(top = 36.dp, bottom = 120.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 24.dp, bottom = 120.dp)
                 ) {
                     when (selectedTab) {
                         HomeTab.MAIN -> Unit
@@ -385,215 +386,124 @@ private fun ComingSoonTab(title: String, subtitle: String) {
     }
 }
 
-@OptIn(ExperimentalJetPrefDatastoreUi::class)
 @Composable
 private fun ThemeTabContent(
     navController: androidx.navigation.NavController
 ) {
     val prefs by FlorisPreferenceStore
-    val scope = rememberCoroutineScope()
-    
-    // 1. Featured Hero Card
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .shadow(elevation = 6.dp, shape = RoundedCornerShape(32.dp))
-            .clip(RoundedCornerShape(32.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(MalangSecondary, MalangPrimary)
-                )
-            )
-            .clickable { navController.navigate(Routes.Settings.Theme) }
-            .padding(24.dp)
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "🎨 테마 라이브러리",
-                    fontFamily = MalangJuaFont,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
-                Text(
-                    text = "바로가기 ➔",
-                    fontFamily = MalangJuaFont,
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "키보드 기본 테마를 선택하고 스타일을 조절해보세요.",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f),
-                lineHeight = 20.sp
-            )
-        }
-    }
+    val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
+    var confirmReset by remember { mutableStateOf(false) }
 
-    Spacer(modifier = Modifier.height(16.dp))
-
-
-
-    // Section 3: Sliders & Reset (in one beautiful card)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(32.dp))
-            .clip(RoundedCornerShape(32.dp))
-            .background(Color.White)
-            .padding(20.dp)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
-        val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
-        val glassmorphismTransparency by prefs.malang.glassmorphismTransparency.collectAsState()
-        val keyFontSizeMultiplier by prefs.malang.keyFontSizeMultiplier.collectAsState()
-        val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
-        val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
-        val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
+        ThemeHeroCard(onClick = { navController.navigate(Routes.Settings.Theme) })
 
-        // Key Corner Radius Slider
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("키 모서리 둥글기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-            Text("${keyCornerRadius}dp", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-        }
-        Slider(
-            value = keyCornerRadius.toFloat(),
-            onValueChange = { scope.launch { prefs.malang.keyCornerRadius.set(it.toInt()) } },
-            valueRange = 0f..32f,
-            colors = SliderDefaults.colors(
-                thumbColor = MalangPrimary,
-                activeTrackColor = MalangSecondary,
-                inactiveTrackColor = MalangTertiary
-            )
+        MalangSettingsSection(
+            title = "키 모양",
+            items = listOf<@Composable () -> Unit>(
+                { MalangSliderRow(prefs.malang.keyCornerRadius, "모서리 둥글기", min = 0, max = 32, unit = "dp") },
+                {
+                    MalangSwitchRow(
+                        prefs.malang.squircleShapeEnabled,
+                        title = "말랑한 모서리 (스쿼클)",
+                        summary = "키 모서리를 부드러운 곡선으로 만듭니다.",
+                    )
+                },
+                {
+                    MalangSwitchRow(
+                        prefs.malang.isNeumorphismEnabled,
+                        title = "입체 효과",
+                        summary = "키에 그림자를 넣어 볼록하게 보이게 합니다.",
+                    )
+                },
+                {
+                    MalangSwitchRow(
+                        prefs.malang.isGlassmorphismEnabled,
+                        title = "유리 효과",
+                        summary = "키보드를 반투명하게 만들어 뒤 화면이 비치게 합니다.",
+                    )
+                },
+            ) + if (isGlassmorphismEnabled) {
+                listOf<@Composable () -> Unit>({ FloatPercentSliderRow(prefs.malang.glassmorphismTransparency, "유리 투명도") })
+            } else {
+                emptyList()
+            },
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("쿼티 글자 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-            Text("${keyFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-        }
-        Slider(
-            value = keyFontSizeMultiplier.toFloat(),
-            onValueChange = { scope.launch { prefs.malang.keyFontSizeMultiplier.set(it.toInt()) } },
-            valueRange = 50f..150f,
-            colors = SliderDefaults.colors(
-                thumbColor = MalangPrimary,
-                activeTrackColor = MalangSecondary,
-                inactiveTrackColor = MalangTertiary
-            )
+        MalangSettingsSection(
+            title = "외곽선",
+            items = listOf(
+                { MalangSliderRow(prefs.malang.keyBorderThickness, "두께", min = 0, max = 5, unit = "dp") },
+                { MalangSliderRow(prefs.malang.keyBorderOpacity, "불투명도", min = 0, max = 100) },
+            ),
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("쿼티 힌트 크기", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-            Text("${keyHintFontSizeMultiplier}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-        }
-        Slider(
-            value = keyHintFontSizeMultiplier.toFloat(),
-            onValueChange = { scope.launch { prefs.malang.keyHintFontSizeMultiplier.set(it.toInt()) } },
-            valueRange = 50f..150f,
-            colors = SliderDefaults.colors(
-                thumbColor = MalangPrimary,
-                activeTrackColor = MalangSecondary,
-                inactiveTrackColor = MalangTertiary
-            )
+        MalangSettingsSection(
+            title = "글꼴",
+            items = listOf(
+                {
+                    MalangChoiceRow(
+                        prefs.malang.keyboardFontFamily,
+                        title = "키보드 글꼴",
+                        entries = listOf(
+                            "jua" to "주아체",
+                            "pretendard" to "프리텐다드",
+                            "noto_sans" to "노토 산스 KR",
+                            "nanum_gothic" to "나눔고딕",
+                            "nanum_myeongjo" to "나눔명조",
+                            "gmarket_sans" to "고운돋움",
+                            "handwriting" to "나눔손글씨 펜",
+                            "tuntun" to "감자꽃",
+                            "tmon" to "검은고딕",
+                            "system" to "시스템 기본",
+                        ),
+                    )
+                },
+                {
+                    MalangNavRow(
+                        title = "글자 크기·키 간격",
+                        summary = "쿼티와 격자 자판(천지인·20키)을 따로 조절해요.",
+                        onClick = { navController.navigate(Routes.Settings.Keyboard) },
+                    )
+                },
+            ),
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("외곽선 두께", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-            Text("${keyBorderThickness}dp", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-        }
-        Slider(
-            value = keyBorderThickness.toFloat(),
-            onValueChange = { scope.launch { prefs.malang.keyBorderThickness.set(it.toInt()) } },
-            valueRange = 0f..5f,
-            steps = 4,
-            colors = SliderDefaults.colors(
-                thumbColor = MalangPrimary,
-                activeTrackColor = MalangSecondary,
-                inactiveTrackColor = MalangTertiary
-            )
+        MalangSettingsSection(
+            title = "더 보기",
+            items = listOf(
+                {
+                    MalangNavRow(
+                        title = "공유된 테마 가져오기",
+                        summary = "다른 사람이 만든 테마 파일을 불러옵니다.",
+                        onClick = { navController.navigate(Routes.Ext.Import(ExtensionImportScreenType.EXT_THEME)) },
+                    )
+                },
+                {
+                    MalangNavRow(
+                        title = "처음 모양으로 되돌리기",
+                        summary = "커스텀 색, 키 모양, 글꼴, 글자 크기를 기본값으로 돌립니다.",
+                        onClick = { confirmReset = true },
+                    )
+                },
+            ),
         )
+    }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("외곽선 불투명도", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-            Text("${keyBorderOpacity}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-        }
-        Slider(
-            value = keyBorderOpacity.toFloat(),
-            onValueChange = { scope.launch { prefs.malang.keyBorderOpacity.set(it.toInt()) } },
-            valueRange = 0f..100f,
-            colors = SliderDefaults.colors(
-                thumbColor = MalangPrimary,
-                activeTrackColor = MalangSecondary,
-                inactiveTrackColor = MalangTertiary
-            )
-        )
-
-        // Glassmorphism Transparency Slider (Visible if Glassmorphism is enabled)
-        if (isGlassmorphismEnabled) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("유리 투명도 설정", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangText)
-                Text("${(glassmorphismTransparency * 100).toInt()}%", fontFamily = MalangJuaFont, fontSize = 16.sp, color = MalangSecondary)
-            }
-            Slider(
-                value = glassmorphismTransparency,
-                onValueChange = { scope.launch { prefs.malang.glassmorphismTransparency.set(it) } },
-                valueRange = 0.1f..0.9f,
-                colors = SliderDefaults.colors(
-                    thumbColor = MalangPrimary,
-                    activeTrackColor = MalangSecondary,
-                    inactiveTrackColor = MalangTertiary
-                )
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().background(Color(0xFFF0EBE1)))
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Reset Button
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            OutlinedButton(
-                onClick = {
+    if (confirmReset) {
+        val scope = rememberCoroutineScope()
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            containerColor = MalangSettingsCard,
+            title = { Text("처음 모양으로 되돌릴까요?", color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
+            text = { Text("커스텀 색과 키 모양, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmReset = false
                     scope.launch {
                         prefs.malang.customKeyboardBgColor.set(Color.Unspecified)
                         prefs.malang.customKeyBgColor.set(Color.Unspecified)
@@ -603,6 +513,9 @@ private fun ThemeTabContent(
                         prefs.malang.customRealEnterKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customRealEnterKeyTextColor.set(Color.Unspecified)
                         prefs.malang.keyCornerRadius.set(6)
+                        prefs.malang.squircleShapeEnabled.set(false)
+                        prefs.malang.isNeumorphismEnabled.set(false)
+                        prefs.malang.isGlassmorphismEnabled.set(false)
                         prefs.malang.keyboardFontFamily.set("jua")
                         prefs.malang.keyFontSizeMultiplier.set(100)
                         prefs.malang.keyHintFontSizeMultiplier.set(80)
@@ -611,69 +524,67 @@ private fun ThemeTabContent(
                         prefs.malang.keyBorderThickness.set(0)
                         prefs.malang.keyBorderOpacity.set(20)
                     }
-                },
-                border = BorderStroke(1.dp, MalangPrimary),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MalangPrimary)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🔄 커스텀 테마 초기화", fontFamily = MalangJuaFont, fontSize = 14.sp)
-                }
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    // Section 5: Typography & Advanced Features
-    Text(
-        "📝 키보드 폰트 설정",
-        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
-        color = MalangText.copy(alpha = 0.8f),
-        fontFamily = MalangJuaFont,
-        fontSize = 18.sp
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(32.dp))
-            .clip(RoundedCornerShape(32.dp))
-            .background(Color.White)
-    ) {
-
-        Box(modifier = Modifier.padding(vertical = 4.dp)) {
-            ListPreference(
-                listPref = prefs.malang.keyboardFontFamily,
-                title = "키보드 글꼴 설정",
-                modifier = Modifier.padding(horizontal = 8.dp),
-                entries = listPrefEntries {
-                    entry("system", "시스템 기본")
-                    entry("pretendard", "프리텐다드 (추천)")
-                    entry("noto_sans", "노토 산스 KR")
-                    entry("nanum_gothic", "나눔고딕")
-                    entry("nanum_myeongjo", "나눔명조")
-                    entry("jua", "주아체")
-                    entry("gmarket_sans", "고운돋움")
-                    entry("handwriting", "나눔손글씨 펜")
-                    entry("tuntun", "감자꽃")
-                    entry("tmon", "검은고딕")
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().padding(horizontal = 24.dp).background(Color(0xFFF0EBE1)))
-
-        MalangMenuItem(
-            emoji = "📥",
-            title = "공유된 테마 가져오기",
-            onClick = { navController.navigate(Routes.Ext.Import(ExtensionImportScreenType.EXT_THEME)) },
-            showDivider = false
+                }) { Text("되돌리기", color = MalangSettingsSection) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmReset = false }) { Text("취소", color = MalangSettingsSummary) }
+            },
         )
     }
 }
 
+/** 테마 탭 맨 위 카드: 테마 고르기 화면으로 간다. 메인 탭의 큰 카드와 같은 모양. */
+@Composable
+private fun ThemeHeroCard(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(132.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(MalangCocoa)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("테마 고르기", color = MalangCardText, fontSize = 30.sp, lineHeight = 34.sp, fontFamily = MalangJuaFont)
+            Text("키보드 색과 배경을 바꿔요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
+            Text("Keyboard Theme", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
+        }
+        Icon(
+            painter = painterResource(R.drawable.mk_tab_theme),
+            contentDescription = null,
+            tint = MalangCardText,
+            modifier = Modifier.size(64.dp),
+        )
+    }
+}
+
+/** 0~1 값을 %로 보여주는 슬라이더 행. 손을 뗄 때 저장한다. */
+@Composable
+private fun FloatPercentSliderRow(pref: PreferenceData<Float>, title: String) {
+    val stored by pref.collectAsState()
+    val scope = rememberCoroutineScope()
+    var dragging by remember { mutableStateOf(false) }
+    var local by remember { mutableStateOf(0f) }
+    val shown = if (dragging) local else stored
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("${(shown * 100).toInt()}%", color = MalangSettingsSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
+        MalangSlider(
+            value = shown,
+            onValueChange = { dragging = true; local = it },
+            onValueChangeFinished = {
+                val v = local
+                scope.launch { pref.set(v) }
+                dragging = false
+            },
+            range = 0.1f..0.9f,
+        )
+    }
+}
 
 @Composable
 fun ToggleCard(

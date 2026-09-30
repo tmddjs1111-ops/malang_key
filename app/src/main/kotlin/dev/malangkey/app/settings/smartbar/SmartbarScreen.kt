@@ -328,6 +328,8 @@ fun MalangSlotsEditor() {
 @Composable
 fun getActionLabel(action: QuickAction, evaluator: dev.malangkey.ime.keyboard.ComputingEvaluator): String {
     val keyData = action.keyData() as? TextKeyData ?: return "미정"
+    // 한국어 이름이 있는 기능은 그것을 먼저 쓴다 (키보드가 주는 이름은 영어일 때가 있다).
+    koreanActionLabel(keyData.code)?.let { return it }
     val label = evaluator.computeLabel(keyData)
     if (!label.isNullOrEmpty()) return label
     
@@ -358,6 +360,29 @@ fun getActionLabel(action: QuickAction, evaluator: dev.malangkey.ime.keyboard.Co
         TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
         else -> label ?: "기능"
     }
+}
+
+private fun koreanActionLabel(code: Int): String? = when (code) {
+    TextKeyData.CLIPBOARD_COPY.code -> "복사"
+    TextKeyData.CLIPBOARD_CUT.code -> "잘라내기"
+    TextKeyData.CLIPBOARD_PASTE.code -> "붙여넣기"
+    TextKeyData.CLIPBOARD_SELECT.code -> "선택"
+    TextKeyData.CLIPBOARD_SELECT_ALL.code -> "전체 선택"
+    TextKeyData.CLIPBOARD_CLEAR_HISTORY.code -> "기록 삭제"
+    TextKeyData.UNDO.code -> "실행 취소"
+    TextKeyData.REDO.code -> "다시 실행"
+    TextKeyData.ARROW_LEFT.code -> "왼쪽"
+    TextKeyData.ARROW_RIGHT.code -> "오른쪽"
+    TextKeyData.ARROW_UP.code -> "위"
+    TextKeyData.ARROW_DOWN.code -> "아래"
+    TextKeyData.MOVE_START_OF_LINE.code -> "줄 처음"
+    TextKeyData.MOVE_END_OF_LINE.code -> "줄 끝"
+    KeyCode.ENTER -> "엔터"
+    TextKeyData.IME_UI_MODE_CLIPBOARD.code -> "클립보드"
+    TextKeyData.IME_UI_MODE_MEDIA.code -> "이모지"
+    TextKeyData.IME_UI_MODE_EDITING.code -> "커서 이동"
+    TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
+    else -> null
 }
 
 @Composable

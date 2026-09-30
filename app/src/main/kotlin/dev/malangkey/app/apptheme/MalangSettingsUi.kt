@@ -49,6 +49,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -227,17 +229,29 @@ fun MalangSettingsSection(
     }
 }
 
+/**
+ * 한국어가 글자 중간이 아니라 어절 단위로 줄바꿈되게 한다 (안드로이드 13 이상).
+ * 휴대폰 언어가 한국어가 아니어도 적용되도록 글자의 언어를 한국어로 지정한다.
+ */
+val KoreanWordBreak = TextStyle(
+    lineBreak = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase),
+    localeList = LocaleList("ko-KR"),
+)
+
 @Composable
 private fun RowTexts(title: String, summary: String?, modifier: Modifier, summaryBold: Boolean = false) {
-    Column(modifier = modifier) {
-        Text(title, color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    // 오른쪽 토글·화살표와 글자 사이를 띄운다.
+    Column(modifier = modifier.padding(end = 12.dp)) {
+        Text(title, color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold, style = KoreanWordBreak)
         if (summary != null) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 summary,
                 color = if (summaryBold) MalangSettingsSection else MalangSettingsSummary,
                 fontSize = if (summaryBold) 14.sp else 13.sp,
+                lineHeight = 19.sp,
                 fontWeight = if (summaryBold) FontWeight.Bold else FontWeight.Normal,
+                style = KoreanWordBreak,
             )
         }
     }
@@ -551,6 +565,7 @@ fun MalangInfoCard(text: String) {
         color = MalangSettingsSummary,
         fontSize = 13.sp,
         lineHeight = 19.sp,
+        style = KoreanWordBreak,
     )
 }
 

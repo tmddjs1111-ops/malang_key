@@ -75,7 +75,7 @@
     { "code": -9717, "label": "完了", "type": "system_gui", "grow": 1 }
   ],
   [
-    { "code": -9715, "label": ">?123", "type": "system_gui", "grow": 1 },
+    { "code": -9715, "label": "?123", "type": "system_gui", "grow": 1 },
     { "code": -9719, "label": "゛゜小", "type": "system_gui", "grow": 1, "popup": { "relevant": [
         { "code": -9720, "label": "゛", "type": "system_gui" },
         { "code": -9722, "label": "小", "type": "system_gui" },

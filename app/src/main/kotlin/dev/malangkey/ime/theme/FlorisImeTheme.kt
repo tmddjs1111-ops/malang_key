@@ -416,7 +416,7 @@ private val QwertyShapeModes = listOf(
 /**
  * 기능키 글자 크기를 기본 스타일과 맞춘다.
  *
- * 테마의 `key` 규칙은 글자 키에 맞춘 큰 크기(20sp 등)를 모든 키에 준다. 기본 스타일은 '1 2 / 3 4',
+ * 테마의 `key` 규칙은 글자 키에 맞춘 큰 크기(20sp 등)를 모든 키에 준다. 기본 스타일은 '123',
  * '?123', 스페이스의 언어 이름 같은 기능키를 작게 줄여 두는데, 테마를 넣으면 이 규칙이 빠져서
  * 기능키 글자가 넘치거나 잘린다. 테마가 그 키에 글자 크기를 직접 정하지 않았을 때만 채운다.
  */
@@ -496,12 +496,11 @@ private val FunctionKeyTextSizes = listOf(
         KeyCode.VIEW_SYMBOLS2,
         KeyCode.JAPANESE_CONVERT,
         KeyCode.KANA_SMALL,
-    ), 16, 1),
-    Triple(listOf(
+        // 숫자·기호 전환 키는 모든 자판에서 '123'·'?123' 한 줄로 쓴다.
         KeyCode.VIEW_NUMERIC,
         KeyCode.VIEW_NUMERIC_ADVANCED,
         KeyCode.EXIT_NUMERIC,
         KeyCode.JAPANESE_VIEW_NUMERIC,
         KeyCode.JAPANESE_VIEW_SYMBOLS,
-    ), 12, 2),
+    ), 16, 1),
 )

@@ -579,7 +579,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val longPressDelay = int(
             key = "keyboard__long_press_delay",
-            default = 300,
+            default = 400,
         )
         val spaceBarSwitchesToCharacters = boolean(
             key = "keyboard__space_bar_switches_to_characters",

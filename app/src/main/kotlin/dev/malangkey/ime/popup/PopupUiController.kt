@@ -355,7 +355,8 @@ class PopupUiController(
             
             val colCount = extRenderInfo.elements.firstOrNull()?.size ?: 1
             
-            val colDiff = (dx / (baseBounds.width * 0.6f)).toInt()
+            // 칸 너비(키 폭)만큼 움직여야 한 칸 넘어간다. 0.6배일 때는 너무 쉽게 옆 칸으로 넘어갔다.
+            val colDiff = (dx / baseBounds.width).toInt()
             val rowDiff = (dy / (baseBounds.height * 0.4f)).toInt()
             
             val targetCol = (colCount - 1 + colDiff).coerceIn(0, colCount - 1)
@@ -375,12 +376,9 @@ class PopupUiController(
         val elemWidth = extRenderInfo.elemWidthPx.takeIf { it > 0f } ?: (extRenderInfo.bounds.width / extRenderInfo.row0count)
         val elemHeight = extRenderInfo.elemHeightPx.takeIf { it > 0f } ?: (extRenderInfo.bounds.height / (if (extRenderInfo.row1count > 0) 2 else 1))
 
-        // Apply 1.3x sensitivity multiplier relative to pressed key center
-        val keyCenterX = key.visibleBounds.left + key.visibleBounds.width / 2.0f
-        val keyCenterY = key.visibleBounds.top + key.visibleBounds.height / 2.0f
-
-        val effectiveX = keyCenterX + (xEvent - keyCenterX) * 1.3f
-        val effectiveY = keyCenterY + (yEvent - keyCenterY) * 1.3f
+        // 손가락이 움직인 만큼만 따라간다. 예전에는 1.3배로 부풀려서 조금만 움직여도 옆 글자로 넘어갔다.
+        val effectiveX = xEvent
+        val effectiveY = yEvent
 
         val relX = effectiveX - extRenderInfo.bounds.left
         val relY = effectiveY - extRenderInfo.bounds.top

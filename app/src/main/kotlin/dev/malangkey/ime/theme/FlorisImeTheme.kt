@@ -35,6 +35,8 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.snygg.SnyggRule
 import org.florisboard.lib.snygg.SnyggPropertySetEditor
 import org.florisboard.lib.snygg.SnyggSinglePropertySetEditor
+import org.florisboard.lib.snygg.SnyggStylesheet
+import org.florisboard.lib.snygg.value.SnyggTextMaxLinesValue
 import org.florisboard.lib.snygg.ui.ProvideSnyggTheme
 import org.florisboard.lib.snygg.ui.rememberSnyggTheme
 import org.florisboard.lib.snygg.value.SnyggRoundedCornerDpShapeValue
@@ -337,7 +339,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             
             baseStylesheet = editor.build()
         }
-        baseStylesheet
+        withFunctionKeyTextSizes(baseStylesheet)
     }
 
     val snyggTheme = rememberSnyggTheme(stylesheet, assetResolver)
@@ -367,3 +369,49 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         }
     }
 }
+
+/**
+ * 기능키 글자 크기를 기본 스타일과 맞춘다.
+ *
+ * 테마의 `key` 규칙은 글자 키에 맞춘 큰 크기(20sp 등)를 모든 키에 준다. 기본 스타일은 '1 2 / 3 4',
+ * '?123', 스페이스의 언어 이름 같은 기능키를 작게 줄여 두는데, 테마를 넣으면 이 규칙이 빠져서
+ * 기능키 글자가 넘치거나 잘린다. 테마가 그 키에 글자 크기를 직접 정하지 않았을 때만 채운다.
+ */
+private fun withFunctionKeyTextSizes(stylesheet: SnyggStylesheet): SnyggStylesheet {
+    val editor = stylesheet.edit()
+    var changed = false
+    for ((codes, fontSize, maxLines) in FunctionKeyTextSizes) {
+        for (code in codes) {
+            val rule = SnyggRule.fromOrNull("key[code=$code]") ?: continue
+            val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: continue
+            if (!propEditor.properties.containsKey("font-size")) {
+                propEditor.properties["font-size"] = SnyggSpSizeValue(fontSize.sp)
+                changed = true
+            }
+            if (maxLines != null && !propEditor.properties.containsKey("text-max-lines")) {
+                propEditor.properties["text-max-lines"] = SnyggTextMaxLinesValue(maxLines)
+                changed = true
+            }
+        }
+    }
+    return if (changed) editor.build() else stylesheet
+}
+
+/** 기본 스타일(FlorisImeThemeBaseStyle)의 기능키 글자 크기. (키 코드, sp, 최대 줄 수) */
+private val FunctionKeyTextSizes = listOf(
+    Triple(listOf(KeyCode.SPACE, KeyCode.CJK_SPACE), 14, 1),
+    Triple(listOf(
+        KeyCode.VIEW_CHARACTERS,
+        KeyCode.VIEW_SYMBOLS,
+        KeyCode.VIEW_SYMBOLS2,
+        KeyCode.JAPANESE_CONVERT,
+        KeyCode.KANA_SMALL,
+    ), 16, 1),
+    Triple(listOf(
+        KeyCode.VIEW_NUMERIC,
+        KeyCode.VIEW_NUMERIC_ADVANCED,
+        KeyCode.EXIT_NUMERIC,
+        KeyCode.JAPANESE_VIEW_NUMERIC,
+        KeyCode.JAPANESE_VIEW_SYMBOLS,
+    ), 12, 2),
+)

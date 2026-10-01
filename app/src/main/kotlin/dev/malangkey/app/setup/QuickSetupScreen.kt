@@ -411,13 +411,6 @@ private fun ClipboardStep() {
                 )
             },
             { QuickPhraseGridEditor() },
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.suggestionEnabled,
-                    title = "방금 복사한 내용 추천",
-                    summary = "복사한 글이 키보드 위에 바로 떠요. 누르면 붙여넣어져요.",
-                )
-            },
         ),
     )
 }

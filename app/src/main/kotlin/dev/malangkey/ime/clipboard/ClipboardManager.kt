@@ -127,9 +127,12 @@ class ClipboardManager(
         ioScope.launch {
             if (clipHistoryDb == null) {
                 clipHistoryDb = ClipboardHistoryDatabase.new(context.applicationContext)
-                // 클립보드 기록 기능은 뺐다. 예전에 켜 둔 사용자는 끄고, 쌓인 기록도 지운다.
+                // 클립보드 기록과 '방금 복사한 내용 추천'은 뺐다. 예전에 켜 둔 사용자는 끄고, 쌓인 기록도 지운다.
                 if (prefs.clipboard.historyEnabled.get()) {
                     prefs.clipboard.historyEnabled.set(false)
+                }
+                if (prefs.clipboard.suggestionEnabled.get()) {
+                    prefs.clipboard.suggestionEnabled.set(false)
                 }
                 clipHistoryDao?.let { dao ->
                     val stored = dao.getAll()

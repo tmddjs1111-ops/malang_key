@@ -110,7 +110,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionEnabled = boolean(
             key = "clipboard__suggestion_enabled",
-            default = true,
+            default = false,
         )
         val suggestionTimeout = int(
             key = "clipboard__suggestion_timeout",

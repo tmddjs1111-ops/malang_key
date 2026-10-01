@@ -59,7 +59,6 @@ import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangSwitchRow
-import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
 import dev.malangkey.ime.clipboard.QuickPhraseTriggerKey
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -85,7 +84,6 @@ private val SyncEntries = listOf(
 fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = "Clipboard") {
     val prefs by FlorisPreferenceStore
     val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
-    val suggestionEnabled by prefs.clipboard.suggestionEnabled.collectAsState()
     val useInternal by prefs.clipboard.useInternalClipboard.collectAsState()
 
     val triggerKeyName = TriggerKeyEntries.first { it.first == triggerKey }.second
@@ -103,31 +101,6 @@ fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = 
                 )
             },
             { QuickPhraseGridEditor() },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "붙여넣기 추천",
-        items = listOf(
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.suggestionEnabled,
-                    title = "방금 복사한 내용 추천",
-                    summary = "최근에 복사한 내용을 스마트바에 띄워 바로 붙여넣습니다.",
-                )
-            },
-            {
-                MalangValueDialogRow(
-                    prefs.clipboard.suggestionTimeout,
-                    title = "추천 유지 시간",
-                    min = 10,
-                    max = 300,
-                    step = 10,
-                    unit = "초",
-                    enabled = suggestionEnabled,
-                    valueLabel = { "복사 후 ${it}초" },
-                )
-            },
         ),
     )
 

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +58,7 @@ fun SnyggText(
     modifier: Modifier = Modifier,
     text: String,
     fontFamily: FontFamily? = null,
+    onTextLayout: ((TextLayoutResult) -> Unit)? = null,
 ) {
     ProvideSnyggStyle(elementName, attributes, selector) { style ->
         Text(
@@ -78,6 +80,7 @@ fun SnyggText(
             textDecoration = style.textDecorationLine(),
             maxLines = style.textMaxLines(),
             overflow = style.textOverflow(),
+            onTextLayout = { onTextLayout?.invoke(it) },
         )
     }
 }

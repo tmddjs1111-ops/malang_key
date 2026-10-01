@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import dev.malangkey.app.FlorisPreferenceStore
-import dev.malangkey.ime.keyboard.KeyboardMode
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.window.LocalWindowController
 import dev.malangkey.keyboardManager
@@ -139,6 +138,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         themeMode
     ) {
         var baseStylesheet = activeThemeInfo.stylesheet
+        // 사용자가 정한 모서리(스퀘어클·모서리 크기)가 실제로 들어갔는지. 들어갔으면 기본 10dp를 덮어쓰지 않는다.
+        var isKeyShapeCustom = false
         val isCustomThemeSelected = dayThemeId.componentId == "custom" && (themeMode == ThemeMode.ALWAYS_DAY || themeMode == ThemeMode.FOLLOW_SYSTEM)
         
         val isKeyboardBgCustom = isCustomThemeSelected && customKeyboardBgColor != Color.Unspecified
@@ -219,9 +220,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
                 if (squircleShapeEnabled) {
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(16.dp, 16.dp, 16.dp, 16.dp)
+                    isKeyShapeCustom = true
                 } else if (keyCornerRadius != 6) {
                     val radius = keyCornerRadius.toFloat().dp
                     propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
+                    isKeyShapeCustom = true
                 }
                 if (keyBorderThickness > 0) {
                     propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
@@ -345,7 +348,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             
             baseStylesheet = editor.build()
         }
-        withBaseStyleFallbacks(baseStylesheet, isKeyShapeCustom = squircleShapeEnabled || keyCornerRadius != 6)
+        withBaseStyleFallbacks(baseStylesheet, isKeyShapeCustom)
     }
 
     val snyggTheme = rememberSnyggTheme(stylesheet, assetResolver)
@@ -384,34 +387,23 @@ private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet, isKeyShapeCustom
     val editor = stylesheet.edit()
     val changedKeys = applyFunctionKeyTextSizes(editor)
     val changedPopup = applyKeyPopupBubbleStyle(editor)
-    val changedShape = !isKeyShapeCustom && applyQwertyKeyShape(editor)
+    val changedShape = !isKeyShapeCustom && applyDefaultKeyShape(editor)
     return if (changedKeys || changedPopup || changedShape) editor.build() else stylesheet
 }
 
 /**
- * 쿼티·기호 자판은 키 폭이 좁아서, 격자 자판에 맞춘 테마 모서리(20dp 등)를 그대로 쓰면 키가 알약처럼
- * 뭉개진다. 이 자판들의 모서리를 줄이되, 사용자가 모서리 크기·스퀘어클을 정했으면 부르지 않는다.
+ * 모든 자판의 기본 키 모서리를 10dp로 맞춘다. 테마의 20dp 모서리는 폭이 좁은 쿼티 키를 알약처럼
+ * 뭉개고, 20키에서도 오른쪽 위 힌트를 곡선 밖으로 밀어내 가렸다.
+ * 사용자가 모서리 크기·스퀘어클을 정했으면 부르지 않는다.
  */
-private fun applyQwertyKeyShape(editor: SnyggStylesheetEditor): Boolean {
-    var changed = false
-    for (mode in QwertyShapeModes) {
-        val rule = SnyggRule.fromOrNull("${FlorisImeUi.Key.elementName}[${FlorisImeUi.Attr.Mode}=`$mode`]") ?: continue
-        val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: continue
-        if (!propEditor.properties.containsKey("shape")) {
-            propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(QwertyKeyCorner, QwertyKeyCorner, QwertyKeyCorner, QwertyKeyCorner)
-            changed = true
-        }
-    }
-    return changed
+private fun applyDefaultKeyShape(editor: SnyggStylesheetEditor): Boolean {
+    val rule = SnyggRule.fromOrNull(FlorisImeUi.Key.elementName) ?: return false
+    val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: return false
+    propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(DefaultKeyCorner, DefaultKeyCorner, DefaultKeyCorner, DefaultKeyCorner)
+    return true
 }
 
-private val QwertyKeyCorner = 10.dp
-private val QwertyShapeModes = listOf(
-    KeyboardMode.CHARACTERS,
-    KeyboardMode.SYMBOLS,
-    KeyboardMode.SYMBOLS2,
-    KeyboardMode.NUMERIC_ADVANCED,
-).map { it.toString() }
+private val DefaultKeyCorner = 10.dp
 
 /**
  * 기능키 글자 크기를 기본 스타일과 맞춘다.

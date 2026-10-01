@@ -51,6 +51,14 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontSynthesis
+import androidx.compose.ui.unit.isSpecified
+import android.graphics.Paint
+import android.graphics.Rect as AndroidRect
+import android.graphics.Typeface
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -172,6 +180,36 @@ private fun WithFontScale(scale: Float, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * scale)) {
         content()
     }
+}
+
+private val InkPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+private val InkBounds = AndroidRect()
+
+/**
+ * 한 줄 글자를 잉크 기준으로 위아래 가운데에 두려면 얼마나 옮겨야 하는지(px, 아래가 +).
+ * Compose는 글꼴의 줄 상자(위·아래 여유 공간 포함)를 가운데 두므로 소문자나 한글은 아래로 처져 보인다.
+ * 마침표·쉼표·하이픈처럼 잉크가 작은 기호는 원래 자리(기준선 근처)에 있어야 자연스러워서 옮기지 않는다.
+ */
+private fun inkCenterShift(result: TextLayoutResult, text: String): Float {
+    if (text.isEmpty() || result.lineCount != 1) return 0f
+    val input = result.layoutInput
+    val style = input.style
+    val fontPx = with(input.density) { style.fontSize.takeIf { it.isSpecified }?.toPx() } ?: return 0f
+    val typeface = runCatching {
+        input.fontFamilyResolver.resolve(
+            style.fontFamily,
+            style.fontWeight ?: FontWeight.Normal,
+            style.fontStyle ?: FontStyle.Normal,
+            style.fontSynthesis ?: FontSynthesis.All,
+        ).value as? Typeface
+    }.getOrNull() ?: Typeface.DEFAULT
+    InkPaint.typeface = typeface
+    InkPaint.textSize = fontPx
+    InkPaint.getTextBounds(text, 0, text.length, InkBounds)
+    if (InkBounds.isEmpty || InkBounds.height() < fontPx * 0.3f) return 0f
+    val inkMid = result.firstBaseline + (InkBounds.top + InkBounds.bottom) / 2f
+    val boxMid = result.size.height / 2f
+    return (boxMid - inkMid).coerceIn(-fontPx * 0.25f, fontPx * 0.25f)
 }
 
 /** 스페이스바 표시 설정(언어 이름·␣·없음)을 따르는 키. */
@@ -557,13 +595,17 @@ private fun TextKeyButton(
                     SpaceBarMode.SPACE_BAR_KEY -> customLabel = "␣"
                 }
             }
+            // 글자 줄 상자가 아니라 실제 잉크를 키 위아래 가운데에 둔다 (소문자·한글이 아래로 처지지 않게).
+            var inkShiftPx by remember(customLabel) { mutableFloatStateOf(0f) }
             WithFontScale(textScale.label) {
                 SnyggText(
                     modifier = Modifier
                         .wrapContentSize()
                         .scale(compactNumberRowScale)
-                        .align(if (isTelPadKey) BiasAlignment(-0.5f, 0f) else Alignment.Center),
+                        .align(if (isTelPadKey) BiasAlignment(-0.5f, 0f) else Alignment.Center)
+                        .graphicsLayer { translationY = inkShiftPx },
                     text = customLabel,
+                    onTextLayout = { inkShiftPx = inkCenterShift(it, customLabel) },
                 )
             }
         }

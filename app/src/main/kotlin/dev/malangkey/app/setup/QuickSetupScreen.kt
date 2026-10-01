@@ -1,5 +1,6 @@
 package dev.malangkey.app.setup
 
+import dev.malangkey.app.settings.clipboard.QuickPhraseGridEditor
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -394,7 +395,7 @@ private fun ClipboardStep() {
 
     MalangInfoCard(
         "상용구: $triggerName 키를 길게 누르면 \"감사합니다.\", \"지금 가고 있어요.\" 같은 문구 표가 떠요. " +
-            "원하는 칸에서 손을 떼면 바로 입력됩니다. 문구는 클립보드 설정에서 바꿀 수 있어요."
+            "원하는 칸에서 손을 떼면 바로 입력됩니다. 문구는 아래 표에서 바로 바꿀 수 있어요."
     )
     MalangSettingsSection(
         items = listOf(
@@ -409,18 +410,12 @@ private fun ClipboardStep() {
                     ),
                 )
             },
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.historyEnabled,
-                    title = "클립보드 기록",
-                    summary = "복사한 내용을 모아두고 키보드에서 다시 붙여넣습니다.",
-                )
-            },
+            { QuickPhraseGridEditor() },
             {
                 MalangSwitchRow(
                     prefs.clipboard.suggestionEnabled,
                     title = "방금 복사한 내용 추천",
-                    summary = "복사 직후 스마트 바에 붙여넣기 버튼을 띄웁니다.",
+                    summary = "복사한 글이 키보드 위에 바로 떠요. 누르면 붙여넣어져요.",
                 )
             },
         ),

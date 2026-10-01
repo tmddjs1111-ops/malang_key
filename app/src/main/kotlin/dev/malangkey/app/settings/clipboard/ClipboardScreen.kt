@@ -60,7 +60,6 @@ import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
-import dev.malangkey.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
 import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
 import dev.malangkey.ime.clipboard.QuickPhraseTriggerKey
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -82,17 +81,10 @@ private val SyncEntries = listOf(
     ClipboardSyncBehavior.NO_EVENTS to "동기화 안 함",
 )
 
-private val GridColumnEntries = listOf(CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO to "자동") +
-    (1..5).map { it to "${it}줄" }
-
 @Composable
 fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = "Clipboard") {
     val prefs by FlorisPreferenceStore
     val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
-    val historyEnabled by prefs.clipboard.historyEnabled.collectAsState()
-    val autoCleanOld by prefs.clipboard.historyAutoCleanOldEnabled.collectAsState()
-    val autoCleanSensitive by prefs.clipboard.historyAutoCleanSensitiveEnabled.collectAsState()
-    val sizeLimitEnabled by prefs.clipboard.historySizeLimitEnabled.collectAsState()
     val suggestionEnabled by prefs.clipboard.suggestionEnabled.collectAsState()
     val useInternal by prefs.clipboard.useInternalClipboard.collectAsState()
 
@@ -111,90 +103,6 @@ fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = 
                 )
             },
             { QuickPhraseGridEditor() },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "클립보드 기록",
-        items = listOf(
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.historyEnabled,
-                    title = "클립보드 기록 사용",
-                    summary = "복사한 내용을 모아두고 키보드에서 다시 붙여넣을 수 있습니다.",
-                )
-            },
-            { MalangSwitchRow(prefs.clipboard.historySizeLimitEnabled, "기록 개수 제한", enabled = historyEnabled) },
-            {
-                MalangValueDialogRow(
-                    prefs.clipboard.historySizeLimit,
-                    title = "최대 기록 개수",
-                    min = 5,
-                    max = 100,
-                    step = 5,
-                    unit = "개",
-                    enabled = historyEnabled && sizeLimitEnabled,
-                )
-            },
-            { MalangSwitchRow(prefs.clipboard.historyAutoCleanOldEnabled, "오래된 기록 자동 삭제", enabled = historyEnabled) },
-            {
-                MalangValueDialogRow(
-                    prefs.clipboard.historyAutoCleanOldAfter,
-                    title = "오래된 기록 삭제 시점",
-                    min = 1,
-                    max = 120,
-                    step = 1,
-                    unit = "분",
-                    enabled = historyEnabled && autoCleanOld,
-                    valueLabel = { "${it}분 후" },
-                )
-            },
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.historyAutoCleanSensitiveEnabled,
-                    title = "민감한 기록 자동 삭제",
-                    summary = "비밀번호처럼 민감하게 표시된 항목을 빨리 지웁니다.",
-                    enabled = historyEnabled,
-                )
-            },
-            {
-                MalangValueDialogRow(
-                    prefs.clipboard.historyAutoCleanSensitiveAfter,
-                    title = "민감한 기록 삭제 시점",
-                    min = 5,
-                    max = 300,
-                    step = 5,
-                    unit = "초",
-                    enabled = historyEnabled && autoCleanSensitive,
-                    valueLabel = { "${it}초 후" },
-                )
-            },
-            { MalangSwitchRow(prefs.clipboard.historyHideOnPaste, "붙여넣으면 기록 창 닫기", enabled = historyEnabled) },
-            { MalangSwitchRow(prefs.clipboard.historyHideOnNextTextField, "다른 입력칸으로 가면 기록 창 닫기", enabled = historyEnabled) },
-            {
-                MalangChoiceRow(
-                    prefs.clipboard.historyNumGridColumnsPortrait,
-                    title = "기록 표시 열 수 (세로 화면)",
-                    entries = GridColumnEntries,
-                    enabled = historyEnabled,
-                )
-            },
-            {
-                MalangChoiceRow(
-                    prefs.clipboard.historyNumGridColumnsLandscape,
-                    title = "기록 표시 열 수 (가로 화면)",
-                    entries = GridColumnEntries,
-                    enabled = historyEnabled,
-                )
-            },
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.clearPrimaryClipAffectsHistoryIfUnpinned,
-                    title = "클립보드를 비우면 기록에서도 삭제",
-                    summary = "고정하지 않은 항목만 함께 지워집니다.",
-                    enabled = historyEnabled,
-                )
-            },
         ),
     )
 
@@ -253,9 +161,9 @@ fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = 
     )
 }
 
-/** 상용구 표 미리보기. 칸을 누르면 문구를 입력하거나 지울 수 있다. */
+/** 상용구 표 미리보기. 칸을 누르면 문구를 입력하거나 지울 수 있다. 간단 설정에서도 쓴다. */
 @Composable
-private fun QuickPhraseGridEditor() {
+fun QuickPhraseGridEditor() {
     val prefs by FlorisPreferenceStore
     val scope = rememberCoroutineScope()
     val columns by prefs.clipboard.quickPhrasesGridRows.collectAsState()

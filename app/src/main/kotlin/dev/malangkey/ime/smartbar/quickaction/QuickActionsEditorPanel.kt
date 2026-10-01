@@ -99,7 +99,6 @@ fun QuickActionsEditorPanel() {
             QuickAction.InsertKey(TextKeyData.UNDO),
             QuickAction.InsertKey(TextKeyData.REDO),
             QuickAction.InsertKey(TextKeyData.SETTINGS),
-            QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_EDITING),
             QuickAction.InsertKey(TextKeyData.VOICE_INPUT),

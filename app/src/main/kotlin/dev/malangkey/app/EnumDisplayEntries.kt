@@ -641,10 +641,6 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
                 label = stringRes(R.string.enum__swipe_action__undo),
             )
             entry(
-                key = SwipeAction.SWITCH_TO_CLIPBOARD_CONTEXT,
-                label = stringRes(R.string.enum__swipe_action__switch_to_clipboard_context),
-            )
-            entry(
                 key = SwipeAction.SWITCH_TO_MEDIA_CONTEXT,
                 label = stringRes(R.string.enum__swipe_action__switch_to_media_context)
             )

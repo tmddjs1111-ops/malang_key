@@ -907,7 +907,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.IME_NEXT_SUBTYPE -> subtypeManager.switchToNextSubtype()
             KeyCode.IME_UI_MODE_TEXT -> activeState.imeUiMode = ImeUiMode.TEXT
             KeyCode.IME_UI_MODE_MEDIA -> activeState.imeUiMode = ImeUiMode.MEDIA
-            KeyCode.IME_UI_MODE_CLIPBOARD -> activeState.imeUiMode = ImeUiMode.CLIPBOARD
+            // 클립보드 기록 화면은 뺐다. 예전 설정에 남은 버튼·제스처가 눌려도 아무것도 하지 않는다.
+            KeyCode.IME_UI_MODE_CLIPBOARD -> { }
             KeyCode.IME_UI_MODE_EDITING -> { /* No-op: handled by horizontal scrubbing gesture in QuickActionButton */ }
             KeyCode.VOICE_INPUT -> FlorisImeService.switchToVoiceInputMethod()
             KeyCode.KANA_SWITCHER -> handleKanaSwitch()

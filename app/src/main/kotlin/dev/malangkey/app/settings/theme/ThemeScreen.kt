@@ -16,6 +16,12 @@
 
 package dev.malangkey.app.settings.theme
 
+import androidx.compose.ui.platform.LocalContext
+import dev.malangkey.app.setup.DefaultPreviewPalette
+import dev.malangkey.app.setup.KeyboardPreview
+import dev.malangkey.app.setup.loadPreviewPalette
+import dev.malangkey.app.setup.rememberCustomPreviewPalette
+import dev.malangkey.subtypeManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -147,6 +153,15 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
         val nightThemeId by florisPrefs.theme.nightThemeId.collectAsState()
         val currentMode by florisPrefs.theme.mode.collectAsState()
         val coroutineScope = rememberCoroutineScope()
+        // 간단 설정처럼 지금 쓰는 자판에 각 테마 색을 입혀 미리 보여 준다.
+        val context = LocalContext.current
+        val subtypeManager by context.subtypeManager()
+        val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+        val customPalette = rememberCustomPreviewPalette()
+        val palettes = remember(context) {
+            malangThemes.filter { it.compId != "custom" }
+                .associateWith { loadPreviewPalette(context, it.extId, it.compId) ?: DefaultPreviewPalette }
+        }
 
         run {
             run {
@@ -169,32 +184,34 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                     coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo) }
                                 }
                                 .border(1.dp, if (isSelected) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(24.dp))
-                                .padding(vertical = 20.dp, horizontal = 12.dp),
+                                .padding(vertical = 12.dp, horizontal = 10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(themeInfo.displayColor)
-                                    .border(1.dp, ColorDarkChocolate.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
+                                Text(
+                                    text = themeInfo.name,
+                                    modifier = Modifier.weight(1f),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) MalangSettingsCard else MalangSettingsTitle
+                                )
                                 if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
-                                        tint = if (themeInfo.displayColor.red * 0.299 + themeInfo.displayColor.green * 0.587 + themeInfo.displayColor.blue * 0.114 > 0.5) ColorDarkChocolate else Color.White,
-                                        modifier = Modifier.size(32.dp)
+                                        tint = MalangSettingsCard,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = themeInfo.name,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MalangSettingsCard else MalangSettingsTitle
+                            Spacer(modifier = Modifier.height(8.dp))
+                            KeyboardPreview(
+                                subtype = activeSubtype,
+                                palette = if (themeInfo.compId == "custom") customPalette else palettes.getValue(themeInfo),
+                                height = 96.dp,
                             )
                         }
                     }

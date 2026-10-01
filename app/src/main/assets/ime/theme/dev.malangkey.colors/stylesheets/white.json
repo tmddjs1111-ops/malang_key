@@ -2,7 +2,7 @@
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
     "--bg": "#fcf5d6",
-    "--key-bg": "#fcf5d6",
+    "--key-bg": "#FFFFFF",
     "--key-fg": "#311d18",
     "--key-bg-pressed": "#e8e1c3",
     "--action-bg": "#311d18",
@@ -17,6 +17,8 @@
     "foreground": "var(--key-fg)",
     "font-size": "20sp",
     "shape": "var(--shape)",
+    "border-width": "1dp",
+    "border-color": "#E3D7AE",
     "shadow-elevation": "1dp",
     "shadow-color": "rgba(0, 0, 0, 0.15)"
   },

@@ -17,6 +17,8 @@
     "foreground": "var(--key-fg)",
     "font-size": "20sp",
     "shape": "var(--shape)",
+    "border-width": "1dp",
+    "border-color": "#E3D7AE",
     "shadow-elevation": "1dp",
     "shadow-color": "rgba(0, 0, 0, 0.1)"
   },

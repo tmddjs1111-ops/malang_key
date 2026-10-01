@@ -441,7 +441,7 @@ private fun ThemeStep() {
         }
     }
     Text(
-        "배경 사진, 키 모양 같은 자세한 꾸미기는 메인 화면의 테마 탭에서 할 수 있어요.",
+        "배경 사진, 외곽선 같은 자세한 꾸미기는 메인 화면의 테마 탭에서 할 수 있어요.",
         color = MalangSettingsSummary,
         fontSize = 13.sp,
         lineHeight = 19.sp,

@@ -104,6 +104,36 @@ fun loadPreviewPalette(context: Context, extId: String, compId: String): Preview
     PreviewPalette(background, keyBackground, keyForeground, byCode)
 }.getOrNull()
 
+/** 사용자가 고른 커스텀 색으로 만든 미리보기 색. 고르지 않은 색은 기본 크림 테마를 따른다. */
+@Composable
+fun rememberCustomPreviewPalette(): PreviewPalette {
+    val prefs by FlorisPreferenceStore
+    val customBg by prefs.malang.customKeyboardBgColor.collectAsState()
+    val customKey by prefs.malang.customKeyBgColor.collectAsState()
+    val customText by prefs.malang.customKeyTextColor.collectAsState()
+    val customSpecial by prefs.malang.customEnterKeyBgColor.collectAsState()
+    val customSpecialText by prefs.malang.customEnterKeyTextColor.collectAsState()
+    val customEnter by prefs.malang.customRealEnterKeyBgColor.collectAsState()
+    val customEnterText by prefs.malang.customRealEnterKeyTextColor.collectAsState()
+    return remember(customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText) {
+        fun Color.or(fallback: Color) = if (this == Color.Unspecified) fallback else this
+        val d = DefaultPreviewPalette
+        val special = customSpecial.or(Color(0xFF311D18)) to customSpecialText.or(d.keyBackground)
+        PreviewPalette(
+            background = customBg.or(d.background),
+            keyBackground = customKey.or(d.keyBackground),
+            keyForeground = customText.or(d.keyForeground),
+            byCode = mapOf(
+                KeyCode.ENTER to (customEnter.or(Color(0xFF5D4037)) to customEnterText.or(Color.White)),
+                KeyCode.SHIFT to special,
+                KeyCode.DELETE to special,
+                KeyCode.VIEW_SYMBOLS to special,
+                KeyCode.VIEW_CHARACTERS to special,
+            ),
+        )
+    }
+}
+
 /** 지금 키보드에 적용된 테마의 미리보기 색. 커스텀 테마면 사용자가 고른 색을 쓴다. */
 @Composable
 fun rememberActivePreviewPalette(): PreviewPalette {
@@ -112,34 +142,14 @@ fun rememberActivePreviewPalette(): PreviewPalette {
     val mode by prefs.theme.mode.collectAsState()
     val dayThemeId by prefs.theme.dayThemeId.collectAsState()
     val nightThemeId by prefs.theme.nightThemeId.collectAsState()
-    val customBg by prefs.malang.customKeyboardBgColor.collectAsState()
-    val customKey by prefs.malang.customKeyBgColor.collectAsState()
-    val customText by prefs.malang.customKeyTextColor.collectAsState()
-    val customSpecial by prefs.malang.customEnterKeyBgColor.collectAsState()
-    val customSpecialText by prefs.malang.customEnterKeyTextColor.collectAsState()
-    val customEnter by prefs.malang.customRealEnterKeyBgColor.collectAsState()
-    val customEnterText by prefs.malang.customRealEnterKeyTextColor.collectAsState()
     val isNight = mode == ThemeMode.ALWAYS_NIGHT ||
         (mode == ThemeMode.FOLLOW_SYSTEM && isSystemInDarkTheme())
     val themeId = if (isNight) nightThemeId else dayThemeId
+    val custom = rememberCustomPreviewPalette()
 
-    return remember(themeId, customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText) {
+    return remember(themeId, custom) {
         if (themeId.componentId == "custom") {
-            fun Color.or(fallback: Color) = if (this == Color.Unspecified) fallback else this
-            val d = DefaultPreviewPalette
-            val special = customSpecial.or(Color(0xFF311D18)) to customSpecialText.or(d.keyBackground)
-            PreviewPalette(
-                background = customBg.or(d.background),
-                keyBackground = customKey.or(d.keyBackground),
-                keyForeground = customText.or(d.keyForeground),
-                byCode = mapOf(
-                    KeyCode.ENTER to (customEnter.or(Color(0xFF5D4037)) to customEnterText.or(Color.White)),
-                    KeyCode.SHIFT to special,
-                    KeyCode.DELETE to special,
-                    KeyCode.VIEW_SYMBOLS to special,
-                    KeyCode.VIEW_CHARACTERS to special,
-                ),
-            )
+            custom
         } else {
             loadPreviewPalette(context, themeId.extensionId, themeId.componentId) ?: DefaultPreviewPalette
         }

@@ -58,8 +58,6 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
-import dev.malangkey.app.apptheme.MalangSwitchRow
-import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
 import dev.malangkey.ime.clipboard.QuickPhraseTriggerKey
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
@@ -86,24 +84,16 @@ private val TriggerKeyEntries = listOf(
     QuickPhraseTriggerKey.ENTER to "엔터(Enter)",
 )
 
-private val SyncEntries = listOf(
-    ClipboardSyncBehavior.ALL_EVENTS to "복사·지우기 모두",
-    ClipboardSyncBehavior.ONLY_SET_EVENTS to "복사만",
-    ClipboardSyncBehavior.ONLY_CLEAR_EVENTS to "지우기만",
-    ClipboardSyncBehavior.NO_EVENTS to "동기화 안 함",
-)
-
 @Composable
 fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = "Clipboard") {
     val prefs by FlorisPreferenceStore
     val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
-    val useInternal by prefs.clipboard.useInternalClipboard.collectAsState()
 
     val triggerKeyName = TriggerKeyEntries.first { it.first == triggerKey }.second
     MalangInfoCard("키보드에서 $triggerKeyName 키를 길게 누르면 상용구 표가 뜨고, 원하는 칸에서 손을 떼면 바로 입력됩니다. 모든 키보드 레이아웃에서 동작해요.")
 
     MalangSettingsSection(
-        title = "상용구",
+        title = "클립보드",
         items = listOf(
             { MalangChoiceRow(prefs.clipboard.quickPhraseTriggerKey, "상용구 호출 키", TriggerKeyEntries) },
             {
@@ -114,35 +104,6 @@ fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = 
                 )
             },
             { QuickPhraseGridEditor() },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "고급",
-        items = listOf(
-            {
-                MalangSwitchRow(
-                    prefs.clipboard.useInternalClipboard,
-                    title = "말랑키 전용 클립보드 사용",
-                    summary = "시스템 클립보드 대신 키보드 안의 클립보드를 씁니다.",
-                )
-            },
-            {
-                MalangChoiceRow(
-                    prefs.clipboard.syncToFloris,
-                    title = "시스템 → 말랑키 동기화",
-                    entries = SyncEntries,
-                    enabled = useInternal,
-                )
-            },
-            {
-                MalangChoiceRow(
-                    prefs.clipboard.syncToSystem,
-                    title = "말랑키 → 시스템 동기화",
-                    entries = SyncEntries,
-                    enabled = useInternal,
-                )
-            },
         ),
     )
 }

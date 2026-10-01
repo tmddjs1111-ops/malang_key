@@ -215,7 +215,7 @@ private fun inkCenterShift(result: TextLayoutResult, text: String): Float {
 /** 스페이스바 표시 설정(언어 이름·␣·없음)을 따르는 키. */
 private val SpaceKeyCodes = setOf(KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE)
 
-/** 테마가 천지인 모음키(ㅣ·ㆍ·ㅡ)를 강조할 때 쓰는 키 코드. */
+/** 테마가 천지인 모음키(ㅣ·ㆍ·ㅡ)를 크게 그릴 때 쓰는 키 코드. 연타형 'ㅣㅡ' 키도 같은 코드라 천지인에서만 적용한다. */
 private val CheonjiinVowelStyleCodes = setOf(12643, 183, 12641)
 
 /** 자판을 나눌 수 있는 모드. 천지인 같은 격자 자판과 숫자 패드는 나누지 않는다. */
@@ -458,7 +458,7 @@ fun TextKeyboardLayout(
         popupUiController.keyHintConfiguration = prefs.keyboard.keyHintConfiguration()
         controller.popupUiController = popupUiController
         val debugShowTouchBoundaries by prefs.devtools.showKeyTouchBoundaries.collectAsState()
-        // 테마의 모음키 강조 규칙(key[code=ㅣ/·/ㅡ])은 천지인 전용이다. 연타형의 'ㅣㅡ' 키도
+        // 테마의 모음키 규칙(key[code=ㅣ/·/ㅡ], 큰 글자)은 천지인 전용이다. 연타형의 'ㅣㅡ' 키도
         // 같은 ㅣ 코드를 쓰므로 천지인이 아닐 때는 그 규칙을 받지 않게 한다.
         val activeSubtype by context.subtypeManager().value.activeSubtypeFlow.collectAsState()
         val isCheonjiin = activeSubtype.layoutMap.characters.componentId.contains("cheonjiin")

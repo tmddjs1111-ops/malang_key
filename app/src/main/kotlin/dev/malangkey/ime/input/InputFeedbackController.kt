@@ -73,29 +73,30 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         systemHapticEnabled = systemPref(Settings.System.HAPTIC_FEEDBACK_ENABLED)
     }
 
+    // 진동은 손끝에 바로 와야 해서 소리보다 먼저, 다른 스레드로 넘기지 않고 이 자리에서 낸다.
     fun keyPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
         if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(data, 1.0)
+        if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
     }
 
     fun keyLongPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.audioFeatKeyLongPress.get()) performAudioFeedback(data, 0.7)
         if (prefs.inputFeedback.hapticFeatKeyLongPress.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.audioFeatKeyLongPress.get()) performAudioFeedback(data, 0.7)
     }
 
     fun keyRepeatedAction(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.audioFeatKeyRepeatedAction.get()) performAudioFeedback(data, 0.4)
         if (prefs.inputFeedback.hapticFeatKeyRepeatedAction.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.audioFeatKeyRepeatedAction.get()) performAudioFeedback(data, 0.4)
     }
 
     fun gestureSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.audioFeatGestureSwipe.get()) performAudioFeedback(data, 0.7)
         if (prefs.inputFeedback.hapticFeatGestureSwipe.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.audioFeatGestureSwipe.get()) performAudioFeedback(data, 0.7)
     }
 
     fun gestureMovingSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.audioFeatGestureMovingSwipe.get()) performAudioFeedback(data, 0.4)
         if (prefs.inputFeedback.hapticFeatGestureMovingSwipe.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.audioFeatGestureMovingSwipe.get()) performAudioFeedback(data, 0.4)
     }
 
     private fun systemPref(id: String): Boolean {
@@ -153,15 +154,13 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         }
 
         flogDebug { "Performing haptic feedback (factor=$factor)" }
-        scope.launch {
-            try {
-                val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
-                val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
-                flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
-                vibrator.vibrateClick(primitive.androidId, intensity)
-            } catch (e: Exception) {
-                flogDebug { "Haptic execution failed: ${e.message}" }
-            }
+        try {
+            val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
+            val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
+            flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
+            vibrator.vibrateClick(primitive.androidId, intensity)
+        } catch (e: Exception) {
+            flogDebug { "Haptic execution failed: ${e.message}" }
         }
     }
 }

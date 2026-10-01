@@ -134,6 +134,10 @@ class ClipboardManager(
                 if (prefs.clipboard.suggestionEnabled.get()) {
                     prefs.clipboard.suggestionEnabled.set(false)
                 }
+                // '말랑키 전용 클립보드'(고급)도 뺐다. 늘 시스템 클립보드를 쓴다.
+                if (prefs.clipboard.useInternalClipboard.get()) {
+                    prefs.clipboard.useInternalClipboard.set(false)
+                }
                 clipHistoryDao?.let { dao ->
                     val stored = dao.getAll()
                     if (stored.isNotEmpty()) {

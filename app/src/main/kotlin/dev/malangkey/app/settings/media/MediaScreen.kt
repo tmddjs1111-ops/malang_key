@@ -25,7 +25,6 @@ import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.media.emoji.EmojiHistory
-import dev.malangkey.ime.media.emoji.EmojiSkinTone
 import dev.malangkey.ime.media.emoji.EmojiSuggestionType
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 
@@ -74,20 +73,6 @@ fun MediaScreen() = MalangSettingsScreen(title = "이모지", subtitle = "Emoji"
     MalangSettingsSection(
         title = "이모지 패널",
         items = listOf(
-            {
-                MalangChoiceRow(
-                    prefs.emoji.preferredSkinTone,
-                    title = "기본 피부색",
-                    entries = listOf(
-                        EmojiSkinTone.DEFAULT to "👋 기본",
-                        EmojiSkinTone.LIGHT_SKIN_TONE to "👋🏻 밝은 피부색",
-                        EmojiSkinTone.MEDIUM_LIGHT_SKIN_TONE to "👋🏼 조금 밝은 피부색",
-                        EmojiSkinTone.MEDIUM_SKIN_TONE to "👋🏽 중간 피부색",
-                        EmojiSkinTone.MEDIUM_DARK_SKIN_TONE to "👋🏾 조금 어두운 피부색",
-                        EmojiSkinTone.DARK_SKIN_TONE to "👋🏿 어두운 피부색",
-                    ),
-                )
-            },
             {
                 MalangSwitchRow(
                     prefs.emoji.historyEnabled,

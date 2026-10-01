@@ -36,7 +36,6 @@ import dev.malangkey.ime.keyboard.SpaceBarMode
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
 import dev.malangkey.ime.media.emoji.EmojiHairStyle
 import dev.malangkey.ime.media.emoji.EmojiHistory
-import dev.malangkey.ime.media.emoji.EmojiSkinTone
 import dev.malangkey.ime.media.emoji.EmojiSuggestionType
 import dev.malangkey.ime.nlp.SpellingLanguageMode
 import dev.malangkey.ime.smartbar.CandidatesDisplayMode
@@ -249,10 +248,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
 
     val emoji = Emoji()
     inner class Emoji {
-        val preferredSkinTone = enum(
-            key = "emoji__preferred_skin_tone",
-            default = EmojiSkinTone.DEFAULT,
-        )
         val preferredHairStyle = enum(
             key = "emoji__preferred_hair_style",
             default = EmojiHairStyle.DEFAULT,
@@ -288,7 +283,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionType = enum(
             key = "emoji__suggestion_type",
-            default = EmojiSuggestionType.LEADING_COLON,
+            default = EmojiSuggestionType.INLINE_TEXT,
         )
         val suggestionUpdateHistory = boolean(
             key = "emoji__suggestion_update_history",
@@ -724,7 +719,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
-            default = 5,
+            default = 6,
         )
         val malangSlots = custom(
             key = "smartbar__malang_slots",
@@ -732,6 +727,8 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
+                // 자판에는 이모지 키가 없어서 이모지 패널은 여기서 연다.
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
                 QuickAction.InsertKey(TextKeyData.ARROW_RIGHT),
             ),

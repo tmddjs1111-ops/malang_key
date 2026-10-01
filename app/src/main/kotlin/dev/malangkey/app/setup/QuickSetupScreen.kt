@@ -1,5 +1,6 @@
 package dev.malangkey.app.setup
 
+import dev.malangkey.app.settings.theme.KeyboardFontPicker
 import dev.malangkey.app.settings.keyboard.KeySoundPicker
 import dev.malangkey.app.settings.clipboard.QuickPhraseGridEditor
 import androidx.activity.compose.BackHandler
@@ -83,7 +84,7 @@ private enum class QuickStep(val title: String, val subtitle: String) {
     FEEDBACK("소리·진동", "키를 누를 때의 느낌을 골라주세요."),
     SMARTBAR("스마트 바", "키보드 위 버튼 줄에 넣을 기능이에요."),
     CLIPBOARD("클립보드·상용구", "자주 쓰는 문구를 빠르게 입력해요."),
-    THEME("테마", "키보드 색을 골라주세요."),
+    THEME("테마·글꼴", "키보드 색과 글꼴을 골라주세요."),
 }
 
 @Composable
@@ -357,7 +358,7 @@ private fun SmartbarStep() {
         }
     }
 
-    MalangInfoCard("처음에는 붙여넣기 · 복사 · 전체 선택 · ← · → 가 들어 있어요. 대부분 이대로 쓰시는 걸 추천해요!")
+    MalangInfoCard("처음에는 붙여넣기 · 복사 · 전체 선택 · 이모지 · ← · → 가 들어 있어요. 대부분 이대로 쓰시는 걸 추천해요!")
     MalangSettingsSection(
         items = listOf(
             { MalangSwitchRow(prefs.smartbar.enabled, "스마트 바 사용", "키보드 위에 기능 버튼 줄을 표시합니다.") },
@@ -374,7 +375,7 @@ private fun SmartbarStep() {
                 }
             },
             {
-                MalangNavRow(title = "추천 구성으로 되돌리기", summary = "붙여넣기 · 복사 · 전체 선택 · ← · →") {
+                MalangNavRow(title = "추천 구성으로 되돌리기", summary = "붙여넣기 · 복사 · 전체 선택 · 이모지 · ← · →") {
                     scope.launch {
                         prefs.smartbar.malangSlots.set(prefs.smartbar.malangSlots.default)
                         prefs.smartbar.malangSlotsCount.set(prefs.smartbar.malangSlotsCount.default)
@@ -442,6 +443,7 @@ private fun ThemeStep() {
             KeyboardPreview(subtype = activeSubtype, palette = palettes.getValue(theme))
         }
     }
+    MalangSettingsSection(items = listOf({ KeyboardFontPicker() }))
     Text(
         "배경 사진, 외곽선 같은 자세한 꾸미기는 메인 화면의 테마 탭에서 할 수 있어요.",
         color = MalangSettingsSummary,

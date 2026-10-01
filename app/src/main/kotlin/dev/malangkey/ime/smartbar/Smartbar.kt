@@ -107,6 +107,9 @@ fun Smartbar() {
     val hasJapaneseCandidates = candidates.any {
         it.sourceProvider?.providerId == JapaneseLanguageProvider.ProviderId
     }
+    // 말랑 슬롯은 버튼만 보여 줘서, 단어를 칠 때 뜨는 이모지 추천(사랑 → ❤️)도 후보 줄로 잠깐 바꿔 보여 준다.
+    val hasEmojiCandidates = candidates.any { it is dev.malangkey.ime.nlp.EmojiSuggestionCandidate }
+    val showCandidatesOverSlots = hasJapaneseCandidates || hasEmojiCandidates
     var candidatesExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(hasJapaneseCandidates) {
@@ -127,7 +130,7 @@ fun Smartbar() {
                     SmartbarMainRow(
                         candidatesExpanded = candidatesExpanded,
                         onCandidatesExpandedChange = { candidatesExpanded = it },
-                        showJapaneseCandidates = hasJapaneseCandidates,
+                        showJapaneseCandidates = showCandidatesOverSlots,
                     )
                 }
             }
@@ -137,7 +140,7 @@ fun Smartbar() {
                     SmartbarMainRow(
                         candidatesExpanded = candidatesExpanded,
                         onCandidatesExpandedChange = { candidatesExpanded = it },
-                        showJapaneseCandidates = hasJapaneseCandidates,
+                        showJapaneseCandidates = showCandidatesOverSlots,
                     )
                     SmartbarSecondaryRow()
                 }
@@ -162,7 +165,7 @@ fun Smartbar() {
                     SmartbarMainRow(
                         candidatesExpanded = candidatesExpanded,
                         onCandidatesExpandedChange = { candidatesExpanded = it },
-                        showJapaneseCandidates = hasJapaneseCandidates,
+                        showJapaneseCandidates = showCandidatesOverSlots,
                     )
                 }
             }

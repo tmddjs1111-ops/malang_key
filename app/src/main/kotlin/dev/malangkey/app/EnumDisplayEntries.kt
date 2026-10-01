@@ -31,7 +31,6 @@ import dev.malangkey.ime.keyboard.KeyboardMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
 import dev.malangkey.ime.media.emoji.EmojiHistory
-import dev.malangkey.ime.media.emoji.EmojiSkinTone
 import dev.malangkey.ime.media.emoji.EmojiSuggestionType
 import dev.malangkey.ime.nlp.SpellingLanguageMode
 import dev.malangkey.ime.smartbar.CandidatesDisplayMode
@@ -210,52 +209,6 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
                 key = EmojiHistory.UpdateStrategy.MANUAL_SORT_APPEND,
                 label = stringRes(R.string.enum__emoji_history_update_strategy__manual_sort_append),
                 description = stringRes(R.string.enum__emoji_history_update_strategy__manual_sort_append__description),
-            )
-        }
-    },
-    EmojiSkinTone::class to DEFAULT to {
-        listPrefEntries {
-            entry(
-                key = EmojiSkinTone.DEFAULT,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__default,
-                    "emoji" to "\uD83D\uDC4B" // 👋
-                ),
-            )
-            entry(
-                key = EmojiSkinTone.LIGHT_SKIN_TONE,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__light_skin_tone,
-                    "emoji" to "\uD83D\uDC4B\uD83C\uDFFB" // 👋🏻
-                ),
-            )
-            entry(
-                key = EmojiSkinTone.MEDIUM_LIGHT_SKIN_TONE,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__medium_light_skin_tone,
-                    "emoji" to "\uD83D\uDC4B\uD83C\uDFFC" // 👋🏼
-                ),
-            )
-            entry(
-                key = EmojiSkinTone.MEDIUM_SKIN_TONE,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__medium_skin_tone,
-                    "emoji" to "\uD83D\uDC4B\uD83C\uDFFD" // 👋🏽
-                ),
-            )
-            entry(
-                key = EmojiSkinTone.MEDIUM_DARK_SKIN_TONE,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__medium_dark_skin_tone,
-                    "emoji" to "\uD83D\uDC4B\uD83C\uDFFE" // 👋🏾
-                ),
-            )
-            entry(
-                key = EmojiSkinTone.DARK_SKIN_TONE,
-                label = stringRes(
-                    R.string.enum__emoji_skin_tone__dark_skin_tone,
-                    "emoji" to "\uD83D\uDC4B\uD83C\uDFFF" // 👋🏿
-                ),
             )
         }
     },

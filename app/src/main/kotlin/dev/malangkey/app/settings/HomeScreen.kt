@@ -468,18 +468,7 @@ private fun ThemeTabContent(
                     MalangChoiceRow(
                         prefs.malang.keyboardFontFamily,
                         title = "키보드 글꼴",
-                        entries = listOf(
-                            "jua" to "주아체",
-                            "pretendard" to "프리텐다드",
-                            "noto_sans" to "노토 산스 KR",
-                            "nanum_gothic" to "나눔고딕",
-                            "nanum_myeongjo" to "나눔명조",
-                            "gmarket_sans" to "고운돋움",
-                            "handwriting" to "나눔손글씨 펜",
-                            "tuntun" to "감자꽃",
-                            "tmon" to "검은고딕",
-                            "system" to "시스템 기본",
-                        ),
+                        entries = dev.malangkey.app.settings.theme.KeyboardFontEntries,
                     )
                 },
                 {

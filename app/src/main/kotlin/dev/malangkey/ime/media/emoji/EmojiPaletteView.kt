@@ -160,7 +160,6 @@ fun EmojiPaletteView(
 
     val deviceLocked = androidKeyguardManager.let { it.isDeviceLocked || it.isKeyguardLocked }
 
-    val preferredSkinTone by prefs.emoji.preferredSkinTone.collectAsState()
     val emojiHistoryEnabled by prefs.emoji.historyEnabled.collectAsState()
 
     var activeCategory by remember(emojiHistoryEnabled) {
@@ -190,7 +189,6 @@ fun EmojiPaletteView(
         EmojiKey(
             emojiSet = emojiSet,
             emojiCompatInstance = emojiCompatInstance,
-            preferredSkinTone = preferredSkinTone,
             isPinned = isPinned,
             isRecent = isRecent,
             onEmojiInput = { emoji ->
@@ -288,6 +286,18 @@ fun EmojiPaletteView(
             pagerState.animateScrollToPage(0)
         }
 
+        // 최근 쓴 이모지가 하나도 없으면 빈 '최근' 탭 대신 웃는 얼굴 탭부터 보여 준다.
+        LaunchedEffect(Unit) {
+            if (emojiHistoryEnabled) {
+                val data = prefs.emoji.historyData.get()
+                val hasHistory = (data.pinned + data.recent).any { it.skinTone == EmojiSkinTone.DEFAULT }
+                if (!hasHistory) {
+                    activeCategory = EmojiCategory.SMILEYS_EMOTION
+                    pagerState.scrollToPage(categoryToPageNumber(EmojiCategory.SMILEYS_EMOTION))
+                }
+            }
+        }
+
         EmojiCategoriesTabRow(
             activeCategory = activeCategory,
             onCategoryChange = { category ->
@@ -315,8 +325,9 @@ fun EmojiPaletteView(
                 remember(recentlyUsedVersion) {
                     val data = prefs.emoji.historyData.get()
                     EmojiMappingForView(
-                        pinned = data.pinned.map { EmojiSet(listOf(it)) },
-                        recent = data.recent.map { EmojiSet(listOf(it)) },
+                        // 예전에 피부색을 골라 쓴 이모지는 기록에서 보이지 않게 한다.
+                        pinned = data.pinned.filter { it.skinTone == EmojiSkinTone.DEFAULT }.map { EmojiSet(listOf(it)) },
+                        recent = data.recent.filter { it.skinTone == EmojiSkinTone.DEFAULT }.map { EmojiSet(listOf(it)) },
                         simple = emptyList(),
                     )
                 }
@@ -397,15 +408,15 @@ fun EmojiPaletteView(
 private fun EmojiKey(
     emojiSet: EmojiSet,
     emojiCompatInstance: EmojiCompat?,
-    preferredSkinTone: EmojiSkinTone,
     isPinned: Boolean,
     isRecent: Boolean,
     onEmojiInput: (Emoji) -> Unit,
     onHistoryAction: () -> Unit,
 ) {
     val inputFeedbackController = LocalInputFeedbackController.current
-    val base = emojiSet.base(withSkinTone = preferredSkinTone)
-    val variations = emojiSet.variations(withoutSkinTone = preferredSkinTone)
+    // 피부색 고르기는 논란이 될 수 있어 뺐다. 늘 기본(노란색) 이모지를 쓰고 피부색 변형 목록도 띄우지 않는다.
+    val base = emojiSet.base()
+    val variations = emptyList<Emoji>()
     var showVariantsBox by remember { mutableStateOf(false) }
 
     SnyggBox(FlorisImeUi.MediaEmojiKey.elementName,

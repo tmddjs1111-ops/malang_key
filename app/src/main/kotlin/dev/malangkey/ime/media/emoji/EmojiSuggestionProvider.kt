@@ -42,7 +42,9 @@ class EmojiSuggestionProvider(private val context: Context) : SuggestionProvider
     override val providerId = "org.florisboard.nlp.providers.emoji"
 
     private val prefs by FlorisPreferenceStore
-    private val lettersRegex = "^[A-Za-z]*$".toRegex()
+    // 한글·가나·한자 같은 모든 문자를 받는다. 예전에는 A-Z만 받아 한국어·일본어로는 추천이 뜨지 않았다.
+    private val trailingWordRegex = """:?\p{L}+$""".toRegex()
+    private val lettersRegex = """^\p{L}+$""".toRegex()
 
     private val cachedEmojiMappings = Cache.Builder<FlorisLocale, EmojiDataBySkinTone>().build()
 
@@ -64,10 +66,11 @@ class EmojiSuggestionProvider(private val context: Context) : SuggestionProvider
         allowPossiblyOffensive: Boolean,
         isPrivateSession: Boolean
     ): List<SuggestionCandidate> {
-        val preferredSkinTone = prefs.emoji.preferredSkinTone.get()
         val showName = prefs.emoji.suggestionCandidateShowName.get()
-        val query = validateInputQuery(content.composingText) ?: return emptyList()
-        val emojis = cachedEmojiMappings.get(subtype.primaryLocale)?.get(preferredSkinTone) ?: emptyList()
+        // 단어 추천이 꺼져 있으면 조합 중인 단어가 비어 있다. 그때는 커서 바로 앞의 단어(공백 없이 붙은 글자)로 찾는다.
+        val typed = content.composingText.ifEmpty { trailingWordRegex.find(content.textBeforeSelection)?.value ?: "" }
+        val query = validateInputQuery(typed) ?: return emptyList()
+        val emojis = cachedEmojiMappings.get(subtype.primaryLocale)?.get(EmojiSkinTone.DEFAULT) ?: emptyList()
         val candidates = withContext(Dispatchers.Default) {
             emojis.parallelStream()
                 .map { emoji ->
@@ -119,7 +122,10 @@ class EmojiSuggestionProvider(private val context: Context) : SuggestionProvider
      */
     private fun validateInputQuery(composingText: CharSequence): String? {
         val prefix = prefs.emoji.suggestionType.get().prefix
-        val queryMinLength = prefs.emoji.suggestionQueryMinLength.get() + prefix.length
+        val minLength = prefs.emoji.suggestionQueryMinLength.get()
+        // 한글·일본어는 두 글자만으로도 뜻이 분명한 말이 많다(사랑, 축하, ㅎㅎ).
+        val isCjk = composingText.any { it.code >= 0x1100 }
+        val queryMinLength = (if (isCjk) minOf(minLength, 2) else minLength) + prefix.length
         if (prefix.isNotEmpty() && !composingText.startsWith(prefix)) {
             return null
         }

@@ -40,6 +40,7 @@ import org.florisboard.lib.snygg.SnyggStylesheet
 import org.florisboard.lib.snygg.SnyggStylesheetEditor
 import org.florisboard.lib.snygg.value.SnyggDefinedVarValue
 import org.florisboard.lib.snygg.value.SnyggDpSizeValue
+import org.florisboard.lib.snygg.value.SnyggPaddingValue
 import org.florisboard.lib.snygg.value.SnyggValue
 import org.florisboard.lib.snygg.value.SnyggTextMaxLinesValue
 import org.florisboard.lib.snygg.ui.ProvideSnyggTheme
@@ -312,8 +313,9 @@ private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet): SnyggStylesheet
     val editor = stylesheet.edit()
     val changedKeys = applyFunctionKeyTextSizes(editor)
     val changedPopup = applyKeyPopupBubbleStyle(editor)
+    val changedMedia = applyEmojiPanelStyle(editor)
     val changedShape = applyDefaultKeyShape(editor)
-    return if (changedKeys || changedPopup || changedShape) editor.build() else stylesheet
+    return if (changedKeys || changedPopup || changedShape || changedMedia) editor.build() else stylesheet
 }
 
 /**
@@ -402,6 +404,53 @@ private fun applyKeyPopupBubbleStyle(editor: SnyggStylesheetEditor): Boolean {
 }
 
 private val PopupBubbleVars = listOf("--bg", "--key-fg", "--action-bg", "--action-fg")
+
+/**
+ * 이모지 패널에 테마 색을 입힌다. 말랑키 테마에는 이모지 패널 규칙이 없어서 분류 아이콘이 검은색이고,
+ * 아래 'ABC'·지우기 버튼은 키 모양 없이 글자만 떠 있었다. 테마가 직접 정한 값은 두고, 필요한 색 변수가
+ * 없는 테마는 건드리지 않는다.
+ */
+private fun applyEmojiPanelStyle(editor: SnyggStylesheetEditor): Boolean {
+    val defines = editor.rules[SnyggAnnotationRule.Defines] as? SnyggSinglePropertySetEditor ?: return false
+    // 말랑키 테마의 색 변수 이름을 먼저 쓰고, 없으면 기본 스타일(커스텀 테마가 쓰는)의 이름을 쓴다.
+    fun pick(vararg names: String) = names.firstOrNull { it in defines.properties }?.let { SnyggDefinedVarValue(it) }
+    val keyBg = pick("--key-bg", "--surface") ?: return false
+    val keyFg = pick("--key-fg", "--on-surface") ?: return false
+    val keyPressed = pick("--key-bg-pressed", "--surface-variant") ?: return false
+    val accent = pick("--action-bg", "--primary") ?: return false
+
+    var changed = false
+    fun fill(ruleStr: String, vararg props: Pair<String, SnyggValue>) {
+        val rule = SnyggRule.fromOrNull(ruleStr) ?: return
+        val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: return
+        for ((name, value) in props) {
+            if (!propEditor.properties.containsKey(name)) {
+                propEditor.properties[name] = value
+                changed = true
+            }
+        }
+    }
+    val keyShape = SnyggRoundedCornerDpShapeValue(DefaultKeyCorner, DefaultKeyCorner, DefaultKeyCorner, DefaultKeyCorner)
+    fill(FlorisImeUi.MediaEmojiTab.elementName, "foreground" to keyFg)
+    fill("${FlorisImeUi.MediaEmojiTab.elementName}:focus", "foreground" to accent)
+    fill(FlorisImeUi.MediaEmojiSubheader.elementName, "foreground" to keyFg)
+    fill(
+        "${FlorisImeUi.MediaEmojiKey.elementName}:pressed",
+        "background" to keyPressed,
+        "shape" to keyShape,
+    )
+    fill(
+        FlorisImeUi.MediaBottomRowButton.elementName,
+        "background" to keyBg,
+        "foreground" to keyFg,
+        "shape" to keyShape,
+        // 글자에 딱 붙지 않고 키처럼 보이도록 안팎 여백을 준다.
+        "padding" to SnyggPaddingValue(androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp)),
+        "margin" to SnyggPaddingValue(androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 5.dp)),
+    )
+    fill("${FlorisImeUi.MediaBottomRowButton.elementName}:pressed", "background" to keyPressed)
+    return changed
+}
 
 /** 기본 스타일(FlorisImeThemeBaseStyle)의 기능키 글자 크기. (키 코드, sp, 최대 줄 수) */
 private val FunctionKeyTextSizes = listOf(

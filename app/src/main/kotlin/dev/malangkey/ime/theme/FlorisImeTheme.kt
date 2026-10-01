@@ -56,10 +56,6 @@ import org.florisboard.lib.snygg.value.SnyggSpSizeValue
 import androidx.compose.ui.unit.sp
 
 data class MalangConfig(
-    val isGlassmorphismEnabled: Boolean = false,
-    val glassmorphismTransparency: Float = 0.3f,
-    val isNeumorphismEnabled: Boolean = false,
-    val squircleShapeEnabled: Boolean = false,
     val malangSoundEnabled: Boolean = false,
 )
 
@@ -88,12 +84,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val customEnterKeyTextColor by prefs.malang.customEnterKeyTextColor.collectAsState()
     val customRealEnterKeyBgColor by prefs.malang.customRealEnterKeyBgColor.collectAsState()
     val customRealEnterKeyTextColor by prefs.malang.customRealEnterKeyTextColor.collectAsState()
-    val keyCornerRadius by prefs.malang.keyCornerRadius.collectAsState()
-    
-    val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
-    val glassmorphismTransparency by prefs.malang.glassmorphismTransparency.collectAsState()
-    val isNeumorphismEnabled by prefs.malang.isNeumorphismEnabled.collectAsState()
-    val squircleShapeEnabled by prefs.malang.squircleShapeEnabled.collectAsState()
 
     val keyFontSizeMultiplier by prefs.malang.keyFontSizeMultiplier.collectAsState()
     val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
@@ -101,14 +91,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
     val malangSoundEnabled by prefs.malang.malangSoundEnabled.collectAsState()
 
-    val malangConfig = remember(isGlassmorphismEnabled, glassmorphismTransparency, isNeumorphismEnabled, squircleShapeEnabled, malangSoundEnabled) {
-        MalangConfig(
-            isGlassmorphismEnabled,
-            glassmorphismTransparency,
-            isNeumorphismEnabled,
-            squircleShapeEnabled,
-            malangSoundEnabled
-        )
+    val malangConfig = remember(malangSoundEnabled) {
+        MalangConfig(malangSoundEnabled = malangSoundEnabled)
     }
 
     val assetResolver = remember(activeThemeInfo) {
@@ -124,12 +108,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         customEnterKeyTextColor,
         customRealEnterKeyBgColor,
         customRealEnterKeyTextColor,
-        keyCornerRadius,
         keyboardFontFamily,
-        isGlassmorphismEnabled,
-        glassmorphismTransparency,
-        isNeumorphismEnabled,
-        squircleShapeEnabled,
         keyFontSizeMultiplier,
         keyHintFontSizeMultiplier,
         keyBorderThickness,
@@ -138,8 +117,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         themeMode
     ) {
         var baseStylesheet = activeThemeInfo.stylesheet
-        // 사용자가 정한 모서리(스퀘어클·모서리 크기)가 실제로 들어갔는지. 들어갔으면 기본 10dp를 덮어쓰지 않는다.
-        var isKeyShapeCustom = false
         val isCustomThemeSelected = dayThemeId.componentId == "custom" && (themeMode == ThemeMode.ALWAYS_DAY || themeMode == ThemeMode.FOLLOW_SYSTEM)
         
         val isKeyboardBgCustom = isCustomThemeSelected && customKeyboardBgColor != Color.Unspecified
@@ -153,17 +130,14 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         // 글자·힌트 크기는 자판 종류(쿼티/격자)마다 달라서 TextKeyboardLayout에서 키마다 적용한다.
         val isKeyLayoutCustom = keyBorderThickness > 0
         
-        if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || (isCustomThemeSelected && keyCornerRadius != 6) || isFontCustom || (isCustomThemeSelected && isGlassmorphismEnabled) || (isCustomThemeSelected && isNeumorphismEnabled) || (isCustomThemeSelected && squircleShapeEnabled)) {
+        if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || isFontCustom) {
             val editor = baseStylesheet.edit()
             
             val rootRule = SnyggRule.fromOrNull("root")
             if (rootRule != null) {
                 val propEditor = editor.rules.getOrPut(rootRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                 if (isKeyboardBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = glassmorphismTransparency))
+                    propEditor.properties["background"] = SnyggStaticColorValue(customKeyboardBgColor)
                 }
             }
             
@@ -171,10 +145,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             if (keyboardRule != null) {
                 val propEditor = editor.rules.getOrPut(keyboardRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                 if (isKeyboardBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = glassmorphismTransparency))
+                    propEditor.properties["background"] = SnyggStaticColorValue(customKeyboardBgColor)
                 }
             }
             
@@ -182,10 +153,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             if (windowRule != null) {
                 val propEditor = editor.rules.getOrPut(windowRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                 if (isKeyboardBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                    propEditor.properties["background"] = SnyggStaticColorValue(customKeyboardBgColor)
                 }
                 if (isKeyTextCustom) {
                     propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
@@ -196,10 +164,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             if (smartbarRule != null) {
                 val propEditor = editor.rules.getOrPut(smartbarRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                 if (isKeyboardBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyboardBgColor.copy(alpha = glassmorphismTransparency) else customKeyboardBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                    propEditor.properties["background"] = SnyggStaticColorValue(customKeyboardBgColor)
                 }
                 if (isKeyTextCustom) {
                     propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
@@ -210,21 +175,10 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             if (keyRule != null) {
                 val propEditor = editor.rules.getOrPut(keyRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                 if (isKeyBgCustom) {
-                    val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
-                    propEditor.properties["background"] = SnyggStaticColorValue(bg)
-                } else if (isGlassmorphismEnabled || isNeumorphismEnabled) {
-                    propEditor.properties["background"] = SnyggStaticColorValue(Color.White.copy(alpha = if (isGlassmorphismEnabled) glassmorphismTransparency * 1.5f else 1.0f))
+                    propEditor.properties["background"] = SnyggStaticColorValue(customKeyBgColor)
                 }
                 if (isKeyTextCustom) {
                     propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
-                }
-                if (squircleShapeEnabled) {
-                    propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(16.dp, 16.dp, 16.dp, 16.dp)
-                    isKeyShapeCustom = true
-                } else if (keyCornerRadius != 6) {
-                    val radius = keyCornerRadius.toFloat().dp
-                    propEditor.properties["shape"] = SnyggRoundedCornerDpShapeValue(radius, radius, radius, radius)
-                    isKeyShapeCustom = true
                 }
                 if (keyBorderThickness > 0) {
                     propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
@@ -255,8 +209,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     val vowelRule = SnyggRule.fromOrNull("key[code=$code]") ?: continue
                     val propEditor = editor.rules.getOrPut(vowelRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
                     if (isKeyBgCustom) {
-                        val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
-                        propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                        propEditor.properties["background"] = SnyggStaticColorValue(customKeyBgColor)
                     }
                     if (isKeyTextCustom) {
                         propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
@@ -321,8 +274,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                         }
                     } else if (isSpaceCode) {
                         if (isKeyBgCustom) {
-                            val bg = if (isGlassmorphismEnabled) customKeyBgColor.copy(alpha = glassmorphismTransparency * 1.5f) else customKeyBgColor
-                            propEditor.properties["background"] = SnyggStaticColorValue(bg)
+                            propEditor.properties["background"] = SnyggStaticColorValue(customKeyBgColor)
                         }
                     } else if (isEnterKeyBgCustom) {
                         propEditor.properties["background"] = SnyggStaticColorValue(customEnterKeyBgColor)
@@ -348,7 +300,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             
             baseStylesheet = editor.build()
         }
-        withBaseStyleFallbacks(baseStylesheet, isKeyShapeCustom)
+        withBaseStyleFallbacks(baseStylesheet)
     }
 
     val snyggTheme = rememberSnyggTheme(stylesheet, assetResolver)
@@ -383,18 +335,17 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
  * 테마 스타일시트는 기본 스타일과 합쳐지지 않아서, 테마가 적지 않은 규칙은 통째로 빠진다.
  * 그중 눈에 띄게 깨지는 기능키 글자 크기와 길게 누름 팝업을 채운다.
  */
-private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet, isKeyShapeCustom: Boolean): SnyggStylesheet {
+private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet): SnyggStylesheet {
     val editor = stylesheet.edit()
     val changedKeys = applyFunctionKeyTextSizes(editor)
     val changedPopup = applyKeyPopupBubbleStyle(editor)
-    val changedShape = !isKeyShapeCustom && applyDefaultKeyShape(editor)
+    val changedShape = applyDefaultKeyShape(editor)
     return if (changedKeys || changedPopup || changedShape) editor.build() else stylesheet
 }
 
 /**
  * 모든 자판의 기본 키 모서리를 10dp로 맞춘다. 테마의 20dp 모서리는 폭이 좁은 쿼티 키를 알약처럼
  * 뭉개고, 20키에서도 오른쪽 위 힌트를 곡선 밖으로 밀어내 가렸다.
- * 사용자가 모서리 크기·스퀘어클을 정했으면 부르지 않는다.
  */
 private fun applyDefaultKeyShape(editor: SnyggStylesheetEditor): Boolean {
     val rule = SnyggRule.fromOrNull(FlorisImeUi.Key.elementName) ?: return false

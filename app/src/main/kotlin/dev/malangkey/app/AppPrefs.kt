@@ -778,10 +778,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
-        val keyCornerRadius = int(
-            key = "malang__key_corner_radius",
-            default = 6,
-        )
         val keyboardFontFamily = string(
             key = "malang__keyboard_font_family",
             default = "jua",
@@ -811,14 +807,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__key_border_opacity",
             default = 20,
         )
-        val isGlassmorphismEnabled = boolean(
-            key = "malang__is_glassmorphism_enabled",
-            default = false,
-        )
-        val glassmorphismTransparency = float(
-            key = "malang__glassmorphism_transparency",
-            default = 0.3f,
-        )
         val bgImageUri = string(
             key = "malang__bg_image_uri",
             default = "",
@@ -826,14 +814,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val bgDimmer = float(
             key = "malang__bg_dimmer",
             default = 0.5f,
-        )
-        val isNeumorphismEnabled = boolean(
-            key = "malang__is_neumorphism_enabled",
-            default = false,
-        )
-        val squircleShapeEnabled = boolean(
-            key = "malang__squircle_shape_enabled",
-            default = false,
         )
         val malangSoundEnabled = boolean(
             key = "malang__sound_enabled",

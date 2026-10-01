@@ -443,7 +443,6 @@ private fun ThemeTabContent(
     navController: androidx.navigation.NavController
 ) {
     val prefs by FlorisPreferenceStore
-    val isGlassmorphismEnabled by prefs.malang.isGlassmorphismEnabled.collectAsState()
     var confirmReset by remember { mutableStateOf(false) }
 
     Column(
@@ -453,38 +452,6 @@ private fun ThemeTabContent(
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         ThemeHeroCard(onClick = { navController.navigate(Routes.Settings.Theme) })
-
-        MalangSettingsSection(
-            title = "키 모양",
-            items = listOf<@Composable () -> Unit>(
-                { MalangSliderRow(prefs.malang.keyCornerRadius, "모서리 둥글기", min = 0, max = 32, unit = "dp") },
-                {
-                    MalangSwitchRow(
-                        prefs.malang.squircleShapeEnabled,
-                        title = "말랑한 모서리 (스쿼클)",
-                        summary = "키 모서리를 부드러운 곡선으로 만듭니다.",
-                    )
-                },
-                {
-                    MalangSwitchRow(
-                        prefs.malang.isNeumorphismEnabled,
-                        title = "입체 효과",
-                        summary = "키에 그림자를 넣어 볼록하게 보이게 합니다.",
-                    )
-                },
-                {
-                    MalangSwitchRow(
-                        prefs.malang.isGlassmorphismEnabled,
-                        title = "유리 효과",
-                        summary = "키보드를 반투명하게 만들어 뒤 화면이 비치게 합니다.",
-                    )
-                },
-            ) + if (isGlassmorphismEnabled) {
-                listOf<@Composable () -> Unit>({ FloatPercentSliderRow(prefs.malang.glassmorphismTransparency, "유리 투명도") })
-            } else {
-                emptyList()
-            },
-        )
 
         MalangSettingsSection(
             title = "외곽선",
@@ -552,7 +519,7 @@ private fun ThemeTabContent(
             onDismissRequest = { confirmReset = false },
             containerColor = MalangSettingsCard,
             title = { Text("처음 모양으로 되돌릴까요?", color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
-            text = { Text("커스텀 색과 키 모양, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
+            text = { Text("커스텀 색과 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReset = false
@@ -564,10 +531,6 @@ private fun ThemeTabContent(
                         prefs.malang.customEnterKeyTextColor.set(Color.Unspecified)
                         prefs.malang.customRealEnterKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customRealEnterKeyTextColor.set(Color.Unspecified)
-                        prefs.malang.keyCornerRadius.set(6)
-                        prefs.malang.squircleShapeEnabled.set(false)
-                        prefs.malang.isNeumorphismEnabled.set(false)
-                        prefs.malang.isGlassmorphismEnabled.set(false)
                         prefs.malang.keyboardFontFamily.set("jua")
                         prefs.malang.keyFontSizeMultiplier.set(100)
                         prefs.malang.keyHintFontSizeMultiplier.set(80)

@@ -119,11 +119,6 @@ suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThem
         prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
         prefs.theme.dayThemeId.set(themeCompName)
     }
-    prefs.malang.keyCornerRadius.set(6)
-    prefs.malang.isGlassmorphismEnabled.set(false)
-    prefs.malang.glassmorphismTransparency.set(0.3f)
-    prefs.malang.isNeumorphismEnabled.set(false)
-    prefs.malang.squircleShapeEnabled.set(false)
 }
 
 /** 현재 적용된 테마인지 여부. */

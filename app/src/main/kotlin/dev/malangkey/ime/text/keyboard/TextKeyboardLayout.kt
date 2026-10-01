@@ -544,30 +544,6 @@ private fun TextKeyButton(
             .absoluteOffset { face.topLeft.toIntOffset() }
     }
         
-    if (malangConfig.isNeumorphismEnabled) {
-        val elevation = if (key.isPressed) (-2).dp else 4.dp
-        val lightShadow = Color.White.copy(alpha = 0.8f)
-        val darkShadow = Color.Black.copy(alpha = 0.15f)
-        // simple neumorphism simulation
-        keyModifier = keyModifier.shadow(
-            elevation = if (key.isPressed) 0.dp else 2.dp,
-            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp),
-            ambientColor = darkShadow,
-            spotColor = darkShadow
-        ).background(
-            color = Color.Unspecified, // rely on snygg for base
-            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp)
-        )
-    }
-
-    if (malangConfig.isGlassmorphismEnabled) {
-        keyModifier = keyModifier.border(
-            width = 1.dp,
-            color = Color.White.copy(alpha = 0.4f),
-            shape = RoundedCornerShape(if (malangConfig.squircleShapeEnabled) 16.dp else 8.dp)
-        )
-    }
-
     SnyggBox(
         FlorisImeUi.Key.elementName,
         attributes = attributes,

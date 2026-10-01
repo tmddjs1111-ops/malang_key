@@ -151,9 +151,6 @@ object Routes {
         @Deeplink("settings/theme/manage")
         data class ThemeManager(val action: ThemeManagerScreenAction)
 
-        @Serializable
-        @Deeplink("settings/theme/advanced")
-        object AdvancedTheme
 
         @Serializable
         @Deeplink("settings/keyboard")
@@ -329,7 +326,6 @@ object Routes {
             }
 
             composableWithDeepLink(Settings.Theme::class) { ThemeScreen() }
-            composableWithDeepLink(Settings.AdvancedTheme::class) { dev.malangkey.app.settings.theme.AdvancedThemeScreen() }
             composableWithDeepLink(Settings.ThemeManager::class) { navBackStack ->
                 val payload = navBackStack.toRoute<Settings.ThemeManager>()
                 ThemeManagerScreen(payload.action)

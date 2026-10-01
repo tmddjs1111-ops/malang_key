@@ -82,9 +82,6 @@ class PopupUiController(
     private var extRenderInfo by mutableStateOf<ExtRenderInfo?>(null)
 
     private var activeElementIndex by mutableIntStateOf(-1)
-    private var needsInitialTouch = false
-    private var initialTouchX = 0f
-    private var initialTouchY = 0f
     var evaluator: ComputingEvaluator = DefaultComputingEvaluator
     var keyHintConfiguration: KeyHintConfiguration = KeyHintConfiguration.HINTS_DISABLED
 
@@ -263,20 +260,19 @@ class PopupUiController(
     }
 
     fun showClipboardPopup(key: Key, items: List<dev.malangkey.ime.clipboard.provider.ClipboardItem>, size: Size, maxRows: Int) {
-        val rowCount = 3
+        val rowCount = ClipboardPopupRows
         val colCount = maxRows
         val n = rowCount * colCount
         if (items.isEmpty()) return
 
         val baseBounds = baseRenderInfo?.bounds ?: boundsProvider(key)
-        val keyPopupDiffX = (key.visibleBounds.width - baseBounds.width) / 2.0f
+        val density = context.resources.displayMetrics.density
 
         val elements = List(rowCount) { mutableListOf<Element>() }
         for (i in 0 until n) {
             val visualRowIndex = i / colCount
             val elementsRowIndex = rowCount - 1 - visualRowIndex
-            val item = items.getOrNull(i)
-            val label = item?.text?.toString() ?: ""
+            val label = items.getOrNull(i)?.text?.toString() ?: ""
             val displayLabel = if (label.length > 5) label.take(4) + "…" else label
             val keyData = TextKeyData(
                 code = KeyCode.MULTIPLE_CODE_POINTS,
@@ -292,13 +288,18 @@ class PopupUiController(
             ))
         }
 
-        val extWidth = colCount * baseBounds.width
-        val extHeight = rowCount * baseBounds.height * 0.4f
+        // 손가락에 가려도 문구가 보이도록 칸을 넉넉히 잡고, 화면이 좁으면 맞춰 줄인다.
+        val cellWidth = minOf(
+            maxOf(baseBounds.width, ClipboardCellMinWidthDp * density),
+            (size.width - 8f * density) / colCount,
+        )
+        val cellHeight = ClipboardCellHeightDp * density
+        val extWidth = colCount * cellWidth
+        val extHeight = rowCount * cellHeight
 
-        var x = key.visibleBounds.right - extWidth
-        x = x.coerceIn(0f, size.width - extWidth)
-
-        val y = key.visibleBounds.top - extHeight - baseBounds.height * 0.1f
+        val keyCenterX = key.visibleBounds.left + key.visibleBounds.width / 2f
+        val x = (key.visibleBounds.right - extWidth).coerceIn(0f, (size.width - extWidth).coerceAtLeast(0f))
+        val y = key.visibleBounds.top - extHeight - PopupBubbleTailHeight.value * density
 
         val extBounds = FlorisRect.new(
             left = x, top = y, right = x + extWidth, bottom = y + extHeight,
@@ -314,11 +315,48 @@ class PopupUiController(
             row0count = colCount,
             row1count = (rowCount - 1) * colCount,
             isClipboard = true,
+            elemWidthPx = cellWidth,
+            elemHeightPx = cellHeight,
+            tailCenterXPx = keyCenterX - x,
         )
-        activeElementIndex = -1
-        needsInitialTouch = true
-        initialTouchX = 0f
-        initialTouchY = 0f
+        // 뜨자마자 누른 키 바로 위 칸이 골라져 있게 한다.
+        clipboardRow = -1
+        clipboardCol = -1
+        selectClipboardCell(keyCenterX, key.visibleBounds.top + key.visibleBounds.height / 2f)
+    }
+
+    private var clipboardRow = -1
+    private var clipboardCol = -1
+
+    /**
+     * 손가락 아래(또는 바로 위·아래)에 있는 상용구 칸을 고른다. 칸 경계에서 손이 조금 떨려도 왔다 갔다 하지
+     * 않도록, 지금 칸을 [ClipboardCellHysteresis]만큼 넘어가야 옆 칸으로 바꾼다. 빈 칸도 골라지지만 놓으면
+     * 아무것도 입력하지 않는다(getActiveKeyData).
+     */
+    private fun selectClipboardCell(xEvent: Float, yEvent: Float) {
+        val info = extRenderInfo ?: return
+        val cellW = info.elemWidthPx
+        val cellH = info.elemHeightPx
+        val rowCount = info.elements.size
+        val colCount = info.row0count
+        val relX = xEvent - info.bounds.left
+        val relY = yEvent - info.bounds.top
+
+        val keepCurrent = clipboardRow >= 0 && clipboardCol >= 0 && run {
+            val padX = cellW * ClipboardCellHysteresis
+            val padY = cellH * ClipboardCellHysteresis
+            val withinX = relX >= clipboardCol * cellW - padX && relX < (clipboardCol + 1) * cellW + padX
+            // 맨 위·맨 아래 줄은 팝업 밖으로 나가도 그대로 둔다.
+            val top = if (clipboardRow == 0) Float.NEGATIVE_INFINITY else clipboardRow * cellH - padY
+            val bottom = if (clipboardRow == rowCount - 1) Float.POSITIVE_INFINITY else (clipboardRow + 1) * cellH + padY
+            withinX && relY >= top && relY < bottom
+        }
+        if (!keepCurrent) {
+            clipboardCol = (relX / cellW).toInt().coerceIn(0, colCount - 1)
+            clipboardRow = (relY / cellH).toInt().coerceIn(0, rowCount - 1)
+        }
+        val element = info.elements.getOrNull(rowCount - 1 - clipboardRow)?.getOrNull(clipboardCol)
+        activeElementIndex = element?.orderedIndex ?: -1
     }
 
     /**
@@ -344,32 +382,7 @@ class PopupUiController(
         val y = yEvent - key.visibleBounds.top
 
         if (extRenderInfo.isClipboard) {
-            if (needsInitialTouch) {
-                initialTouchX = xEvent
-                initialTouchY = yEvent
-                needsInitialTouch = false
-            }
-
-            val dx = xEvent - initialTouchX
-            val dy = yEvent - initialTouchY
-            
-            val colCount = extRenderInfo.elements.firstOrNull()?.size ?: 1
-            
-            // 칸 너비(키 폭)만큼 움직여야 한 칸 넘어간다. 0.6배일 때는 너무 쉽게 옆 칸으로 넘어갔다.
-            val colDiff = (dx / baseBounds.width).toInt()
-            val rowDiff = (dy / (baseBounds.height * 0.4f)).toInt()
-            
-            val targetCol = (colCount - 1 + colDiff).coerceIn(0, colCount - 1)
-            val targetRow = (2 + rowDiff).coerceIn(0, 2)
-            
-            val actualRow = 2 - targetRow
-            val element = extRenderInfo.elements.getOrNull(actualRow)?.getOrNull(targetCol)
-            
-            if (element != null && element.data.label.isNotEmpty()) {
-                activeElementIndex = element.orderedIndex
-            } else {
-                activeElementIndex = -1
-            }
+            selectClipboardCell(xEvent, yEvent)
             return true
         }
 
@@ -415,7 +428,7 @@ class PopupUiController(
             if (extRenderInfo != null) {
                 val activeElement = extRenderInfo.elements.flatMap { it }.find { it.orderedIndex == activeElementIndex }
                 if (extRenderInfo.isClipboard) {
-                    activeElement?.data
+                    activeElement?.data?.takeIf { it.label.isNotEmpty() }
                 } else {
                     activeElement?.data ?: key.computedData
                 }
@@ -527,3 +540,9 @@ class PopupUiController(
         val adjustedIndex: Int,
     )
 }
+
+/** 상용구 팝업: 줄 수, 칸 최소 너비·높이(dp), 옆 칸으로 넘어가기 전에 더 움직여야 하는 비율. */
+private const val ClipboardPopupRows = 3
+private const val ClipboardCellMinWidthDp = 64f
+private const val ClipboardCellHeightDp = 46f
+private const val ClipboardCellHysteresis = 0.18f

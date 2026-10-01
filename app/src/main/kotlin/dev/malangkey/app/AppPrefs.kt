@@ -402,6 +402,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__audio_volume",
             default = 50,
         )
+        /** 키 소리 종류. 예전 '말랑 효과음' 스위치를 켜 둔 사용자는 처음 켤 때 MALANG으로 옮겨진다. */
+        val keySoundStyle = enum(
+            key = "input_feedback__key_sound_style",
+            default = dev.malangkey.ime.input.KeySoundStyle.CLICK,
+        )
         val audioFeatKeyPress = boolean(
             key = "input_feedback__audio_feat_key_press",
             default = true,

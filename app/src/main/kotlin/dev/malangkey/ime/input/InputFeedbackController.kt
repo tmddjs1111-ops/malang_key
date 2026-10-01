@@ -60,8 +60,19 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     init {
         scope.launch(Dispatchers.IO) {
+            // 예전 '말랑 효과음' 스위치는 소리 종류 중 하나(말랑 뽁)가 됐다.
+            if (prefs.malang.malangSoundEnabled.get()) {
+                prefs.inputFeedback.keySoundStyle.set(KeySoundStyle.MALANG)
+                prefs.malang.malangSoundEnabled.set(false)
+            }
+            loadSoundStyle(prefs.inputFeedback.keySoundStyle.get())
+        }
+    }
+
+    private fun loadSoundStyle(style: KeySoundStyle) {
+        scope.launch(Dispatchers.IO) {
             try {
-                keySoundPlayer.load()
+                keySoundPlayer.load(style)
             } catch (e: Exception) {
                 flogDebug { "Key sound load failed: ${e.message}" }
             }
@@ -114,24 +125,23 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
 
         // 누르는 순간 바로 들리도록 코루틴으로 넘기지 않고 이 자리에서 재생한다.
-        // '말랑'은 키 소리의 종류 중 하나다. 크기는 기본 소리와 같은 설정을 따른다.
-        val isMalang = prefs.malang.malangSoundEnabled.get()
+        val style = prefs.inputFeedback.keySoundStyle.get()
         val volume = (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
         if (volume !in 0.01..1.00) return
-        val sound = when {
-            isMalang -> KeySoundPlayer.Sound.MALANG
-            data.code == KeyCode.DELETE -> KeySoundPlayer.Sound.DELETE
-            data.code == KeyCode.ENTER -> KeySoundPlayer.Sound.ENTER
-            data.code == KeyCode.SPACE || data.code == KeyCode.CJK_SPACE -> KeySoundPlayer.Sound.SPACE
-            else -> KeySoundPlayer.Sound.STANDARD
+        val kind = when (data.code) {
+            KeyCode.DELETE -> KeySoundPlayer.Kind.DELETE
+            KeyCode.ENTER, KeyCode.JAPANESE_ENTER -> KeySoundPlayer.Kind.ENTER
+            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE -> KeySoundPlayer.Kind.SPACE
+            else -> KeySoundPlayer.Kind.STANDARD
         }
-        if (keySoundPlayer.play(sound, volume.toFloat())) return
+        if (keySoundPlayer.play(style, kind, volume.toFloat())) return
 
-        // 소리 파일을 올리는 중이면 시스템 효과음으로 대신한다.
-        val effect = when (sound) {
-            KeySoundPlayer.Sound.DELETE -> AudioManager.FX_KEYPRESS_DELETE
-            KeySoundPlayer.Sound.ENTER -> AudioManager.FX_KEYPRESS_RETURN
-            KeySoundPlayer.Sound.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+        // 고른 소리를 아직 올리는 중이면(방금 종류를 바꾼 경우 등) 그동안만 시스템 효과음으로 대신한다.
+        if (!keySoundPlayer.isLoaded(style)) loadSoundStyle(style)
+        val effect = when (kind) {
+            KeySoundPlayer.Kind.DELETE -> AudioManager.FX_KEYPRESS_DELETE
+            KeySoundPlayer.Kind.ENTER -> AudioManager.FX_KEYPRESS_RETURN
+            KeySoundPlayer.Kind.SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
             else -> AudioManager.FX_KEYPRESS_STANDARD
         }
         flogDebug { "Perform system audio with volume=$volume and effect=$effect" }

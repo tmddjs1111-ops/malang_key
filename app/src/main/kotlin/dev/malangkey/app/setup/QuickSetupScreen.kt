@@ -1,5 +1,6 @@
 package dev.malangkey.app.setup
 
+import dev.malangkey.app.settings.keyboard.KeySoundPicker
 import dev.malangkey.app.settings.clipboard.QuickPhraseGridEditor
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -330,14 +331,7 @@ private fun FeedbackStep() {
     MalangSettingsSection(
         items = listOf(
             { MalangSwitchRow(prefs.inputFeedback.audioEnabled, "키 소리", "키를 누를 때 소리를 냅니다.") },
-            {
-                MalangChoiceRow(
-                    prefs.malang.malangSoundEnabled,
-                    title = "소리 종류",
-                    entries = listOf(false to "기본 (딸깍)", true to "말랑 (뽁)"),
-                    enabled = audioEnabled,
-                )
-            },
+            { KeySoundPicker(enabled = audioEnabled) },
             { MalangSwitchRow(prefs.inputFeedback.hapticEnabled, "키 진동", "키를 누를 때 진동을 줍니다.") },
             { MalangSwitchRow(prefs.keyboard.popupEnabled, "키 팝업", "누른 글자를 키 위에 크게 보여줍니다.") },
             { MalangSwitchRow(prefs.keyboard.numberRow, "숫자 행 표시", "키보드 맨 위에 숫자 줄을 항상 보여줍니다.") },

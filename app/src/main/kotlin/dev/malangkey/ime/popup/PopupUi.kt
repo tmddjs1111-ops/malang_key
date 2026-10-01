@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.draw.scale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -146,14 +147,14 @@ fun PopupExtBox(
                             .padding(horizontal = 1.dp, vertical = 1.dp),
                     ) {
                         element.label?.let { label ->
-                            val scaleModifier = if (isClipboard) Modifier.scale(0.66f) else Modifier
+                            val scaleModifier = if (isClipboard) Modifier.wrapContentWidth(unbounded = true).scale(0.62f) else Modifier
                             SnyggText(
                                 modifier = Modifier.align(Alignment.Center).then(scaleModifier),
                                 text = label,
                             )
                         }
                         element.icon?.let { icon ->
-                            val scaleModifier = if (isClipboard) Modifier.scale(0.66f) else Modifier
+                            val scaleModifier = if (isClipboard) Modifier.wrapContentWidth(unbounded = true).scale(0.62f) else Modifier
                             SnyggIcon(
                                 modifier = Modifier.align(Alignment.Center).then(scaleModifier),
                                 imageVector = icon,

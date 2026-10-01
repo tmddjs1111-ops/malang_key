@@ -65,14 +65,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     summary = "키를 누를 때 소리를 냅니다.",
                 )
             },
-            {
-                MalangChoiceRow(
-                    prefs.malang.malangSoundEnabled,
-                    title = "소리 종류",
-                    entries = listOf(false to "기본 (딸깍)", true to "말랑 (뽁)"),
-                    enabled = audioEnabled,
-                )
-            },
+            { KeySoundPicker(enabled = audioEnabled) },
             {
                 MalangChoiceRow(
                     prefs.inputFeedback.audioActivationMode,

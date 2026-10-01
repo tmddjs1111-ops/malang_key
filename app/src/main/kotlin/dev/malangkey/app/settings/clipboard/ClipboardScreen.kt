@@ -67,6 +67,19 @@ import kotlinx.serialization.json.Json
 
 private const val QuickPhraseSlots = 15
 
+/**
+ * 빈 상용구 칸에 흐리게 보여 줄 쓰임새 예시 (칸 이름, 입력창 예시). 보이는 빈 칸에 앞에서부터 차례로 붙는다.
+ * 상용구는 암호화 없이 저장되고 팝업에 그대로 보이므로 비밀번호 같은 값은 예시로 권하지 않는다.
+ */
+private val QuickPhraseHints = listOf(
+    "집 주소" to "예: 서울시 마포구 말랑로 12, 101동 1001호",
+    "계좌번호" to "예: 말랑은행 123-456-789012",
+    "이메일" to "예: malang@example.com",
+    "전화번호" to "예: 010-1234-5678",
+    "회사 주소" to "예: 서울시 중구 세종대로 110",
+    "자주 쓰는 링크" to "예: https://open.kakao.com/…",
+)
+
 private val TriggerKeyEntries = listOf(
     QuickPhraseTriggerKey.PERIOD to "마침표(.)",
     QuickPhraseTriggerKey.COMMA to "쉼표(,)",
@@ -148,6 +161,13 @@ fun QuickPhraseGridEditor() {
     }
     var editingIndex by remember { mutableIntStateOf(-1) }
     var editingText by remember { mutableStateOf("") }
+    // 지금 표에 보이는 빈 칸마다 쓰임새 예시를 하나씩 붙인다.
+    val hintsByIndex = remember(quickPhrases, columns) {
+        (0 until 3 * columns)
+            .filter { quickPhrases.getOrElse(it) { "" }.isEmpty() }
+            .zip(QuickPhraseHints)
+            .toMap()
+    }
 
     fun save(index: Int, text: String) {
         val updated = quickPhrases.toMutableList()
@@ -166,6 +186,7 @@ fun QuickPhraseGridEditor() {
                 for (c in 0 until columns) {
                     val index = r * columns + c
                     val phrase = quickPhrases.getOrElse(index) { "" }
+                    val hint = hintsByIndex[index]?.first
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -180,15 +201,27 @@ fun QuickPhraseGridEditor() {
                             .padding(4.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = phrase.ifEmpty { "+" },
-                            color = if (phrase.isNotEmpty()) MalangSettingsCard else MalangSettingsSummary,
-                            fontSize = if (phrase.isNotEmpty()) 11.sp else 16.sp,
-                            lineHeight = 14.sp,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
-                        )
+                        if (phrase.isEmpty() && hint != null) {
+                            Text(
+                                text = "+ $hint",
+                                color = MalangSettingsSummary.copy(alpha = 0.75f),
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                            )
+                        } else {
+                            Text(
+                                text = phrase.ifEmpty { "+" },
+                                color = if (phrase.isNotEmpty()) MalangSettingsCard else MalangSettingsSummary,
+                                fontSize = if (phrase.isNotEmpty()) 11.sp else 16.sp,
+                                lineHeight = 14.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
             }
@@ -202,7 +235,7 @@ fun QuickPhraseGridEditor() {
             containerColor = MalangSettingsCard,
             title = {
                 Text(
-                    "${index / columns + 1}행 ${index % columns + 1}열 상용구",
+                    hintsByIndex[index]?.let { "${it.first} 상용구" } ?: "${index / columns + 1}행 ${index % columns + 1}열 상용구",
                     color = MalangSettingsTitle,
                     fontFamily = JuaFontFamily,
                     fontSize = 20.sp,
@@ -212,7 +245,7 @@ fun QuickPhraseGridEditor() {
                 OutlinedTextField(
                     value = editingText,
                     onValueChange = { editingText = it },
-                    placeholder = { Text("예: 감사합니다!, 지금 가요") },
+                    placeholder = { Text(hintsByIndex[index]?.second ?: "예: 감사합니다!, 지금 가요") },
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(

@@ -49,17 +49,10 @@ import org.florisboard.lib.snygg.value.SnyggStaticColorValue
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.compositionLocalOf
 import org.florisboard.lib.snygg.value.SnyggCustomFontFamilyValue
 import org.florisboard.lib.snygg.value.SnyggGenericFontFamilyValue
 import org.florisboard.lib.snygg.value.SnyggSpSizeValue
 import androidx.compose.ui.unit.sp
-
-data class MalangConfig(
-    val malangSoundEnabled: Boolean = false,
-)
-
-val LocalMalangConfig = compositionLocalOf { MalangConfig() }
 
 @Composable
 fun FlorisImeTheme(content: @Composable () -> Unit) {
@@ -89,11 +82,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
     val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
     val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
-    val malangSoundEnabled by prefs.malang.malangSoundEnabled.collectAsState()
 
-    val malangConfig = remember(malangSoundEnabled) {
-        MalangConfig(malangSoundEnabled = malangSoundEnabled)
-    }
 
     val assetResolver = remember(activeThemeInfo) {
         FlorisAssetResolver(context, activeThemeInfo)
@@ -127,7 +116,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val isRealEnterKeyBgCustom = isCustomThemeSelected && customRealEnterKeyBgColor != Color.Unspecified
         val isRealEnterKeyTextCustom = isCustomThemeSelected && customRealEnterKeyTextColor != Color.Unspecified
         val isFontCustom = keyboardFontFamily != "system"
-        // 글자·힌트 크기는 자판 종류(쿼티/격자)마다 달라서 TextKeyboardLayout에서 키마다 적용한다.
+        // 湲?먃룻엺???ш린???먰뙋 醫낅쪟(荑쇳떚/寃⑹옄)留덈떎 ?щ씪??TextKeyboardLayout?먯꽌 ?ㅻ쭏???곸슜?쒕떎.
         val isKeyLayoutCustom = keyBorderThickness > 0
         
         if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || isFontCustom) {
@@ -202,8 +191,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
             }
 
-            // 파스텔 테마는 천지인 모음키(ㅣ·ㆍ·ㅡ)에 흰 배경과 포인트색 글자를 따로 준다.
-            // 사용자가 키 색을 바꿨으면 이 키들도 같은 색을 따라가야 한 키만 튀지 않는다.
+            // ?뚯뒪???뚮쭏??泥쒖???紐⑥쓬???Ｂ룔냽쨌??????諛곌꼍怨??ъ씤?몄깋 湲?먮? ?곕줈 以??
+            // ?ъ슜?먭? ???됱쓣 諛붽엥?쇰㈃ ???ㅻ뱾??媛숈? ?됱쓣 ?곕씪媛?????ㅻ쭔 ?吏 ?딅뒗??
             if (isKeyBgCustom || isKeyTextCustom) {
                 for (code in listOf(12643, 183, 12641)) {
                     val vowelRule = SnyggRule.fromOrNull("key[code=$code]") ?: continue
@@ -316,7 +305,6 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     MaterialTheme {
         CompositionLocalProvider(
             LocalTextStyle provides TextStyle.Default,
-            LocalMalangConfig provides malangConfig,
         ) {
             ProvideSnyggTheme(
                 snyggTheme = snyggTheme,
@@ -332,8 +320,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
 }
 
 /**
- * 테마 스타일시트는 기본 스타일과 합쳐지지 않아서, 테마가 적지 않은 규칙은 통째로 빠진다.
- * 그중 눈에 띄게 깨지는 기능키 글자 크기와 길게 누름 팝업을 채운다.
+ * ?뚮쭏 ?ㅽ??쇱떆?몃뒗 湲곕낯 ?ㅽ??쇨낵 ?⑹퀜吏吏 ?딆븘?? ?뚮쭏媛 ?곸? ?딆? 洹쒖튃? ?듭㎏濡?鍮좎쭊??
+ * 洹몄쨷 ?덉뿉 ?꾧쾶 源⑥???湲곕뒫??湲???ш린? 湲멸쾶 ?꾨쫫 ?앹뾽??梨꾩슫??
  */
 private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet): SnyggStylesheet {
     val editor = stylesheet.edit()
@@ -344,8 +332,8 @@ private fun withBaseStyleFallbacks(stylesheet: SnyggStylesheet): SnyggStylesheet
 }
 
 /**
- * 모든 자판의 기본 키 모서리를 10dp로 맞춘다. 테마의 20dp 모서리는 폭이 좁은 쿼티 키를 알약처럼
- * 뭉개고, 20키에서도 오른쪽 위 힌트를 곡선 밖으로 밀어내 가렸다.
+ * 紐⑤뱺 ?먰뙋??湲곕낯 ??紐⑥꽌由щ? 10dp濡?留욎텣?? ?뚮쭏??20dp 紐⑥꽌由щ뒗 ??씠 醫곸? 荑쇳떚 ?ㅻ? ?뚯빟泥섎읆
+ * 萸됯컻怨? 20?ㅼ뿉?쒕룄 ?ㅻⅨ履????뚰듃瑜?怨≪꽑 諛뽰쑝濡?諛?대궡 媛?몃떎.
  */
 private fun applyDefaultKeyShape(editor: SnyggStylesheetEditor): Boolean {
     val rule = SnyggRule.fromOrNull(FlorisImeUi.Key.elementName) ?: return false
@@ -357,11 +345,10 @@ private fun applyDefaultKeyShape(editor: SnyggStylesheetEditor): Boolean {
 private val DefaultKeyCorner = 10.dp
 
 /**
- * 기능키 글자 크기를 기본 스타일과 맞춘다.
+ * 湲곕뒫??湲???ш린瑜?湲곕낯 ?ㅽ??쇨낵 留욎텣??
  *
- * 테마의 `key` 규칙은 글자 키에 맞춘 큰 크기(20sp 등)를 모든 키에 준다. 기본 스타일은 '123',
- * '?123', 스페이스의 언어 이름 같은 기능키를 작게 줄여 두는데, 테마를 넣으면 이 규칙이 빠져서
- * 기능키 글자가 넘치거나 잘린다. 테마가 그 키에 글자 크기를 직접 정하지 않았을 때만 채운다.
+ * ?뚮쭏??`key` 洹쒖튃? 湲???ㅼ뿉 留욎텣 ???ш린(20sp ??瑜?紐⑤뱺 ?ㅼ뿉 以?? 湲곕낯 ?ㅽ??쇱? '123',
+ * '?123', ?ㅽ럹?댁뒪???몄뼱 ?대쫫 媛숈? 湲곕뒫?ㅻ? ?묎쾶 以꾩뿬 ?먮뒗?? ?뚮쭏瑜??ｌ쑝硫???洹쒖튃??鍮좎졇?? * 湲곕뒫??湲?먭? ?섏튂嫄곕굹 ?섎┛?? ?뚮쭏媛 洹??ㅼ뿉 湲???ш린瑜?吏곸젒 ?뺥븯吏 ?딆븯???뚮쭔 梨꾩슫??
  */
 private fun applyFunctionKeyTextSizes(editor: SnyggStylesheetEditor): Boolean {
     var changed = false
@@ -383,11 +370,11 @@ private fun applyFunctionKeyTextSizes(editor: SnyggStylesheetEditor): Boolean {
 }
 
 /**
- * 길게 누름 팝업을 말풍선처럼 보이게 한다.
+ * 湲멸쾶 ?꾨쫫 ?앹뾽??留먰뭾?좎쿂??蹂댁씠寃??쒕떎.
  *
- * 말랑키 테마에는 팝업 규칙이 없어서 배경·그림자·선택 표시 없이 글자만 떠 있었다. 테마 색 변수로
- * 테두리 있는 말풍선을 만들고, 고르고 있는 글자는 포인트색으로 채운다. 테마가 직접 정한 값은 두고,
- * 필요한 색 변수가 없는 테마(기본 테마 등)는 건드리지 않는다.
+ * 留먮옉???뚮쭏?먮뒗 ?앹뾽 洹쒖튃???놁뼱??諛곌꼍쨌洹몃┝?먃룹꽑???쒖떆 ?놁씠 湲?먮쭔 ???덉뿀?? ?뚮쭏 ??蹂?섎줈
+ * ?뚮몢由??덈뒗 留먰뭾?좎쓣 留뚮뱾怨? 怨좊Ⅴ怨??덈뒗 湲?먮뒗 ?ъ씤?몄깋?쇰줈 梨꾩슫?? ?뚮쭏媛 吏곸젒 ?뺥븳 媛믪? ?먭퀬,
+ * ?꾩슂????蹂?섍? ?녿뒗 ?뚮쭏(湲곕낯 ?뚮쭏 ????嫄대뱶由ъ? ?딅뒗??
  */
 private fun applyKeyPopupBubbleStyle(editor: SnyggStylesheetEditor): Boolean {
     val defines = editor.rules[SnyggAnnotationRule.Defines] as? SnyggSinglePropertySetEditor ?: return false
@@ -430,7 +417,7 @@ private fun applyKeyPopupBubbleStyle(editor: SnyggStylesheetEditor): Boolean {
 
 private val PopupBubbleVars = listOf("--bg", "--key-fg", "--action-bg", "--action-fg")
 
-/** 기본 스타일(FlorisImeThemeBaseStyle)의 기능키 글자 크기. (키 코드, sp, 최대 줄 수) */
+/** 湲곕낯 ?ㅽ???FlorisImeThemeBaseStyle)??湲곕뒫??湲???ш린. (??肄붾뱶, sp, 理쒕? 以??? */
 private val FunctionKeyTextSizes = listOf(
     Triple(listOf(KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE), 14, 1),
     Triple(listOf(
@@ -439,7 +426,7 @@ private val FunctionKeyTextSizes = listOf(
         KeyCode.VIEW_SYMBOLS2,
         KeyCode.JAPANESE_CONVERT,
         KeyCode.KANA_SMALL,
-        // 숫자·기호 전환 키는 모든 자판에서 '123'·'?123' 한 줄로 쓴다.
+        // ?レ옄쨌湲고샇 ?꾪솚 ?ㅻ뒗 紐⑤뱺 ?먰뙋?먯꽌 '123'쨌'?123' ??以꾨줈 ?대떎.
         KeyCode.VIEW_NUMERIC,
         KeyCode.VIEW_NUMERIC_ADVANCED,
         KeyCode.EXIT_NUMERIC,

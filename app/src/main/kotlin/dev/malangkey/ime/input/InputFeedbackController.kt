@@ -19,7 +19,6 @@ package dev.malangkey.ime.input
 import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
 import android.provider.Settings
-import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.KeyData
@@ -106,16 +105,17 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     private fun performAudioFeedback(data: KeyData, factor: Double) {
         if (audioManager == null) return
-        if (!prefs.inputFeedback.audioEnabled.get() && !prefs.malang.malangSoundEnabled.get()) return
-        if (!prefs.malang.malangSoundEnabled.get() && prefs.inputFeedback.audioActivationMode.get() ==
+        if (!prefs.inputFeedback.audioEnabled.get()) return
+        if (prefs.inputFeedback.audioActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemAudioEnabled) return
 
         // 무음·진동 모드에서는 키 소리를 내지 않는다.
         if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
 
         // 누르는 순간 바로 들리도록 코루틴으로 넘기지 않고 이 자리에서 재생한다.
+        // '말랑'은 키 소리의 종류 중 하나다. 크기는 기본 소리와 같은 설정을 따른다.
         val isMalang = prefs.malang.malangSoundEnabled.get()
-        val volume = if (isMalang) 0.6 * factor else (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
+        val volume = (prefs.inputFeedback.audioVolume.get() * factor) / 100.0
         if (volume !in 0.01..1.00) return
         val sound = when {
             isMalang -> KeySoundPlayer.Sound.MALANG
@@ -142,12 +142,11 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
             flogDebug { "Haptic skipped: vibrator is null" }
             return
         }
-        val isMalang = prefs.malang.malangSoundEnabled.get()
-        if (!prefs.inputFeedback.hapticEnabled.get() && !isMalang) {
+        if (!prefs.inputFeedback.hapticEnabled.get()) {
             flogDebug { "Haptic skipped: hapticEnabled is false" }
             return
         }
-        if (!isMalang && prefs.inputFeedback.hapticActivationMode.get() ==
+        if (prefs.inputFeedback.hapticActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemHapticEnabled) {
             flogDebug { "Haptic skipped: respect system settings and system haptic is disabled" }
             return
@@ -156,14 +155,10 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         flogDebug { "Performing haptic feedback (factor=$factor)" }
         scope.launch {
             try {
-                if (isMalang) {
-                    vibrator.vibrateClick(HapticFeedbackConstants.CLOCK_TICK, 0.3f * factor.toFloat())
-                } else {
-                    val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
-                    val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
-                    flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
-                    vibrator.vibrateClick(primitive.androidId, intensity)
-                }
+                val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
+                val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
+                flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
+                vibrator.vibrateClick(primitive.androidId, intensity)
             } catch (e: Exception) {
                 flogDebug { "Haptic execution failed: ${e.message}" }
             }

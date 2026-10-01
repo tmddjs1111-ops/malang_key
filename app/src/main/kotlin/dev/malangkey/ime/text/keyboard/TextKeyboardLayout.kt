@@ -516,7 +516,6 @@ private fun TextKeyButton(
     val size = remember(key, desiredKey) {
         key.visibleBounds.size.toDpSize()
     }
-    val malangConfig = dev.malangkey.ime.theme.LocalMalangConfig.current
     val compactNumberRowScale = if ((evaluator.keyboard as TextKeyboard).isCompactNumberRowKey(key)) {
         TextKeyboard.CompactNumberRowHeightFactor
     } else {

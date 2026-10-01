@@ -66,10 +66,11 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                 )
             },
             {
-                MalangSwitchRow(
+                MalangChoiceRow(
                     prefs.malang.malangSoundEnabled,
-                    title = "말랑 효과음",
-                    summary = "기본 소리 대신 말랑키 전용 효과음을 사용합니다.",
+                    title = "소리 종류",
+                    entries = listOf(false to "기본 (딸깍)", true to "말랑 (뽁)"),
+                    enabled = audioEnabled,
                 )
             },
             {

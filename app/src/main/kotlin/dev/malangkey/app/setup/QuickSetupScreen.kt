@@ -326,10 +326,18 @@ private fun PreviewCard(
 @Composable
 private fun FeedbackStep() {
     val prefs by FlorisPreferenceStore
+    val audioEnabled by prefs.inputFeedback.audioEnabled.collectPrefAsState()
     MalangSettingsSection(
         items = listOf(
             { MalangSwitchRow(prefs.inputFeedback.audioEnabled, "키 소리", "키를 누를 때 소리를 냅니다.") },
-            { MalangSwitchRow(prefs.malang.malangSoundEnabled, "말랑 효과음", "기본 소리 대신 말랑키 전용 효과음을 씁니다.") },
+            {
+                MalangChoiceRow(
+                    prefs.malang.malangSoundEnabled,
+                    title = "소리 종류",
+                    entries = listOf(false to "기본 (딸깍)", true to "말랑 (뽁)"),
+                    enabled = audioEnabled,
+                )
+            },
             { MalangSwitchRow(prefs.inputFeedback.hapticEnabled, "키 진동", "키를 누를 때 진동을 줍니다.") },
             { MalangSwitchRow(prefs.keyboard.popupEnabled, "키 팝업", "누른 글자를 키 위에 크게 보여줍니다.") },
             { MalangSwitchRow(prefs.keyboard.numberRow, "숫자 행 표시", "키보드 맨 위에 숫자 줄을 항상 보여줍니다.") },

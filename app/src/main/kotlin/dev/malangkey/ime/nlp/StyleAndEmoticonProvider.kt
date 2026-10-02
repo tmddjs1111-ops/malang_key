@@ -12,17 +12,15 @@ object StyleAndEmoticonProvider {
             return candidates
         }
 
-        // 1. Emoticon Candidates from Database (1000+ emoticons)
-        val matchedEmoticons = EmoticonDatabase.search(text)
-        candidates.addAll(matchedEmoticons.map {
+        val emoticons = EmoticonDatabase.search(text).map {
             ReplaceWordSuggestionCandidate(text = it, originalWordLength = text.length, secondaryText = "이모티콘")
-        })
-
-        // 2. Insta-style font & aesthetic frame candidates (25+ styles)
-        val stylePairs = InstaStyleProvider.generateStyles(text)
-        candidates.addAll(stylePairs.map { (styledText, badge) ->
+        }
+        val styles = InstaStyleProvider.generateStyles(text).map { (styledText, badge) ->
             ReplaceWordSuggestionCandidate(text = styledText, originalWordLength = text.length, secondaryText = badge)
-        })
+        }
+        // 영문을 쳤으면 꾸밈 글씨를 찾는 경우가 많아 먼저 보여 준다. 한글은 뜻에 맞는 이모티콘이 먼저다.
+        val hasLatin = text.any { it in 'A'..'Z' || it in 'a'..'z' }
+        candidates.addAll(if (hasLatin) styles + emoticons else emoticons + styles)
 
         return candidates
     }

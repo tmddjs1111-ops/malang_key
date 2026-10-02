@@ -40,46 +40,79 @@ object InstaStyleProvider {
         return sb.toString()
     }
 
-    fun generateStyles(text: String): List<Pair<String, String>> {
-        val results = mutableListOf<Pair<String, String>>()
-        if (text.isBlank()) return results
+    /** 유니코드 블록에서 A·a의 위치를 알면 나머지 글자는 순서대로 이어진다(전각, 산세리프 이탤릭). */
+    private fun convertByOffset(text: String, upperA: Int, lowerA: Int): String {
+        val sb = StringBuilder()
+        for (ch in text) {
+            when (ch) {
+                in 'A'..'Z' -> sb.appendCodePoint(upperA + (ch - 'A'))
+                in 'a'..'z' -> sb.appendCodePoint(lowerA + (ch - 'a'))
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
 
+    /** 베이퍼웨이브: 영문·숫자를 전각 글자로 바꿔 넓게 띄운다. */
+    private fun fullWidth(text: String): String {
+        val sb = StringBuilder()
+        for (ch in text) {
+            when (ch) {
+                in 'A'..'Z', in 'a'..'z', in '0'..'9' -> sb.appendCodePoint(ch.code - 0x21 + 0xFF01)
+                ' ' -> sb.append('\u3000')
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
+
+    /**
+     * 단어 하나를 꾸민 후보들 (꾸민 글, 배지). 2026년 인스타 바이오 인기 순으로 놓는다.
+     * 영문이 있으면 꾸밈 글씨를 먼저, 한글만 있으면 감싸는 프레임만 낸다(유니코드에 한글 꾸밈 글씨가 없다).
+     */
+    fun generateStyles(text: String): List<Pair<String, String>> {
+        if (text.isBlank()) return emptyList()
         val hasLatin = text.any { it in 'A'..'Z' || it in 'a'..'z' }
 
-        // 1. Decorative / Aesthetic Frames (Works beautifully for Korean and English)
-        results.add(Pair("✿ $text ✿", "인스타: 꽃송이"))
-        results.add(Pair("✨ $text ✨", "인스타: 반짝이"))
-        results.add(Pair("★·.·´¯`·.·★ $text ★·.·´¯`·.·★", "인스타: 스타"))
-        results.add(Pair("( ˘ ³˘)♥ $text ♥", "인스타: 러블리"))
-        results.add(Pair("⋆｡˚ ☁︎ $text ☁︎ ˚｡⋆", "인스타: 몽환구름"))
-        results.add(Pair("꒰ $text ꒱", "인스타: 귀요미"))
-        results.add(Pair("[ $text ]", "인스타: 힙레트로"))
-        results.add(Pair("ฅ^•ﻌ•^ฅ $text ฅ^•ﻌ•^ฅ", "인스타: 냥이"))
-        results.add(Pair("『 $text 』", "인스타: 인용문"))
-        results.add(Pair("« $text »", "인스타: 강조"))
-        results.add(Pair("ʕ•ᴥ•ʔ $text ʕ•ᴥ•ʔ", "인스타: 곰돌이"))
-        results.add(Pair(".°ʚ $text ɞ°.", "인스타: 천사"))
-        results.add(Pair("🎀 $text 🎀", "인스타: 리본"))
-        results.add(Pair("🫧 $text 🫧", "인스타: 물방울"))
-        results.add(Pair("💓 $text 💓", "인스타: 하트비트"))
-
-        // 2. Mathematical Alphanumeric Font Styles (If text contains Latin characters)
-        if (hasLatin) {
-            results.add(Pair(convertLatin(text, BOLD_SERIF_UP, BOLD_SERIF_LOW), "인스타: 굵은명조"))
-            results.add(Pair(convertLatin(text, BOLD_SANS_UP, BOLD_SANS_LOW), "인스타: 굵은고딕"))
-            results.add(Pair(convertLatin(text, SCRIPT_UP, SCRIPT_LOW), "인스타: 필기체"))
-            results.add(Pair(convertLatin(text, BOLD_SCRIPT_UP, BOLD_SCRIPT_LOW), "인스타: 굵은필기체"))
-            results.add(Pair(convertLatin(text, DOUBLE_STRUCK_UP, DOUBLE_STRUCK_LOW), "인스타: 이중선체"))
-            results.add(Pair(convertLatin(text, FRAKTUR_UP, FRAKTUR_LOW), "인스타: 중세고딕"))
-            results.add(Pair(convertLatin(text, MONOSPACE_UP, MONOSPACE_LOW), "인스타: 타자기"))
-            results.add(Pair(convertLatin(text, BUBBLE_UP, BUBBLE_LOW), "인스타: 동그라미"))
-            
+        val fonts = if (!hasLatin) emptyList() else {
             val smallCaps = text.map { ch ->
                 if (ch in 'a'..'z') SMALL_CAPS_LOW[ch - 'a'] else ch.toString()
             }.joinToString("")
-            results.add(Pair(smallCaps, "인스타: 소문자대문자화"))
+            listOf(
+                convertLatin(text, BOLD_SCRIPT_UP, BOLD_SCRIPT_LOW) to "인스타: 굵은필기체",
+                smallCaps to "인스타: 스몰캡",
+                convertLatin(text, SCRIPT_UP, SCRIPT_LOW) to "인스타: 필기체",
+                convertLatin(text, FRAKTUR_UP, FRAKTUR_LOW) to "인스타: 고딕",
+                convertLatin(text, BUBBLE_UP, BUBBLE_LOW) to "인스타: 동그라미",
+                convertLatin(text, DOUBLE_STRUCK_UP, DOUBLE_STRUCK_LOW) to "인스타: 이중선체",
+                convertByOffset(text, 0x1D608, 0x1D622) to "인스타: 이탤릭",
+                fullWidth(text) to "인스타: 베이퍼웨이브",
+                convertLatin(text, BOLD_SERIF_UP, BOLD_SERIF_LOW) to "인스타: 굵은명조",
+                convertLatin(text, BOLD_SANS_UP, BOLD_SANS_LOW) to "인스타: 굵은고딕",
+                convertLatin(text, MONOSPACE_UP, MONOSPACE_LOW) to "인스타: 타자기",
+            )
         }
 
-        return results
+        // 요즘 한국 인스타에서 많이 쓰는 리본·하트 조합을 앞에 둔다.
+        val frames = listOf(
+            "୨♡୧ $text ୨♡୧" to "인스타: 리본하트",
+            "₊˚⊹♡ $text ♡⊹˚₊" to "인스타: 반짝하트",
+            "ʚ♡ɞ $text ʚ♡ɞ" to "인스타: 천사하트",
+            "$text ➳♡" to "인스타: 큐피드",
+            "$text ᡣ𐭩" to "인스타: 몽글하트",
+            "⋆˚｡⋆୨ $text ୧⋆｡˚⋆" to "인스타: 리본구분선",
+            "꒰ $text ꒱" to "인스타: 귀요미",
+            "🎀 $text 🎀" to "인스타: 리본",
+            "⋆｡˚ ☁︎ $text ☁︎ ˚｡⋆" to "인스타: 몽환구름",
+            "✨ $text ✨" to "인스타: 반짝이",
+            "🫧 $text 🫧" to "인스타: 물방울",
+            "( ˘ ³˘)♥ $text ♥" to "인스타: 러블리",
+            "✿ $text ✿" to "인스타: 꽃송이",
+            "ฅ^•ﻌ•^ฅ $text ฅ^•ﻌ•^ฅ" to "인스타: 냥이",
+            "ʕ•ᴥ•ʔ $text ʕ•ᴥ•ʔ" to "인스타: 곰돌이",
+            "『 $text 』" to "인스타: 인용문",
+            "💓 $text 💓" to "인스타: 하트비트",
+        )
+        return fonts + frames
     }
 }

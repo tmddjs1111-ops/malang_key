@@ -171,8 +171,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     propEditor.properties["foreground"] = SnyggStaticColorValue(customKeyTextColor)
                 }
                 if (keyBorderThickness > 0) {
+                    // 외곽선은 키 글자색으로 그려 어떤 테마에서도 선으로 보이게 한다. 흰색 고정이면
+                    // 밝은 테마에서 하얀 테두리처럼 번져 보인다.
+                    val lineColor = if (isKeyTextCustom) customKeyTextColor else resolveStaticColor(editor, propEditor.properties["foreground"])
                     propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
-                    propEditor.properties["border-color"] = org.florisboard.lib.snygg.value.SnyggStaticColorValue(Color.White.copy(alpha = keyBorderOpacity / 100f))
+                    propEditor.properties["border-color"] = SnyggStaticColorValue((lineColor ?: Color.Black).copy(alpha = keyBorderOpacity / 100f))
                 }
                 if (isFontCustom) {
                     val rulesWithText = listOf("keyboard", "key", "key-hint", "key-popup-element", "smartbar-action-tile", "smartbar-action-tile-text")
@@ -302,6 +305,18 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 materialYouFlags = activeThemeInfo.config.materialYouFlags
             )
         }
+    }
+}
+
+/** 고정 색이거나 @defines의 고정 색을 가리키는 var(--...)이면 그 색을, 아니면 null을 준다. */
+private fun resolveStaticColor(editor: SnyggStylesheetEditor, value: SnyggValue?): Color? {
+    return when (value) {
+        is SnyggStaticColorValue -> value.color
+        is SnyggDefinedVarValue -> {
+            val defines = editor.rules[SnyggAnnotationRule.Defines] as? SnyggSinglePropertySetEditor
+            (defines?.properties?.get(value.key) as? SnyggStaticColorValue)?.color
+        }
+        else -> null
     }
 }
 

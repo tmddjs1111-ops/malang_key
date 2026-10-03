@@ -595,7 +595,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val spaceLongPressDelay = int(
             key = "keyboard__space_long_press_delay",
-            default = 3000,
+            default = 1500,
         )
         /** 폴더블을 펼쳤을 때(또는 태블릿에서) 쿼티 자판을 가운데에서 나눈다. */
         val splitWhenUnfolded = boolean(

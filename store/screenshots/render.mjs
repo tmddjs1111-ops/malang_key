@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const names = ['01_theme', '02_layouts', '03_sound', '04_insta_font', '05_quick_phrase'];
+const names = ['01_convenience', '02_theme', '03_quick_phrase', '04_layouts', '05_insta_font'];
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 2000 } });

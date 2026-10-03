@@ -589,9 +589,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__incognito_indicator",
             default = IncognitoDisplayMode.DISPLAY_BEHIND_KEYBOARD,
         )
+        // 스토어에서 내세우는 인스타 폰트가 설치 직후부터 되도록 켜 둔다 (스페이스바 길게 누르기).
         val emoticonSuggestionEnabled = boolean(
             key = "keyboard__emoticon_suggestion_enabled",
-            default = false,
+            default = true,
         )
         val spaceLongPressDelay = int(
             key = "keyboard__space_long_press_delay",

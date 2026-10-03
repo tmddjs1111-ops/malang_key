@@ -852,8 +852,14 @@ private class TextKeyboardLayoutController(
                     pointer.hasTriggeredLongPress = true
                     when (key.computedData.code) {
                         KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE -> {
+                            // 이모티콘 검색이 켜져 있으면 검색이 먼저다. 아니면 제스처 설정의 동작을 한다.
+                            val longPressAction = prefs.gestures.spaceBarLongPress.get()
                             if (prefs.keyboard.emoticonSuggestionEnabled.get()) {
                                 keyboardManager.isEmoticonSearchVisible.value = true
+                                inputFeedbackController?.keyLongPress(key.computedData)
+                                true
+                            } else if (longPressAction != SwipeAction.NO_ACTION) {
+                                keyboardManager.executeSwipeAction(longPressAction)
                                 inputFeedbackController?.keyLongPress(key.computedData)
                                 true
                             } else {
@@ -1188,26 +1194,69 @@ private class TextKeyboardLayoutController(
         }
     }
 
+    /**
+     * 스페이스바 밀기. 좌우는 설정에 따라 언어 전환(밀면서 안내가 차오름)이나 커서 이동을 하고,
+     * 그 밖의 동작과 위로 밀기는 손을 뗄 때 한 번 실행한다.
+     */
     private fun handleSpaceSwipe(event: SwipeGesture.Event): Boolean {
         japaneseMultiTapState.reset()
+        val swipesRight = event.absUnitCountX > 0
+        val horizontalAction = if (swipesRight) prefs.gestures.spaceBarSwipeRight.get() else prefs.gestures.spaceBarSwipeLeft.get()
+        val isMostlyHorizontal = abs(event.absUnitCountX) >= abs(event.absUnitCountY)
         return when (event.type) {
+            // 밀기 중에는 늘 true를 줘서 스페이스가 옆 키로 미끄러져 입력되지 않게 한다.
             SwipeGesture.Type.TOUCH_MOVE -> {
-                val absUnitX = abs(event.absUnitCountX)
-                val direction = if (event.absUnitCountX > 0) 1 else -1
-
-                if (absUnitX >= 1) {
-                    keyboardManager.isLanguageHudVisible.value = true
-                    keyboardManager.languageHudDirection.value = direction
-                    // Ensure progress stays between 0 and 1 for exactly one step
-                    keyboardManager.languageHudProgress.value = (absUnitX / 8.0f).coerceIn(0.0f, 1.0f)
+                if (!isMostlyHorizontal) return true
+                when (horizontalAction) {
+                    SwipeAction.SWITCH_TO_NEXT_SUBTYPE, SwipeAction.SWITCH_TO_PREV_SUBTYPE -> {
+                        val absUnitX = abs(event.absUnitCountX)
+                        if (absUnitX >= 1) {
+                            keyboardManager.isLanguageHudVisible.value = true
+                            // 안내 방향 = 바뀔 언어 방향. 손을 떼면 onTouchCancelInternal에서 바꾼다.
+                            keyboardManager.languageHudDirection.value =
+                                if (horizontalAction == SwipeAction.SWITCH_TO_NEXT_SUBTYPE) 1 else -1
+                            // Ensure progress stays between 0 and 1 for exactly one step
+                            keyboardManager.languageHudProgress.value = (absUnitX / 8.0f).coerceIn(0.0f, 1.0f)
+                        }
+                        true
+                    }
+                    SwipeAction.MOVE_CURSOR_LEFT, SwipeAction.MOVE_CURSOR_RIGHT -> {
+                        // 밀던 손가락을 되돌리면 커서도 되돌아간다.
+                        val steps = event.relUnitCountX
+                        if (steps != 0) {
+                            inputFeedbackController?.gestureMovingSwipe(TextKeyData.SPACE)
+                            val step = if (steps > 0) SwipeAction.MOVE_CURSOR_RIGHT else SwipeAction.MOVE_CURSOR_LEFT
+                            repeat(abs(steps)) { keyboardManager.executeSwipeAction(step) }
+                        }
+                        true
+                    }
+                    // 나머지 동작은 손을 뗄 때 한 번만 실행한다.
+                    else -> true
                 }
-                true
             }
             SwipeGesture.Type.TOUCH_UP -> {
                 val isHudTriggered = keyboardManager.isLanguageHudVisible.value
                 // The actual language switch is now handled in onTouchCancelInternal
                 // to ensure it triggers even on slow swipes.
-                isHudTriggered
+                if (isHudTriggered) return true
+                when (event.direction) {
+                    SwipeGesture.Direction.UP -> {
+                        val action = prefs.gestures.spaceBarSwipeUp.get()
+                        if (action == SwipeAction.NO_ACTION) return false
+                        keyboardManager.executeSwipeAction(action)
+                        true
+                    }
+                    SwipeGesture.Direction.LEFT, SwipeGesture.Direction.RIGHT -> when (horizontalAction) {
+                        SwipeAction.NO_ACTION -> false
+                        SwipeAction.SWITCH_TO_NEXT_SUBTYPE, SwipeAction.SWITCH_TO_PREV_SUBTYPE,
+                        SwipeAction.MOVE_CURSOR_LEFT, SwipeAction.MOVE_CURSOR_RIGHT -> true
+                        else -> {
+                            keyboardManager.executeSwipeAction(horizontalAction)
+                            true
+                        }
+                    }
+                    else -> false
+                }
             }
         }
     }

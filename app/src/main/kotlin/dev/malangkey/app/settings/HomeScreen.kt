@@ -45,7 +45,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import dev.malangkey.R
+import dev.malangkey.ime.theme.KeyboardBackgroundPhoto
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
@@ -443,6 +447,7 @@ private fun ThemeTabContent(
     navController: androidx.navigation.NavController
 ) {
     val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
     var confirmReset by remember { mutableStateOf(false) }
 
     Column(
@@ -460,6 +465,8 @@ private fun ThemeTabContent(
                 { MalangSliderRow(prefs.malang.keyBorderOpacity, "불투명도", min = 0, max = 100) },
             ),
         )
+
+        BackgroundPhotoSection()
 
         MalangSettingsSection(
             title = "글꼴",
@@ -508,7 +515,7 @@ private fun ThemeTabContent(
             onDismissRequest = { confirmReset = false },
             containerColor = MalangSettingsCard,
             title = { Text("처음 모양으로 되돌릴까요?", color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
-            text = { Text("커스텀 색과 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
+            text = { Text("커스텀 색과 외곽선, 배경 사진, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReset = false
@@ -527,6 +534,9 @@ private fun ThemeTabContent(
                         prefs.malang.gridKeyHintFontSizeMultiplier.set(100)
                         prefs.malang.keyBorderThickness.set(0)
                         prefs.malang.keyBorderOpacity.set(20)
+                        prefs.malang.bgImageUri.set("")
+                        prefs.malang.bgDimPercent.set(30)
+                        KeyboardBackgroundPhoto.clear(context)
                     }
                 }) { Text("되돌리기", color = MalangSettingsSection) }
             },
@@ -535,6 +545,52 @@ private fun ThemeTabContent(
             },
         )
     }
+}
+
+/** 키보드 배경 사진: 고르기, 지우기, 어둡게 하기. */
+@Composable
+private fun BackgroundPhotoSection() {
+    val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val photoPath by prefs.malang.bgImageUri.collectAsState()
+    val hasPhoto = photoPath.isNotEmpty()
+    var failed by remember { mutableStateOf(false) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val saved = KeyboardBackgroundPhoto.save(context, uri)
+            failed = saved == null
+            if (saved != null) prefs.malang.bgImageUri.set(saved)
+        }
+    }
+
+    MalangSettingsSection(
+        title = "배경 사진",
+        items = listOf(
+            {
+                MalangNavRow(
+                    title = if (hasPhoto) "다른 사진으로 바꾸기" else "사진 고르기",
+                    summary = if (failed) "사진을 불러오지 못했어요. 다른 사진을 골라 주세요."
+                    else "키보드 뒤에 사진을 깔아요. 키는 테마 색 그대로 보여요.",
+                    onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                )
+            },
+            { MalangSliderRow(prefs.malang.bgDimPercent, "사진 어둡게", min = 0, max = 80, enabled = hasPhoto) },
+            {
+                MalangNavRow(
+                    title = "사진 지우기",
+                    enabled = hasPhoto,
+                    onClick = {
+                        scope.launch {
+                            prefs.malang.bgImageUri.set("")
+                            KeyboardBackgroundPhoto.clear(context)
+                        }
+                    },
+                )
+            },
+        ),
+    )
 }
 
 /** 테마 탭 맨 위 카드: 테마 고르기 화면으로 간다. 메인 탭의 큰 카드와 같은 모양. */

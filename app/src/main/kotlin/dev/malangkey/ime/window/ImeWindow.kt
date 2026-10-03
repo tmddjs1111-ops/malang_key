@@ -67,6 +67,7 @@ import dev.malangkey.ime.media.MediaInputLayout
 import dev.malangkey.ime.sheet.BottomSheetWindow
 import dev.malangkey.ime.text.TextInputLayout
 import dev.malangkey.ime.theme.FlorisImeUi
+import dev.malangkey.ime.theme.KeyboardBackgroundPhotoLayer
 import dev.malangkey.keyboardManager
 import kotlinx.coroutines.delay
 import org.florisboard.lib.compose.ProvideActualLayoutDirection
@@ -178,6 +179,7 @@ fun BoxScope.ImeWindow() {
         supportsBackgroundImage = true,
         allowClip = false,
     ) {
+        KeyboardBackgroundPhotoLayer(Modifier.matchParentSize())
         OneHandedPanel()
         ProvideKeyboardRowBaseHeight {
             ImeInnerWindow()

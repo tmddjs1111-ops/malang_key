@@ -83,6 +83,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val keyHintFontSizeMultiplier by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
     val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
     val keyBorderOpacity by prefs.malang.keyBorderOpacity.collectAsState()
+    val bgImagePath by prefs.malang.bgImageUri.collectAsState()
 
 
     val assetResolver = remember(activeThemeInfo) {
@@ -103,6 +104,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         keyHintFontSizeMultiplier,
         keyBorderThickness,
         keyBorderOpacity,
+        bgImagePath,
         dayThemeId,
         themeMode
     ) {
@@ -118,9 +120,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val isRealEnterKeyTextCustom = isCustomThemeSelected && customRealEnterKeyTextColor != Color.Unspecified
         val isFontCustom = keyboardFontFamily != "system"
         // 글자·힌트 크기는 자판 종류(쿼티/격자)마다 달라서 TextKeyboardLayout에서 키마다 적용한다.
-        val isKeyLayoutCustom = keyBorderThickness > 0
-        
-        if (isKeyLayoutCustom || isKeyboardBgCustom || isKeyBgCustom || isKeyTextCustom || isEnterKeyBgCustom || isEnterKeyTextCustom || isRealEnterKeyBgCustom || isRealEnterKeyTextCustom || isFontCustom) {
+        // 배경 사진은 키보드 창 뒤에 깔리므로, 그 위를 덮는 자판·스마트바 배경을 비운다.
+        val hasBgPhoto = bgImagePath.isNotEmpty()
+
+        // 외곽선 두께는 늘 적용하므로(0이면 테마 테두리도 지운다) 스타일시트를 항상 고친다.
+        run {
             val editor = baseStylesheet.edit()
             
             val rootRule = SnyggRule.fromOrNull("root")
@@ -176,6 +180,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     val lineColor = if (isKeyTextCustom) customKeyTextColor else resolveStaticColor(editor, propEditor.properties["foreground"])
                     propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(keyBorderThickness.toFloat().dp)
                     propEditor.properties["border-color"] = SnyggStaticColorValue((lineColor ?: Color.Black).copy(alpha = keyBorderOpacity / 100f))
+                } else {
+                    propEditor.properties["border-width"] = org.florisboard.lib.snygg.value.SnyggDpSizeValue(0.dp)
                 }
                 if (isFontCustom) {
                     val rulesWithText = listOf("keyboard", "key", "key-hint", "key-popup-element", "smartbar-action-tile", "smartbar-action-tile-text")
@@ -276,6 +282,14 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                 }
             }
             
+            if (hasBgPhoto) {
+                for (element in listOf("keyboard", "smartbar")) {
+                    val elementRule = SnyggRule.fromOrNull(element) ?: continue
+                    val elementPropEditor = editor.rules.getOrPut(elementRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
+                    elementPropEditor.properties["background"] = SnyggStaticColorValue(Color.Transparent)
+                }
+            }
+
             baseStylesheet = editor.build()
         }
         withBaseStyleFallbacks(baseStylesheet)

@@ -27,14 +27,12 @@ import dev.malangkey.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
 import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
 import dev.malangkey.ime.core.DisplayLanguageNamesIn
 import dev.malangkey.ime.core.Subtype
-import dev.malangkey.ime.input.CapitalizationBehavior
 
 import dev.malangkey.ime.input.HapticVibrationPrimitive
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
-import dev.malangkey.ime.media.emoji.EmojiHairStyle
 import dev.malangkey.ime.media.emoji.EmojiHistory
 import dev.malangkey.ime.media.emoji.EmojiSuggestionType
 import dev.malangkey.ime.nlp.SpellingLanguageMode
@@ -168,10 +166,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "clipboard__history_hide_on_next_text_field",
             default = true,
         )
-        val advancedClipboardPopup = boolean(
-            key = "clipboard__advanced_clipboard_popup",
-            default = false,
-        )
         val clearPrimaryClipAffectsHistoryIfUnpinned = boolean(
             key = "clipboard__clear_primary_clip_affects_history_if_unpinned",
             default = true,
@@ -248,10 +242,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
 
     val emoji = Emoji()
     inner class Emoji {
-        val preferredHairStyle = enum(
-            key = "emoji__preferred_hair_style",
-            default = EmojiHairStyle.DEFAULT,
-        )
         val historyEnabled = boolean(
             key = "emoji__history_enabled",
             default = true,
@@ -327,15 +317,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val spaceBarSwipeLeft = enum(
             key = "gestures__space_bar_swipe_left",
-            default = SwipeAction.MOVE_CURSOR_LEFT,
+            default = SwipeAction.SWITCH_TO_PREV_SUBTYPE,
         )
         val spaceBarSwipeRight = enum(
             key = "gestures__space_bar_swipe_right",
-            default = SwipeAction.MOVE_CURSOR_RIGHT,
+            default = SwipeAction.SWITCH_TO_NEXT_SUBTYPE,
         )
         val spaceBarLongPress = enum(
             key = "gestures__space_bar_long_press",
-            default = SwipeAction.SHOW_INPUT_METHOD_PICKER,
+            default = SwipeAction.NO_ACTION,
         )
         val deleteKeySwipeLeft = enum(
             key = "gestures__delete_key_swipe_left",
@@ -528,10 +518,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__space_bar_display_mode",
             default = SpaceBarMode.CURRENT_LANGUAGE,
         )
-        val capitalizationBehavior = enum(
-            key = "keyboard__capitalization_behavior",
-            default = CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP,
-        )
         val fontSizeMultiplierPortrait = int(
             key = "keyboard__font_size_multiplier_portrait",
             default = 100,
@@ -580,10 +566,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val longPressDelay = int(
             key = "keyboard__long_press_delay",
             default = 400,
-        )
-        val spaceBarSwitchesToCharacters = boolean(
-            key = "keyboard__space_bar_switches_to_characters",
-            default = true,
         )
         val incognitoDisplayMode = enum(
             key = "keyboard__incognito_indicator",
@@ -809,13 +791,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__key_border_opacity",
             default = 20,
         )
+        /** 키보드 배경 사진 파일 경로. 비어 있으면 사진을 쓰지 않는다. */
         val bgImageUri = string(
             key = "malang__bg_image_uri",
             default = "",
         )
-        val bgDimmer = float(
-            key = "malang__bg_dimmer",
-            default = 0.5f,
+        /** 배경 사진 위에 까는 검은 막의 진하기(0~100). 글자가 잘 보이게 한다. */
+        val bgDimPercent = int(
+            key = "malang__bg_dim_percent",
+            default = 30,
         )
         val malangSoundEnabled = boolean(
             key = "malang__sound_enabled",
@@ -833,14 +817,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val languageMode = enum(
             key = "spelling__language_mode",
             default = SpellingLanguageMode.USE_KEYBOARD_SUBTYPES,
-        )
-        val useContacts = boolean(
-            key = "spelling__use_contacts",
-            default = true,
-        )
-        val useUdmEntries = boolean(
-            key = "spelling__use_udm_entries",
-            default = true,
         )
     }
 

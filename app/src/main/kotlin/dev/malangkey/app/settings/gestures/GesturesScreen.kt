@@ -60,12 +60,54 @@ private val SwipeRightEntries = listOf(
     SwipeAction.REDO to "다시 실행",
 )
 
+private val SpaceSideEntries = listOf(
+    SwipeAction.NO_ACTION to "동작 없음",
+    SwipeAction.SWITCH_TO_PREV_SUBTYPE to "이전 언어로 전환",
+    SwipeAction.SWITCH_TO_NEXT_SUBTYPE to "다음 언어로 전환",
+    SwipeAction.MOVE_CURSOR_LEFT to "커서 이동 (밀면서 움직임)",
+    SwipeAction.DELETE_WORD to "단어 삭제",
+    SwipeAction.UNDO to "실행 취소",
+    SwipeAction.REDO to "다시 실행",
+)
+
+private val SpaceLongPressEntries = listOf(
+    SwipeAction.NO_ACTION to "동작 없음",
+    SwipeAction.SHOW_INPUT_METHOD_PICKER to "키보드 선택",
+    SwipeAction.SHOW_SUBTYPE_PICKER to "언어 선택",
+    SwipeAction.SWITCH_TO_MEDIA_CONTEXT to "이모지 열기",
+    SwipeAction.SWITCH_TO_CLIPBOARD_CONTEXT to "클립보드 열기",
+    SwipeAction.HIDE_KEYBOARD to "키보드 숨기기",
+)
+
+/** 좌우 밀기 선택지에서 '커서 이동'은 밀기 방향에 맞는 값으로 저장한다. */
+private fun spaceSideEntries(cursorAction: SwipeAction) =
+    SpaceSideEntries.map { (action, label) -> (if (action == SwipeAction.MOVE_CURSOR_LEFT) cursorAction else action) to label }
+
 @Composable
 fun GesturesScreen() = MalangSettingsScreen(title = "제스처", subtitle = "Gesture") {
     val prefs by FlorisPreferenceStore
     val glideEnabled by prefs.glide.enabled.collectAsState()
 
-    MalangInfoCard("스페이스바를 좌우로 밀면 언어가 바뀝니다. 글자 키 위에서 밀었을 때의 동작은 아래에서 고를 수 있어요.")
+    val emoticonSearchEnabled by prefs.keyboard.emoticonSuggestionEnabled.collectAsState()
+
+    MalangInfoCard("스페이스바와 글자 키 위에서 밀었을 때의 동작을 고를 수 있어요.")
+
+    MalangSettingsSection(
+        title = "스페이스바",
+        items = listOf(
+            { MalangChoiceRow(prefs.gestures.spaceBarSwipeLeft, "왼쪽으로 밀기", spaceSideEntries(SwipeAction.MOVE_CURSOR_LEFT)) },
+            { MalangChoiceRow(prefs.gestures.spaceBarSwipeRight, "오른쪽으로 밀기", spaceSideEntries(SwipeAction.MOVE_CURSOR_RIGHT)) },
+            { MalangChoiceRow(prefs.gestures.spaceBarSwipeUp, "위로 밀기", VerticalSwipeEntries) },
+            {
+                MalangChoiceRow(
+                    prefs.gestures.spaceBarLongPress,
+                    title = if (emoticonSearchEnabled) "길게 누르기 (이모티콘 검색을 끄면 쓸 수 있어요)" else "길게 누르기",
+                    entries = SpaceLongPressEntries,
+                    enabled = !emoticonSearchEnabled,
+                )
+            },
+        ),
+    )
 
     MalangSettingsSection(
         title = "글자 키 스와이프",

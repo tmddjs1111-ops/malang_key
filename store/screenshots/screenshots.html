@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>말랑키 스토어 스크린샷</title>
+<!--
+  Play 스토어 스크린샷 원본 (1080×1920, 5장).
+  다시 뽑을 때: node store/screenshots/render.mjs  →  store/screenshots/01_theme.png …
+  색·글꼴은 앱과 같은 값(app/src/main/kotlin/dev/malangkey/app/apptheme/Color.kt, res/font)을 쓴다.
+-->
+<style>
+  @font-face { font-family: Jua; src: url(../../app/src/main/res/font/jua.ttf); }
+  @font-face { font-family: Gmarket; src: url(../../app/src/main/res/font/gmarket_sans.ttf); }
+  @font-face { font-family: Pretendard; src: url(../../app/src/main/res/font/pretendard.ttf); }
+  @font-face { font-family: Rounded; src: url(../../app/src/main/res/font/m_plus_rounded_1c.ttf); }
+
+  :root {
+    --cocoa: #3A211B;
+    --mushroom: #6A4535;
+    --butter: #FBF1D4;
+    --cream: #FCF5D6;
+    --oat: #E9D5A8;
+    --card-text: #FFF1CF;
+    --title: #4A3028;
+    --summary: #866A5F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #888; font-family: Gmarket, Pretendard, sans-serif; }
+
+  .shot {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: var(--butter); color: var(--title);
+    margin: 0 auto 40px;
+  }
+  .shot.dark { background: var(--cocoa); color: var(--card-text); }
+
+  /* 머리 문구 */
+  .head { position: absolute; top: 120px; left: 0; right: 0; text-align: center; padding: 0 70px; }
+  .kicker {
+    display: inline-block; font-family: Gmarket; font-size: 34px; letter-spacing: 1px;
+    padding: 14px 34px; border-radius: 999px; background: var(--cocoa); color: var(--card-text);
+  }
+  .dark .kicker { background: var(--card-text); color: var(--cocoa); }
+  h1 { font-family: Jua; font-weight: normal; font-size: 112px; line-height: 1.12; margin-top: 36px; }
+  h1 em { font-style: normal; color: #C2703D; }
+  .dark h1 em { color: #FFCC80; }
+  .sub { font-size: 40px; line-height: 1.45; margin-top: 30px; color: var(--summary); }
+  .dark .sub { color: var(--oat); }
+
+  /* 휴대폰 */
+  .phone {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    width: 820px; background: #1d1412; border-radius: 80px; padding: 22px;
+    box-shadow: 0 40px 80px rgba(58,33,27,.28);
+  }
+  .key { position: relative; }
+  .pop { position: absolute; left: 50%; top: -70px; transform: translateX(-50%) rotate(-8deg); font-family: Jua; font-size: 54px; color: #FFCC80; white-space: nowrap; text-shadow: 0 4px 0 rgba(0,0,0,.25); }
+  .screen { position: relative; border-radius: 60px; overflow: hidden; background: #fff; height: 100%; display: flex; flex-direction: column; }
+  .appbar { height: 120px; display: flex; align-items: center; gap: 22px; padding: 0 36px; background: #F6F1EA; font-family: Pretendard; font-size: 34px; font-weight: 700; color: #333; flex: none; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; background: #FFD1DC; display: grid; place-items: center; font-size: 36px; }
+  .chat { flex: 1; padding: 30px 30px 20px; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; background: #F9F6F1; font-family: Pretendard; font-size: 32px; }
+  .bubble { max-width: 74%; padding: 20px 28px; border-radius: 34px; line-height: 1.35; background: #fff; color: #333; align-self: flex-start; box-shadow: 0 2px 0 rgba(0,0,0,.04); }
+  .bubble.me { align-self: flex-end; background: #FFE58A; }
+  .field { display: flex; align-items: center; gap: 16px; padding: 18px 26px; background: #fff; border-top: 1px solid #eee; font-family: Pretendard; font-size: 34px; color: #222; flex: none; }
+  .field .input { flex: 1; background: #F3F0EC; border-radius: 40px; padding: 18px 28px; min-height: 76px; display: flex; align-items: center; }
+  .caret { display: inline-block; width: 3px; height: 40px; background: #C2703D; margin-left: 4px; vertical-align: middle; }
+
+  /* 키보드 */
+  .kb { flex: none; padding: 14px 10px 26px; font-family: Jua; }
+  .bar { height: 92px; display: flex; align-items: center; gap: 12px; padding: 0 10px 10px; font-size: 32px; }
+  .bar .slot { flex: 1; height: 72px; border-radius: 20px; display: grid; place-items: center; }
+  .rows { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; gap: 10px; justify-content: center; }
+  .key { flex: 1; height: 104px; border-radius: 20px; display: grid; place-items: center; font-size: 44px; line-height: 1; }
+  .key.small { font-size: 30px; }
+  .grid4 .key { height: 112px; font-size: 46px; }
+  .spacer { flex: .5; }
+
+  /* 칩 */
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+  .chip { font-family: Jua; font-size: 42px; padding: 18px 34px; border-radius: 999px; background: #fff; color: var(--title); box-shadow: 0 6px 0 rgba(106,69,53,.12); }
+  .chip.on { background: var(--cocoa); color: var(--card-text); }
+  .dark .chip { background: rgba(255,241,207,.1); color: var(--card-text); box-shadow: none; border: 2px solid rgba(255,241,207,.25); }
+
+  .badge { position: absolute; display: flex; white-space: nowrap; align-items: center; gap: 14px; background: #fff; color: var(--title); border-radius: 999px; padding: 18px 30px; font-family: Jua; font-size: 36px; box-shadow: 0 16px 34px rgba(58,33,27,.18); }
+</style>
+</head>
+<body>
+
+<!-- 1. 테마: 첫인상 -->
+<section class="shot" id="s1">
+  <div class="head">
+    <span class="kicker">🍄 말랑키 · MalangKey</span>
+    <h1>매일 보는 키보드,<br><em>귀엽게</em> 바꿔요</h1>
+    <p class="sub">파스텔 테마 14가지 · 귀여운 글꼴 10가지<br>키 테두리와 글자 크기까지 내 맘대로</p>
+  </div>
+  <div id="fan"></div>
+  <div class="badge" style="left:50%; top:730px; transform:translateX(-50%)">🔒 인터넷 권한 0개 · 완전 오프라인</div>
+</section>
+
+<!-- 2. 자판: 바꾸는 부담 없애기 -->
+<section class="shot" id="s2">
+  <div class="head">
+    <span class="kicker">갈아타도 손이 기억해요</span>
+    <h1>쓰던 자판<br><em>그대로</em> 쓰세요</h1>
+    <p class="sub">천지인부터 쿼티까지, 익숙한 배열 그대로<br>일본어는 한자 변환까지 돼요</p>
+  </div>
+  <div class="chips" style="position:absolute; top:720px; left:60px; right:60px;">
+    <span class="chip on">천지인</span><span class="chip">두벌식(쿼티)</span><span class="chip">획추가형</span>
+    <span class="chip">연타형</span><span class="chip">English</span><span class="chip" style="font-family:Rounded,Jua;font-weight:800">日本語 かな·漢字</span>
+  </div>
+  <div class="phone" style="bottom:-60px; height:1000px;"><div class="screen" id="p2"></div></div>
+</section>
+
+<!-- 3. 소리: 치는 맛 -->
+<section class="shot dark" id="s3">
+  <div class="head">
+    <span class="kicker">타자 소리 10가지</span>
+    <h1>치는 맛이<br><em>다른</em> 키보드</h1>
+    <p class="sub">뽁뽁 말랑한 소리부터 기계식 키보드 소리까지<br>지연 없이 바로 울리는 소리와 진동</p>
+  </div>
+  <div class="chips" style="position:absolute; top:720px; left:50px; right:50px;">
+    <span class="chip" style="background:#FFCC80;color:#3A211B;border-color:#FFCC80">🫧 말랑 뽁</span><span class="chip">⌨️ 기계식 키보드</span><span class="chip">📠 타자기</span>
+    <span class="chip">💧 물방울</span><span class="chip">🪵 나무 블록</span><span class="chip">🎵 마림바</span>
+    <span class="chip">👾 8비트 게임</span><span class="chip">🤫 저소음</span><span class="chip">딸깍</span><span class="chip">톡</span>
+  </div>
+  <div class="phone" style="bottom:-60px; height:880px;"><div class="screen" id="p3"></div></div>
+  <div class="pop" style="left:120px; top:1080px; transform:rotate(-14deg); font-size:76px">뽁!</div>
+  <div class="pop" style="left:auto; right:60px; top:1060px; transform:rotate(12deg); font-size:64px">뽁!</div>
+</section>
+
+<!-- 4. 인스타 폰트 -->
+<section class="shot" id="s4">
+  <div class="head">
+    <span class="kicker">인스타 폰트 · 이모지 추천</span>
+    <h1>폰트 앱 왔다 갔다,<br>이제 <em>끝</em></h1>
+    <p class="sub">치는 순간 후보 줄에 인스타 폰트가 떠요<br>“사랑”만 쳐도 ❤️ 추천</p>
+  </div>
+  <div class="phone" style="top:720px; height:1500px;"><div class="screen" id="p4"></div></div>
+</section>
+
+<!-- 5. 상용구 -->
+<section class="shot dark" id="s5">
+  <div class="head">
+    <span class="kicker">상용구</span>
+    <h1>자주 쓰는 말은<br><em>꾹 · 슥</em> 한 번에</h1>
+    <p class="sub">마침표를 길게 누르고 원하는 칸에서 손을 떼면 끝<br>주소, 계좌번호, 이메일을 매번 칠 필요 없어요</p>
+  </div>
+  <div class="chips" style="position:absolute; top:730px; left:40px; right:40px;">
+    <span class="chip">① 마침표 꾹</span><span class="chip">② 칸으로 슥</span><span class="chip" style="background:#FFCC80;color:#3A211B;border-color:#FFCC80">③ 손 떼면 입력</span>
+  </div>
+  <div class="phone" style="bottom:-60px; height:1060px;"><div class="screen" id="p5"></div></div>
+</section>
+
+<script>
+// 앱에 들어 있는 테마 색 (assets/ime/theme/dev.malangkey.pastel/stylesheets)
+const T = {
+  pink:  { bg:'#FFF0F5', key:'#FFFFFF', fg:'#5D4037', mod:'#FFD1DC', act:'#FFB6C1', actFg:'#5D4037' },
+  mint:  { bg:'#EFFFF6', key:'#FFFFFF', fg:'#3E5B4A', mod:'#C1F0D4', act:'#A5E6B8', actFg:'#2F4A3A' },
+  sky:   { bg:'#F0F8FF', key:'#FFFFFF', fg:'#3B5568', mod:'#BCE3FA', act:'#96D2F5', actFg:'#2C4355' },
+  yellow:{ bg:'#FFFDE7', key:'#FFFFFF', fg:'#5D4037', mod:'#FFF59D', act:'#FDD835', actFg:'#3E2723' },
+  choco: { bg:'#3E2723', key:'#4E342E', fg:'#FFF8E1', mod:'#5D4037', act:'#FFCC80', actFg:'#3E2723' },
+};
+
+const k = (label, t, o = {}) => {
+  const bg = o.act ? t.act : o.mod ? t.mod : t.key;
+  const fg = o.act ? t.actFg : t.fg;
+  return `<div class="key ${o.small ? 'small' : ''}" style="flex:${o.w || 1};background:${bg};color:${fg};${o.css || ''}">${label}</div>`;
+};
+const row = keys => `<div class="row">${keys.join('')}</div>`;
+
+function bar(t, content) {
+  const c = content || ['😊', '📋', '🎨', '⚙️'].map(s => `<div class="slot" style="background:${t.mod}">${s}</div>`).join('');
+  return `<div class="bar" style="color:${t.fg}">${c}</div>`;
+}
+
+function qwerty(t, o = {}) {
+  const hit = c => o.hl && o.hl.includes(c);
+  const r = s => s.split(' ').map(c => k(c + (hit(c) && o.pop ? `<span class="pop">${o.pop}</span>` : ''), t, { css: hit(c) ? `background:${t.act};color:${t.actFg}` : '' }));
+  return `<div class="kb" style="background:${t.bg}">${o.bar === false ? '' : bar(t, o.barContent)}<div class="rows">
+    ${row(r('ㅂ ㅈ ㄷ ㄱ ㅅ ㅛ ㅕ ㅑ ㅐ ㅔ'))}
+    ${row(['<div class="spacer"></div>', ...r('ㅁ ㄴ ㅇ ㄹ ㅎ ㅗ ㅓ ㅏ ㅣ'), '<div class="spacer"></div>'])}
+    ${row([k('⇧', t, { mod: 1, w: 1.5 }), ...r('ㅋ ㅌ ㅊ ㅍ ㅠ ㅜ ㅡ'), k('⌫', t, { mod: 1, w: 1.5 })])}
+    ${row([k('?123', t, { mod: 1, w: 1.5, small: 1 }), k(',', t, { mod: 1 }), k('한국어', t, { w: 4.6, small: 1 }), k(o.dotLabel || '.', t, { mod: 1, css: o.dotCss || '' }), k('↵', t, { act: 1, w: 1.5 })])}
+  </div></div>`;
+}
+
+function cheonjiin(t) {
+  return `<div class="kb grid4" style="background:${t.bg}">${bar(t)}<div class="rows">
+    ${row([k('ㅣ', t), k('ㆍ', t), k('ㅡ', t), k('⌫', t, { mod: 1 })])}
+    ${row([k('ㄱㅋ', t), k('ㄴㄹ', t), k('ㄷㅌ', t), k('↵', t, { act: 1 })])}
+    ${row([k('ㅂㅍ', t), k('ㅅㅎ', t), k('ㅈㅊ', t), k('.,?!', t, { mod: 1, small: 1 })])}
+    ${row([k('?123', t, { mod: 1, small: 1 }), k('ㅇㅁ', t), k('␣', t), k('🌐', t, { mod: 1, small: 1 })])}
+  </div></div>`;
+}
+
+const chat = (bubbles, field, appbar = true) => `
+  ${appbar ? '<div class="appbar"><div class="avatar">🐰</div>말랑이</div>' : ''}
+  <div class="chat">${bubbles.map(([me, txt]) => `<div class="bubble ${me ? 'me' : ''}">${txt}</div>`).join('')}</div>
+  <div class="field"><div class="input">${field}<span class="caret"></span></div><span style="font-size:40px">➤</span></div>`;
+
+// 1. 테마 세 장을 부채꼴로
+document.getElementById('fan').innerHTML = [
+  ['mint', -9, 150, 900],
+  ['choco', 8, 330, 1060],
+  ['pink', 0, 190, 1260],
+].map(([name, rot, left, top]) => `
+  <div style="position:absolute; left:${left}px; top:${top}px; width:700px; transform:rotate(${rot}deg) scale(.92); transform-origin:center;
+              border-radius:44px; overflow:hidden; box-shadow:0 30px 60px rgba(58,33,27,.25); border:10px solid #fff;">
+    ${qwerty(T[name])}
+  </div>`).join('');
+
+// 2. 천지인
+document.getElementById('p2').innerHTML =
+  chat([[0, '오늘 저녁 뭐 먹지?'], [1, '떡볶이 어때 😋']], '좋아 지금 출발', false) + cheonjiin(T.yellow);
+
+// 3. 소리: 눌리는 키 위로 "뽁!"
+document.getElementById('p3').innerHTML =
+  chat([[1, '키보드 소리 바꿨는데 너무 귀여워 🫧']], '뽁뽁뽁', false) +
+  qwerty(T.choco, { hl: ['ㅂ', 'ㅗ', 'ㄱ'] });
+
+// 4. 인스타 폰트 후보 줄 (InstaStyleProvider와 같은 변환)
+const insta = [
+  ['𝓜𝓪𝓵𝓪𝓷𝓰 𝓓𝓪𝔂', '굵은필기체'],
+  ['୨♡୧ Malang Day ୨♡୧', '리본하트'],
+  ['Ⓜⓐⓛⓐⓝⓖ Ⓓⓐⓨ', '동그라미'],
+  ['ᴍᴀʟᴀɴɢ ᴅᴀʏ', '스몰캡'],
+  ['𝕄𝕒𝕝𝕒𝕟𝕘 𝔻𝕒𝕪', '이중선체'],
+];
+const t4 = T.pink;
+const instaPanel = `
+  <div style="background:${t4.bg}; padding:18px 18px 4px; display:flex; flex-direction:column; gap:12px;">
+    ${insta.map(([s, n], i) => `
+      <div style="display:flex; align-items:center; justify-content:space-between; background:${i === 0 ? t4.act : '#fff'}; border-radius:22px; padding:18px 26px;">
+        <span style="font-family:'FreeSerif',Pretendard,serif; font-size:42px; color:#4A3028">${s}</span>
+        <span style="font-family:Gmarket; font-size:24px; color:#866A5F">${n}</span>
+      </div>`).join('')}
+  </div>`;
+document.getElementById('p4').innerHTML = `
+  <div class="appbar" style="background:#fff">◀&nbsp; 프로필 편집</div>
+  <div style="flex:1; background:#fff; padding:30px 40px; font-family:Pretendard; color:#222; display:flex; flex-direction:column; gap:24px;">
+    <div style="display:flex; align-items:center; gap:28px;">
+      <div style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#FFD1DC,#FFE58A);display:grid;place-items:center;font-size:80px">🐰</div>
+      <div style="font-size:34px; font-weight:700">malang_day</div>
+    </div>
+    <div style="font-size:26px; color:#888">소개</div>
+    <div style="font-size:38px; border-bottom:3px solid #C2703D; padding-bottom:14px">𝓜𝓪𝓵𝓪𝓷𝓰 𝓓𝓪𝔂 ❤️<span class="caret"></span></div>
+  </div>
+  <div style="background:${t4.bg}; padding:16px 18px 0; display:flex; gap:12px; font-family:Jua; font-size:34px; color:${t4.fg}">
+    <div style="flex:1; background:#fff; border-radius:20px; padding:16px; text-align:center">사랑 → ❤️</div>
+    <div style="flex:1; background:#fff; border-radius:20px; padding:16px; text-align:center">🥰</div>
+    <div style="flex:1; background:#fff; border-radius:20px; padding:16px; text-align:center">💕</div>
+  </div>
+  ${instaPanel}
+  ${qwerty(t4, { bar: false })}`;
+
+// 5. 상용구 표 (ClipboardScreen의 예시 칸)
+const t5 = T.sky;
+const phrases = [
+  ['집 주소', '서울시 마포구 말랑로 12'],
+  ['계좌번호', '말랑은행 123-456-7890'],
+  ['이메일', 'malang@example.com'],
+  ['전화번호', '010-1234-5678'],
+  ['인사', '안녕하세요! 확인 후 연락드릴게요 :)'],
+  ['링크', 'open.kakao.com/…'],
+];
+document.getElementById('p5').innerHTML =
+  chat([[0, '택배 보낼 주소 좀 알려줘!'], [1, '서울시 마포구 말랑로 12']], '', false) +
+  qwerty(t5, { dotCss: `background:${t5.act};box-shadow:0 0 0 6px #fff, 0 0 0 12px ${t5.act}` });
+document.getElementById('p5').insertAdjacentHTML('beforeend', `
+  <div style="position:absolute; left:26px; right:26px; bottom:300px; background:#fff; border-radius:34px; padding:18px;
+              box-shadow:0 20px 50px rgba(44,67,85,.3); display:grid; grid-template-columns:1fr 1fr; gap:14px; font-family:Pretendard;">
+    ${phrases.map(([n, v], i) => `
+      <div style="background:${i === 0 ? t5.act : t5.bg}; border-radius:22px; padding:20px 22px; ${i === 0 ? 'outline:4px solid #2C4355;' : ''}">
+        <div style="font-family:Jua; font-size:34px; color:#2C4355">${n}</div>
+        <div style="font-size:24px; color:#5a6d7c; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${v}</div>
+      </div>`).join('')}
+  </div>
+  <div style="position:absolute; right:120px; bottom:-10px; font-size:90px; transform:rotate(-15deg)">👆</div>`);
+</script>
+</body>
+</html>

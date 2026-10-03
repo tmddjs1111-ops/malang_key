@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>말랑키 쇼츠 스토리보드</title>
+<!-- storyboard.mjs가 <이름>.json을 넣어 render()를 부르고 한 장짜리 PNG로 찍는다. 화면 칸은 녹화 전 그림이다. -->
+<style>
+  @font-face { font-family: Jua; src: url(../../app/src/main/res/font/jua.ttf); }
+  @font-face { font-family: Gmarket; src: url(../../app/src/main/res/font/gmarket_sans.ttf); }
+  @font-face { font-family: Pretendard; src: url(../../app/src/main/res/font/pretendard.ttf); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1240px; background: #F3EBDA; font-family: Gmarket, Pretendard, sans-serif; color: #4A3028; padding: 40px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 28px; }
+  header h1 { font-family: Jua; font-weight: normal; font-size: 44px; }
+  header span { font-size: 20px; color: #866A5F; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .cell { background: #fff; border-radius: 22px; padding: 16px; display: flex; gap: 16px; }
+
+  /* 9:16 미니 화면 (실제 영상 1080×1920의 1/6) */
+  .frame { width: 180px; height: 320px; flex: none; border-radius: 12px; overflow: hidden; position: relative; background: #FBF1D4; display: flex; flex-direction: column; }
+  .band { height: 70px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; padding: 0 8px; }
+  .band .tag { font-size: 8px; padding: 2px 7px; border-radius: 99px; background: #3A211B; color: #FFF1CF; }
+  .band .cap { font-family: Jua; font-size: 16px; line-height: 1.15; }
+  .band .cap b { font-weight: normal; color: #C2703D; }
+  .scr { flex: 1; background: #F9F6F1; position: relative; display: flex; flex-direction: column; justify-content: flex-end; }
+  .field { margin: 6px; background: #fff; border-radius: 8px; padding: 7px 8px; font-family: Pretendard; font-size: 10px; min-height: 28px; border: 1px solid #eee; }
+  .caret { display: inline-block; width: 1px; height: 11px; background: #C2703D; vertical-align: middle; }
+  .kb { background: #FFF0F5; padding: 4px 3px 6px; }
+  .sb { height: 14px; display: flex; justify-content: space-around; align-items: center; font-size: 7px; color: #5D4037; }
+  .kr { display: flex; gap: 2px; margin-top: 3px; }
+  .k { flex: 1; height: 19px; background: #fff; border-radius: 3px; display: grid; place-items: center; font-family: Jua; font-size: 8px; color: #5D4037; }
+  .k.m { background: #FFD1DC; } .k.a { background: #FFB6C1; }
+  .k.hit { background: #FFB6C1; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #C2703D; }
+  .touch { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(120,120,120,.45); border: 2px solid #fff; }
+  .pop { position: absolute; left: 6px; right: 6px; bottom: 96px; background: #fff; border-radius: 9px; padding: 5px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .pop div { background: #FFF0F5; border-radius: 5px; padding: 5px; font-family: Jua; font-size: 8px; }
+  .pop div.on { background: #FFB6C1; outline: 2px solid #5D4037; }
+  .badge { position: absolute; top: 8px; right: 8px; font-family: Jua; font-size: 12px; background: #3A211B; color: #FFCC80; padding: 2px 8px; border-radius: 99px; }
+  .full { flex: 1; display: grid; place-items: center; text-align: center; font-family: Jua; font-size: 20px; padding: 10px; }
+  .dark { background: #3A211B; color: #FFF1CF; }
+  .row { display: flex; justify-content: space-between; padding: 9px 10px; border-bottom: 1px solid #eee; font-size: 9px; background: #fff; }
+
+  .info { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .no { display: flex; align-items: center; gap: 8px; }
+  .no b { font-family: Jua; font-weight: normal; font-size: 22px; background: #3A211B; color: #FFF1CF; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+  .no span { font-size: 15px; color: #866A5F; }
+  .lbl { font-size: 11px; color: #A08878; margin-top: 4px; }
+  .txt { font-size: 15px; line-height: 1.4; }
+  .txt.cap { font-family: Jua; font-size: 18px; }
+  .txt.cap b { font-weight: normal; color: #C2703D; }
+  footer { margin-top: 26px; background: #fff; border-radius: 22px; padding: 20px 26px; font-size: 16px; line-height: 1.6; }
+  footer b { font-family: Jua; font-weight: normal; font-size: 20px; }
+</style>
+</head>
+<body>
+<header><h1 id="title"></h1><span id="total"></span></header>
+<div class="grid" id="grid"></div>
+<footer id="foot"></footer>
+<script>
+const kb = (hit = '') => `<div class="kb"><div class="sb"><span>📋</span><span>⧉</span><span>⬚</span><span>☺</span><span>‹</span><span>›</span></div>
+  ${['ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ', 'ㅁㄴㅇㄹㅎㅗㅓㅏㅣ', 'ㅋㅌㅊㅍㅠㅜㅡ'].map((r, i) => `<div class="kr">${i === 2 ? '<div class="k m">⇧</div>' : ''}${[...r].map(c => `<div class="k">${c}</div>`).join('')}${i === 2 ? `<div class="k m ${hit === 'del' ? 'hit' : ''}">⌫</div>` : ''}</div>`).join('')}
+  <div class="kr"><div class="k m">?123</div><div class="k m">,</div><div class="k" style="flex:4">한국어</div><div class="k m ${hit === 'dot' ? 'hit' : ''}">.</div><div class="k a">↵</div></div></div>`;
+const field = t => `<div class="field">${t}<span class="caret"></span></div>`;
+const pop = on => `<div class="pop">${['집 주소', '계좌번호', '이메일', '전화번호', '인사', '링크'].map(n => `<div class="${n === on ? 'on' : ''}">${n}</div>`).join('')}</div>`;
+const touch = (x, y) => `<div class="touch" style="left:${x}px; top:${y}px"></div>`;
+
+const SCREENS = {
+  typing: () => `<div class="scr">${field('서울시 마포구 말랑')}${kb()}</div>`,
+  typo: () => `<div class="scr">${field('서울시 마포구 말란ㄹ <span style="color:#d33">✗</span>')}${kb('del')}${touch(150, 198)}</div>`,
+  switch: c => `<div class="full">${c.caption}</div>`,
+  press: () => `<div class="scr">${field('')}${pop('')}${kb('dot')}${touch(128, 222)}</div>`,
+  slide: () => `<div class="scr">${field('')}${pop('집 주소')}${kb('dot')}${touch(40, 108)}<div style="position:absolute;left:58px;top:128px;width:80px;border-top:2px dashed #C2703D;transform:rotate(-38deg);transform-origin:left"></div></div>`,
+  done: () => `<div class="scr">${field('서울시 마포구 말랑로 12 ✨')}${kb()}</div>`,
+  more: () => `<div class="scr"><div class="badge">×2</div>${field('말랑은행 123-456-789012')}${pop('계좌번호')}${kb('dot')}</div>`,
+  settings: () => `<div class="scr" style="justify-content:flex-start;background:#FBF0D1"><div style="font-family:Jua;font-size:13px;padding:10px">클립보드 › 상용구</div>
+    <div class="row"><span>집 주소</span><span>서울시 마포구 말랑로 12</span></div>
+    <div class="row"><span>계좌번호</span><span>말랑은행 123-…</span></div>
+    <div class="row"><span>이메일</span><span>malang@example.com</span></div>
+    <div class="row" style="background:#FFF0F5"><span>새 칸</span><span>입력 중<span class="caret"></span></span></div></div>`,
+  outro: (c, plan) => `<div class="full dark"><div><img src="../../.github/repo_icon.png" style="width:70px;border-radius:16px"><br>말랑키<br><span style="font-size:11px;background:#FFCC80;color:#3A211B;padding:3px 9px;border-radius:99px">${plan.outro === 'store' ? '플레이스토어에서 “말랑키” 검색' : '곧 플레이스토어 출시!'}</span></div></div>`,
+};
+
+window.render = plan => {
+  let t = 0;
+  const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+  document.getElementById('title').textContent = `🎬 상용구 쇼츠 스토리보드`;
+  document.getElementById('grid').innerHTML = plan.cuts.map((c, i) => {
+    const len = c.card ? c.duration : (c.to - c.from) / (c.speed || 1);
+    const range = `${fmt(t)} – ${fmt(t + len)} (${len.toFixed(1)}초)`;
+    t += len;
+    const band = c.card ? '' : `<div class="band"><span class="tag">🍄 말랑키 꿀팁</span><div class="cap">${c.caption}</div></div>`;
+    return `<div class="cell">
+      <div class="frame">${band}${SCREENS[c.screen](c, plan)}</div>
+      <div class="info">
+        <div class="no"><b>${i + 1}</b><span>${range}</span></div>
+        <div class="lbl">자막</div><div class="txt cap">${c.caption || '—'}</div>
+        <div class="lbl">TTS</div><div class="txt">“${c.tts}”</div>
+        <div class="lbl">화면</div><div class="txt">${c.note}</div>
+      </div></div>`;
+  }).join('');
+  document.getElementById('total').textContent = `전체 ${t.toFixed(1)}초 · 1080×1920 · 화면은 녹화 전 그림`;
+  document.getElementById('foot').innerHTML = `<b>TTS 이어 읽기</b><br>${plan.cuts.map(c => c.tts).join(' ')}`;
+};
+</script>
+</body>
+</html>

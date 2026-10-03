@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>말랑키 쇼츠 자막</title>
+<!-- make_video.mjs가 ?kind=caption|switch|outro&text=… 로 열어 PNG로 찍는다. -->
+<style>
+  @font-face { font-family: Jua; src: url(../../app/src/main/res/font/jua.ttf); }
+  @font-face { font-family: Gmarket; src: url(../../app/src/main/res/font/gmarket_sans.ttf); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1080px; background: #FBF1D4; color: #4A3028; font-family: Jua; }
+
+  /* 영상 위쪽 자막 띠 (1080×420) */
+  .caption { height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 0 50px; text-align: center; }
+  .tag { font-family: Gmarket; font-size: 30px; padding: 10px 26px; border-radius: 999px; background: #3A211B; color: #FFF1CF; }
+  .caption h1 { font-weight: normal; font-size: 92px; line-height: 1.15; }
+  .caption b { font-weight: normal; color: #C2703D; }
+
+  /* 전체 화면 카드 (1080×1920) */
+  .full { height: 1920px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; text-align: center; }
+  .full.dark { background: #3A211B; color: #FFF1CF; }
+  .full h1 { font-weight: normal; font-size: 120px; line-height: 1.15; }
+  .full p { font-family: Gmarket; font-size: 46px; color: #866A5F; }
+  .full.dark p { color: #E9D5A8; }
+  .logo { width: 380px; height: 380px; border-radius: 90px; box-shadow: 0 30px 60px rgba(0,0,0,.35); }
+  .cta { font-family: Jua; font-size: 52px; padding: 26px 56px; border-radius: 999px; background: #FFCC80; color: #3A211B; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const kind = q.get('kind') || 'caption';
+const text = q.get('text') || '';
+const root = document.getElementById('root');
+
+if (kind === 'caption') {
+  root.innerHTML = `<div class="caption"><span class="tag">🍄 말랑키 꿀팁</span><h1>${text}</h1></div>`;
+} else if (kind === 'switch') {
+  root.innerHTML = `<div class="full"><h1>${text}</h1></div>`;
+} else if (kind === 'outro') {
+  const store = q.get('outro') === 'store';
+  root.innerHTML = `<div class="full dark">
+    <img class="logo" src="../../.github/repo_icon.png" alt="">
+    <h1>말랑키</h1>
+    <p>귀엽고 편한 키보드</p>
+    <span class="cta">${store ? '플레이스토어에서 “말랑키” 검색' : '곧 플레이스토어 출시!'}</span>
+  </div>`;
+}
+</script>
+</body>
+</html>

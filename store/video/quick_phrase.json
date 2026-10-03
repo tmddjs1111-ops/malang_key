@@ -1,0 +1,24 @@
+{
+  "name": "quick_phrase",
+  "outro": "soon",
+  "cuts": [
+    { "clip": "01_typing", "from": 0, "to": 3, "speed": 1.5,
+      "caption": "주소 매번 치는 사람? 🙋", "tts": "주소 매번 이렇게 치세요?" },
+    { "clip": "01_typing", "from": 3, "to": 6, "speed": 1.5,
+      "caption": "오타 나면 처음부터… 😩", "tts": "오타 나면 처음부터 다시…" },
+    { "card": "switch", "duration": 1.2,
+      "caption": "이제 이렇게 하세요 👇", "tts": "이제 이렇게 해 보세요." },
+    { "clip": "02_quick_phrase", "from": 0, "to": 2.5,
+      "caption": "① 마침표 <b>꾹</b>", "tts": "마침표를 꾹 누르고" },
+    { "clip": "02_quick_phrase", "from": 2.5, "to": 4.5,
+      "caption": "② 원하는 칸으로 <b>슥</b>", "tts": "원하는 칸으로 슥," },
+    { "clip": "02_quick_phrase", "from": 4.5, "to": 7,
+      "caption": "③ 손 떼면 <b>끝!</b> ✨", "tts": "손을 떼면 끝!" },
+    { "clip": "03_more", "from": 0, "to": 8, "speed": 2,
+      "caption": "계좌번호·이메일도 1초 컷", "tts": "계좌번호, 이메일도 1초면 돼요." },
+    { "clip": "04_settings", "from": 0, "to": 4, "speed": 1.5,
+      "caption": "설정에서 한 번만 등록", "tts": "설정에서 한 번만 등록해 두세요." },
+    { "card": "outro", "duration": 2.5,
+      "caption": "", "tts": "귀엽고 편한 키보드, 말랑키!" }
+  ]
+}

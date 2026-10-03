@@ -30,6 +30,7 @@ import dev.malangkey.ime.text.composing.Composer
 import dev.malangkey.keyboardManager
 import dev.malangkey.lib.ext.ExtensionComponentName
 import dev.malangkey.nlpManager
+import dev.malangkey.lib.devtools.flogDebug
 import dev.malangkey.subtypeManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +57,8 @@ abstract class AbstractEditorInstance(context: Context) {
         private const val NumCharsBeforeCursor: Int = 256
         private const val NumCharsAfterCursor: Int = 128
         private const val NumCharsSafeMarginBeforeCursor: Int = 128
+        /** 캐시가 실제 입력칸과 같은지 볼 때 비교하는 커서 앞 글자 수. */
+        private const val StaleCheckChars: Int = 8
         //private const val NumCharsSafeMarginAfterCursor: Int = 0
 
         private const val CursorUpdateAll: Int =
@@ -291,7 +294,11 @@ abstract class AbstractEditorInstance(context: Context) {
     abstract fun determineComposer(composerName: ExtensionComponentName): Composer
 
     protected open fun shouldDetermineComposingRegion(editorInfo: FlorisEditorInfo): Boolean {
-        return editorInfo.isRichInputEditor && !editorInfo.inputAttributes.flagTextNoSuggestions
+        // 일본어·중국어는 변환이 입력의 일부라, 검색창처럼 '추천 없음'을 건 입력칸에서도 조합 중인 단어를 잡는다.
+        return editorInfo.isRichInputEditor && (
+            !editorInfo.inputAttributes.flagTextNoSuggestions ||
+                nlpManager.providerForcesSuggestionOn(subtypeManager.activeSubtype)
+            )
     }
 
     private suspend fun determineLocalComposing(
@@ -326,6 +333,48 @@ abstract class AbstractEditorInstance(context: Context) {
         return true
     }
 
+    /**
+     * 키보드가 들고 있는 입력칸 내용이 실제와 다르면 지금 바로 다시 읽는다.
+     *
+     * 메신저가 전송하면서 입력칸을 비우는 것처럼 앱이 글을 직접 바꾸면, 키보드의 사본은 한 박자 늦게(비동기로)
+     * 갱신된다. 그 사이에 키를 누르면 이미 지워진 글을 기준으로 조합해서 앞 글자가 다시 붙거나, 조합 중이던
+     * 단어(때로는 보낸 문장 전체)가 다시 써지거나, 누른 글자가 사라진다. 그래서 글을 바꾸기 직전에 커서 앞
+     * 몇 글자만 실제와 비교하고, 다르면 사본을 새로 만든다.
+     *
+     * @return 사본을 새로 만들었으면 true.
+     */
+    fun syncContentIfStale(): Boolean {
+        val ic = currentInputConnection() ?: return false
+        val content = activeContent
+        if (activeInfo.isRawInputEditor || content.selection.isNotValid || content.selection.isSelectionMode) return false
+        val realTail = ic.getTextBeforeCursor(StaleCheckChars, 0)?.toString() ?: return false
+        val cachedTail = content.textBeforeSelection.takeLast(StaleCheckChars).toString()
+        if (realTail == cachedTail) return false
+
+        flogDebug { "Editor cache is stale (cached='$cachedTail', real='$realTail'), re-reading" }
+        runBlocking { expectedContentQueue.clear() }
+        val extracted = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)
+        if (extracted == null || extracted.selectionStart < 0) {
+            // 위치를 알 수 없는 입력칸: 조합 상태만 버리고 다음 선택 변경 알림에서 다시 읽게 둔다.
+            activeContent = EditorContent.Unspecified
+            ic.finishComposingText()
+            return true
+        }
+        val selection = EditorRange(
+            extracted.startOffset + extracted.selectionStart,
+            extracted.startOffset + extracted.selectionEnd,
+        )
+        val textBeforeSelection = if (selection.start > 0) ic.getTextBeforeCursor(NumCharsBeforeCursor, 0) ?: "" else ""
+        val textAfterSelection = ic.getTextAfterCursor(NumCharsAfterCursor, 0) ?: ""
+        val selectedText = if (selection.isSelectionMode) ic.getSelectedText(0) ?: "" else ""
+        val fresh = runBlocking {
+            generateContent(activeInfo, selection, textBeforeSelection, textAfterSelection, selectedText)
+        }
+        activeContent = fresh
+        ic.setComposingRegion(fresh.composing)
+        return true
+    }
+
     open fun commitChar(char: String): Boolean {
         return commitChar(
             char = char,
@@ -341,6 +390,7 @@ abstract class AbstractEditorInstance(context: Context) {
         insertSpaceBeforeChar: Boolean,
         insertSpaceAfterChar: Boolean,
     ): Boolean {
+        syncContentIfStale()
         val content = activeContent
         val selection = content.selection
         if (selection.isNotValid || selection.isSelectionMode || activeInfo.isRawInputEditor) {
@@ -414,12 +464,15 @@ abstract class AbstractEditorInstance(context: Context) {
 
     open fun finalizeComposingText(text: String): Boolean {
         val ic = currentInputConnection() ?: return false
+        // 앱이 이미 글을 바꿨는데 예전 조합 단어를 다시 쓰면, 보낸 말이 통째로 다시 들어간다.
+        if (syncContentIfStale()) return false
         val content = activeContent
         val composing = content.composing
+        // 예전에는 여기서 beginBatchEdit()를 먼저 열고 그냥 돌아가서, 입력칸이 편집을 붙잡고 있다가
+        // 나중에 한꺼번에 반영하는 일이 생겼다.
+        if (activeInfo.isRawInputEditor || composing.isNotValid) return false
         ic.beginBatchEdit()
-        if (activeInfo.isRawInputEditor || composing.isNotValid) {
-            return false
-        } else runBlocking {
+        runBlocking {
             val newSelection = EditorRange.cursor(composing.end + (text.length - content.composingText.length))
             val newContent = content.generateCopy(
                 selection = newSelection,

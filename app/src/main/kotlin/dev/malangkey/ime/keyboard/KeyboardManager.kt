@@ -667,6 +667,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
         val isMultiTap = layoutId.contains("sky") || layoutId.contains("cheonjiin") || layoutId.contains("naratgul")
         if (editorInstance.determineComposingEnabled() || isMultiTap) {
+            // 전송 후 비워진 입력칸에서 예전 글을 기준으로 조합을 확정하지 않도록 먼저 실제 내용과 맞춘다.
+            editorInstance.syncContentIfStale()
             val composer = resources.composers.value[subtypeManager.activeSubtype.composer] ?: dev.malangkey.ime.text.composing.Appender
             val consumed = composer.onSpacePressed(editorInstance.activeContent.textBeforeSelection, layoutId)
             val content = editorInstance.activeContent

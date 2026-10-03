@@ -1,6 +1,5 @@
 {
   "name": "quick_phrase",
-  "outro": "soon",
   "cuts": [
     {
       "clip": "01_typing",
@@ -83,7 +82,7 @@
       "caption": "",
       "tts": "귀엽고 편한 키보드, 말랑키!",
       "screen": "outro",
-      "note": "로고 + 곧 출시 (출시 후엔 스토어 검색)"
+      "note": "로고 + 다운로드하러 가기 👇 (링크는 설명란·고정 댓글)"
     }
   ]
 }

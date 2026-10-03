@@ -25,7 +25,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 async function card(i, kind, text, height) {
   const url = pathToFileURL(path.join(dir, 'cards.html')).href +
-    `?kind=${kind}&outro=${plan.outro}&text=${encodeURIComponent(text)}`;
+    `?kind=${kind}&text=${encodeURIComponent(text)}`;
   await page.goto(url);
   await page.evaluate(() => document.fonts.ready);
   const file = path.join(work, `${String(i).padStart(2, '0')}_${kind}.png`);

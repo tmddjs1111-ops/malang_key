@@ -39,12 +39,11 @@ if (kind === 'caption') {
 } else if (kind === 'switch') {
   root.innerHTML = `<div class="full"><h1>${text}</h1></div>`;
 } else if (kind === 'outro') {
-  const store = q.get('outro') === 'store';
   root.innerHTML = `<div class="full dark">
     <img class="logo" src="../../.github/repo_icon.png" alt="">
     <h1>말랑키</h1>
     <p>귀엽고 편한 키보드</p>
-    <span class="cta">${store ? '플레이스토어에서 “말랑키” 검색' : '곧 플레이스토어 출시!'}</span>
+    <span class="cta">다운로드하러 가기 👇</span>
   </div>`;
 }
 </script>

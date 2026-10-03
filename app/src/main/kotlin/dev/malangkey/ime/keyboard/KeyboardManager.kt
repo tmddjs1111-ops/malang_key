@@ -778,11 +778,14 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     /**
-     * 일본어 스페이스: 입력 중이면 가나 그대로 확정만 하고(일본어는 띄어 쓰지 않는다),
-     * 입력 중이 아닐 때만 일본어 입력기의 기본인 전각 공백을 넣는다.
+     * 일본어 스페이스: 입력 중이면 '다음 글자로'(▶)다. 같은 키 연타만 끊고(손을 떼면 자판이 연타 상태를
+     * 비운다) 조합은 그대로 두어, か·스페이스·か로 かか를 쳐도 みっかかん 전체를 변환할 수 있다.
+     * 확정은 確定(엔터), 변환은 変換 키가 맡는다. 입력 중이 아닐 때만 전각 공백을 넣는다.
      */
     private fun handleJapaneseSpace() {
-        if (!commitJapaneseComposing()) editorInstance.commitText("\u3000")
+        val content = editorInstance.activeContent
+        val isComposing = content.composing.isValid && content.composing.length > 0
+        if (!isComposing) editorInstance.commitText("\u3000")
     }
 
     private fun handleJapaneseConvert() {

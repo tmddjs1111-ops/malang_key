@@ -136,9 +136,9 @@ fun SetupScreen() = FlorisScreen {
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Image(
-                    painter = painterResource(R.drawable.ic_malang_logo),
+                    painter = painterResource(R.drawable.mk_logo_mark),
                     contentDescription = null,
-                    modifier = Modifier.size(96.dp),
+                    modifier = Modifier.size(64.dp),
                 )
                 Text(
                     "말랑키에 오신 걸 환영해요",

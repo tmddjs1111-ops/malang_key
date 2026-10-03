@@ -163,7 +163,8 @@ fun MalangTestInputBar() {
         modifier = Modifier
             .fillMaxWidth()
             .background(MalangDarkCard)
-            .padding(horizontal = 29.dp, vertical = 8.dp)
+            // 위 설정 카드들과 같은 24dp 여백으로 맞춰 입력창 좌우 끝이 카드와 일직선이 되게 한다.
+            .padding(horizontal = 24.dp, vertical = 8.dp)
     ) {
         Box(
             modifier = Modifier

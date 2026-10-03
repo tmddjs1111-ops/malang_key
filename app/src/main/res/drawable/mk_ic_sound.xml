@@ -5,22 +5,29 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path
-        android:pathData="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M15.5 9a4 4 0 0 1 0 6"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:pathData="M18 6.5a7.5 7.5 0 0 1 0 11"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+    <!-- Normalised so every home tile icon has the same size and a left edge flush with the tile title. -->
+    <group
+        android:scaleX="1.0976"
+        android:scaleY="1.0976"
+        android:translateX="-3.3902"
+        android:translateY="-1.1707">
+        <path
+            android:pathData="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.64"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M15.5 9a4 4 0 0 1 0 6"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.64"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M18 6.5a7.5 7.5 0 0 1 0 11"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.64"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

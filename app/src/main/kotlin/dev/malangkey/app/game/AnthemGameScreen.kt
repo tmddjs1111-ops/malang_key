@@ -308,7 +308,7 @@ private fun ResultCard(result: TypingScore.Result, modeLabel: String, playedAt: 
                     .background(MalangCardText),
                 contentAlignment = Alignment.Center,
             ) {
-                Image(painterResource(R.drawable.ic_malang_logo), contentDescription = null, modifier = Modifier.size(24.dp))
+                Image(painterResource(R.drawable.mk_logo_mark), contentDescription = null, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.size(8.dp))
             Text("애국가 빨리치기 · $modeLabel", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = JuaFontFamily)
@@ -326,8 +326,24 @@ private fun ResultCard(result: TypingScore.Result, modeLabel: String, playedAt: 
                 fontWeight = FontWeight.Bold,
             )
         }
-        Text("${result.score}", color = MalangCardText, fontSize = 72.sp, lineHeight = 76.sp, fontFamily = JuaFontFamily)
-        Text("점", color = MalangCardSubLight, fontSize = 16.sp, fontFamily = JuaFontFamily)
+        // 점수와 "점"을 한 줄에 붙여 숫자 아래에 "점"만 따로 떠 보이지 않게 한다.
+        Row {
+            Text(
+                "${result.score}",
+                modifier = Modifier.alignByBaseline(),
+                color = MalangCardText,
+                fontSize = 72.sp,
+                lineHeight = 76.sp,
+                fontFamily = JuaFontFamily,
+            )
+            Text(
+                "점",
+                modifier = Modifier.alignByBaseline().padding(start = 4.dp),
+                color = MalangCardSubLight,
+                fontSize = 20.sp,
+                fontFamily = JuaFontFamily,
+            )
+        }
         Text(
             "${result.grade}등급 · ${result.gradeTitle}",
             color = MalangCardText,
@@ -336,11 +352,12 @@ private fun ResultCard(result: TypingScore.Result, modeLabel: String, playedAt: 
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            ResultStat("타수", "${result.strokesPerMinute}타")
-            ResultStat("정확도", "${(result.accuracy * 100).toInt()}%")
-            ResultStat("오타", "${result.errorCount}개")
-            ResultStat("시간", formatTime(result.elapsedMillis))
+        // 네 칸을 같은 너비로 나눠 값의 글자 수와 상관없이 칸 중심이 고르게 놓이게 한다.
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ResultStat("타수", "${result.strokesPerMinute}타", Modifier.weight(1f))
+            ResultStat("정확도", "${(result.accuracy * 100).toInt()}%", Modifier.weight(1f))
+            ResultStat("오타", "${result.errorCount}개", Modifier.weight(1f))
+            ResultStat("시간", formatTime(result.elapsedMillis), Modifier.weight(1f))
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text("$playedAt · 말랑키", color = MalangCardSubMuted, fontSize = 12.sp)
@@ -348,8 +365,8 @@ private fun ResultCard(result: TypingScore.Result, modeLabel: String, playedAt: 
 }
 
 @Composable
-private fun ResultStat(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun ResultStat(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = MalangCardText, fontSize = 18.sp, fontFamily = JuaFontFamily)
         Text(label, color = MalangCardSubMuted, fontSize = 12.sp)
     }

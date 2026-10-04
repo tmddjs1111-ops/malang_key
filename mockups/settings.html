@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Jua;src:url(../app/src/main/res/font/jua.ttf)}
+@font-face{font-family:Noto;src:url(../app/src/main/res/font/noto_sans.ttf);font-weight:100 900}
+:root{--margin:24px;--rowv:14px;--rowh:16px;}
+*{box-sizing:border-box;margin:0;word-break:keep-all}
+body{width:411px;height:891px;background:#FBF0D1;font-family:Noto;display:flex;flex-direction:column;overflow:hidden}
+.status{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;color:#333;font-size:14px}
+.header{display:flex;align-items:center;gap:14px;padding:6px 16px 12px;border-bottom:1px solid #E5D8C6}
+.back{width:40px;height:40px;border-radius:50%;background:#311D18;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px}
+.ht{font-family:Jua;font-size:26px;color:#311D18;line-height:1.1}.hs{font-size:13px;color:#866A5F;margin-top:2px}
+.body{flex:1;padding:16px var(--margin);overflow:hidden}
+.sect{font-family:Jua;font-size:23px;color:#68463B;margin:0 0 12px 4px}
+.card{background:#FFFDFB;border:1px solid #E5D8C6;border-radius:24px;padding:6px 0}
+.row{display:flex;align-items:center;padding:var(--rowv) var(--rowh)}
+.txt{flex:1;padding-right:12px}.t{font-size:16px;font-weight:700;color:#4A3028}
+.s{font-size:13px;line-height:19px;color:#866A5F;margin-top:6px}
+.div{height:1px;background:#E9DCCB;margin:0 var(--rowh)}
+.chev{width:9px;height:16px;margin:0 10px 0 12px;border-right:2.2px solid #68463B;border-top:2.2px solid #68463B;transform:rotate(45deg) scale(.75);flex:none}
+.tg{width:52px;height:32px;border-radius:16px;background:#68463B;position:relative;flex:none}
+.tg::after{content:"";position:absolute;top:5px;left:25px;width:22px;height:22px;border-radius:50%;background:#FFFBEA}
+.off{opacity:.45}.off .tg{background:#E3DEE8;border:2px solid #fff}
+.sect2{margin-top:24px}
+.bar{background:#311D18;padding:10px 16px}.inp{background:#FFFBEA;border-radius:14px;padding:12px 14px;font-size:14px;color:#866A5F}
+.nav{height:48px;background:#999}
+</style></head><body>
+<div class="status"><span>SKT 7:13</span><span>49</span></div>
+<div class="header"><div class="back">←</div><div><div class="ht">키보드 설정</div><div class="hs">Keyboard Settings</div></div></div>
+<div class="body">
+<div class="sect">키보드 언어 및 레이아웃</div>
+<div class="card">
+<div class="row"><div class="txt"><div class="t">키보드 언어 및 레이아웃</div><div class="s">시스템에 추가할 언어와 레이아웃을 선택합니다.</div></div><div class="chev"></div></div><div class="div"></div>
+<div class="row"><div class="txt"><div class="t">내 키보드 순서</div><div class="s">사용 중인 키보드를 끌어서 전환 순서를 정합니다.</div></div><div class="chev"></div></div><div class="div"></div>
+<div class="row"><div class="txt"><div class="t">입력 및 수정</div><div class="s">자동 교정, 대문자 자동 변환 등 입력 방식을 설정합니다.</div></div><div class="chev"></div></div><div class="div"></div>
+<div class="row"><div class="txt"><div class="t">숫자 행 표시</div><div class="s">키보드 상단에 숫자 키 행을 표시합니다.</div></div><div class="tg"></div></div><div class="div"></div>
+<div class="row off"><div class="txt"><div class="t">힌트 숫자 행 모드</div><div class="s">스마트 우선</div></div><div class="tg"></div></div><div class="div"></div>
+<div class="row"><div class="txt"><div class="t">힌트 기호 모드</div><div class="s">스마트 우선</div></div><div class="tg"></div></div><div class="div"></div>
+<div class="row"><div class="txt"><div class="t">스페이스바 표시 모드</div><div class="s">현재 언어 표시</div></div><div class="chev"></div></div>
+</div>
+<div class="sect sect2">레이아웃 및 크기</div>
+</div>
+<div class="bar"><div class="inp">여기에 입력해 보세요…</div></div><div class="nav"></div>
+</body></html>

@@ -68,6 +68,8 @@ import dev.malangkey.ime.smartbar.quickaction.keyData
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.keyboard.TextKeyData
 import dev.malangkey.keyboardManager
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangInfoCard
 import dev.malangkey.app.apptheme.MalangSettingsBg
@@ -130,7 +132,7 @@ fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = 
                     )
                 },
                 {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV)) {
                         Text("슬롯 편집", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         Text(
                             "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어갑니다.",

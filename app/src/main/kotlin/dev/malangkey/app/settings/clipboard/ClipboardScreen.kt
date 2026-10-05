@@ -49,6 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangInfoCard
@@ -137,7 +139,7 @@ fun QuickPhraseGridEditor() {
     }
 
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text("상용구 편집", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)

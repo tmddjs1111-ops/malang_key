@@ -38,6 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.MalangSettingsBorder
 import dev.malangkey.app.apptheme.MalangSettingsCard
 import dev.malangkey.app.apptheme.MalangSettingsSection
@@ -69,7 +71,7 @@ fun KeyboardFontPicker() {
     val selected by prefs.malang.keyboardFontFamily.collectAsState()
 
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text("키보드 글꼴", color = MalangSettingsTitle, fontSize = 16.sp)

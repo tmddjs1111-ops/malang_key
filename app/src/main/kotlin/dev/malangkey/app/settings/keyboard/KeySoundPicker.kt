@@ -43,6 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.MalangSettingsBorder
 import dev.malangkey.app.apptheme.MalangSettingsCard
 import dev.malangkey.app.apptheme.MalangSettingsSection
@@ -87,7 +89,7 @@ fun KeySoundPicker(enabled: Boolean) {
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV)
             .alpha(if (enabled) 1f else 0.4f),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

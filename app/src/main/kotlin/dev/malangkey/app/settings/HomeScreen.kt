@@ -385,7 +385,7 @@ private fun GameTabContent(navController: androidx.navigation.NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = MalangScreenGutter),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Column(
@@ -453,7 +453,7 @@ private fun ThemeTabContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = MalangScreenGutter),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         ThemeHeroCard(onClick = { navController.navigate(Routes.Settings.Theme) })
@@ -628,7 +628,7 @@ private fun FloatPercentSliderRow(pref: PreferenceData<Float>, title: String) {
     var dragging by remember { mutableStateOf(false) }
     var local by remember { mutableStateOf(0f) }
     val shown = if (dragging) local else stored
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+    Column(modifier = Modifier.padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text("${(shown * 100).toInt()}%", color = MalangSettingsSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)

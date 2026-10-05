@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.MalangInfoCard
 import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
@@ -80,7 +82,7 @@ fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 �
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(onClick = toggle)
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(

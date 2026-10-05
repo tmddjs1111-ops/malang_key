@@ -71,6 +71,13 @@ val MalangSettingsSection = Color(0xFF68463B)
 val MalangSettingsTitle = Color(0xFF4A3028)
 val MalangSettingsSummary = Color(0xFF866A5F)
 
+/** 설정 화면 양옆 여백. 흰 카드가 너무 좁아 보이지 않게 16dp로 둔다. */
+val MalangScreenGutter = 16.dp
+/** 설정 카드 안 한 줄의 좌우 여백. 구분선도 같은 값만큼 들여 쓴다. */
+val MalangRowPaddingH = 18.dp
+/** 설정 카드 안 한 줄의 위아래 여백. */
+val MalangRowPaddingV = 18.dp
+
 /**
  * 피그마 설정 화면 틀: 뒤로가기 버튼과 한/영 제목이 있는 헤더, 스크롤되는 본문,
  * 하단에 고정된 키보드 테스트 입력창.
@@ -105,7 +112,7 @@ fun MalangSettingsScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = MalangScreenGutter, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 content = content,
             )
@@ -217,7 +224,7 @@ fun MalangSettingsSection(
                 if (index > 0) {
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = MalangRowPaddingH)
                             .fillMaxWidth()
                             .height(1.dp)
                             .background(MalangSettingsDivider)
@@ -271,7 +278,7 @@ fun MalangNavRow(
             .fillMaxWidth()
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RowTexts(title, summary, Modifier.weight(1f), summaryBold)
@@ -322,7 +329,7 @@ fun MalangSwitchRow(
             .fillMaxWidth()
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled) { onRowClick?.invoke() ?: setChecked(!checked) }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RowTexts(title, summary, Modifier.weight(1f))
@@ -350,7 +357,7 @@ fun MalangSliderRow(
     Column(
         modifier = Modifier
             .alpha(if (enabled) 1f else 0.5f)
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)

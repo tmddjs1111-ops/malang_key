@@ -47,6 +47,9 @@ import androidx.compose.ui.unit.sp
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
+import dev.malangkey.app.apptheme.MalangScreenGutter
+import dev.malangkey.app.apptheme.MalangRowPaddingH
+import dev.malangkey.app.apptheme.MalangRowPaddingV
 import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.malangkey.app.apptheme.MalangButton
 import dev.malangkey.app.apptheme.MalangChoiceRow
@@ -146,7 +149,7 @@ fun QuickSetupScreen() = FlorisScreen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 4.dp),
+                    .padding(horizontal = MalangScreenGutter, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 steps.forEachIndexed { index, _ ->
@@ -169,7 +172,7 @@ fun QuickSetupScreen() = FlorisScreen {
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = MalangScreenGutter, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 when (step) {
@@ -184,7 +187,7 @@ fun QuickSetupScreen() = FlorisScreen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                    .padding(horizontal = MalangScreenGutter, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (stepIndex > 0) {
@@ -363,7 +366,7 @@ private fun SmartbarStep() {
         items = listOf(
             { MalangSwitchRow(prefs.smartbar.enabled, "스마트 바 사용", "키보드 위에 기능 버튼 줄을 표시합니다.") },
             {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Column(modifier = Modifier.padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV)) {
                     Text("버튼 바꾸기", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Text(
                         "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어갑니다.",
@@ -458,7 +461,7 @@ private fun CheckRow(title: String, checked: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = MalangRowPaddingH, vertical = MalangRowPaddingV),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)

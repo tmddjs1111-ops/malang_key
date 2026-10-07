@@ -55,7 +55,6 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     private val keySoundPlayer = KeySoundPlayer(ims)
 
-    private var systemAudioEnabled: Boolean = false
     private var systemHapticEnabled: Boolean = false
 
     init {
@@ -80,7 +79,6 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
     }
 
     fun updateSystemPrefsState() {
-        systemAudioEnabled = systemPref(Settings.System.SOUND_EFFECTS_ENABLED)
         systemHapticEnabled = systemPref(Settings.System.HAPTIC_FEEDBACK_ENABLED)
     }
 
@@ -118,10 +116,8 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
     private fun performAudioFeedback(data: KeyData, factor: Double) {
         if (audioManager == null) return
         if (!prefs.inputFeedback.audioEnabled.get()) return
-        if (prefs.inputFeedback.audioActivationMode.get() ==
-            InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemAudioEnabled) return
-
-        // 무음·진동 모드에서는 키 소리를 내지 않는다.
+        // 켬·끔은 키 소리 스위치 하나로 정한다. 시스템 '터치음' 설정은 따르지 않고,
+        // 휴대폰이 무음·진동 모드일 때만 소리를 내지 않는다.
         if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
 
         // 누르는 순간 바로 들리도록 코루틴으로 넘기지 않고 이 자리에서 재생한다.

@@ -605,9 +605,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.SHIFT] down event.
      */
     private fun handleShiftDown(data: KeyData) {
-        activeState.inputShiftState = when (activeState.inputShiftState) {
-            InputShiftState.CAPS_LOCK -> InputShiftState.UNSHIFTED
-            else -> InputShiftState.CAPS_LOCK
+        // 한 번 누르면 다음 한 글자만 쌍자음·대문자, 두 번 연달아 누르면 고정한다.
+        activeState.inputShiftState = when (prefs.keyboard.capitalizationBehavior.get()) {
+            CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP -> when {
+                inputEventDispatcher.isConsecutiveDown(data) -> InputShiftState.CAPS_LOCK
+                activeState.inputShiftState == InputShiftState.UNSHIFTED -> InputShiftState.SHIFTED_MANUAL
+                else -> InputShiftState.UNSHIFTED
+            }
+            CapitalizationBehavior.CAPSLOCK_BY_CYCLE -> when (activeState.inputShiftState) {
+                InputShiftState.UNSHIFTED -> InputShiftState.SHIFTED_MANUAL
+                InputShiftState.SHIFTED_MANUAL -> InputShiftState.CAPS_LOCK
+                InputShiftState.SHIFTED_AUTOMATIC -> InputShiftState.UNSHIFTED
+                InputShiftState.CAPS_LOCK -> InputShiftState.UNSHIFTED
+            }
         }
     }
 

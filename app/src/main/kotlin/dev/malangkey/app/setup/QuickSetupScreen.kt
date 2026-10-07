@@ -64,6 +64,8 @@ import dev.malangkey.app.apptheme.MalangTestInputBar
 import dev.malangkey.app.apptheme.MalangToggle
 import dev.malangkey.app.settings.keyboard.KeyboardLanguageTabs
 import dev.malangkey.app.settings.keyboard.keyboardDisplayName
+import android.content.Context
+import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.core.SubtypePreset
 import dev.malangkey.app.settings.smartbar.MalangSlotsEditor
 import dev.malangkey.app.settings.theme.applyMalangTheme
@@ -77,6 +79,22 @@ import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.subtypeManager
 import kotlinx.coroutines.launch
 import dev.patrickgold.jetpref.datastore.model.collectAsState as collectPrefAsState
+
+/**
+ * 자판 목록이 비어 있으면 두벌식을 넣는다. 비어 있어도 키보드는 기본 자판으로 동작하지만,
+ * 자판 선택 화면에 아무것도 체크되지 않고 홈에 설정 경고가 뜬다.
+ */
+internal fun ensureDefaultSubtype(context: Context) {
+    val subtypeManager by context.subtypeManager()
+    if (subtypeManager.subtypes.isNotEmpty()) return
+    val keyboardManager by context.keyboardManager()
+    val default = Subtype.DEFAULT
+    val preset = keyboardManager.resources.subtypePresets.value.find {
+        it.locale == default.primaryLocale && it.preferred.characters == default.layoutMap.characters
+    }
+    subtypeManager.addSubtypeAndActivate(preset?.toSubtype() ?: default)
+    keyboardManager.resources.anyChangedVersion.value += 1
+}
 
 /** 키보드를 켜고 고른 뒤 이어지는 간단 설정 단계. */
 private enum class QuickStep(val title: String, val subtitle: String) {
@@ -97,6 +115,7 @@ fun QuickSetupScreen() = FlorisScreen {
 
     content {
         val navController = LocalNavController.current
+        val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val steps = QuickStep.entries
         var stepIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -104,6 +123,7 @@ fun QuickSetupScreen() = FlorisScreen {
         val isLast = stepIndex == steps.lastIndex
 
         val finish: () -> Unit = {
+            ensureDefaultSubtype(context)
             scope.launch { prefs.internal.isImeSetUp.set(true) }
             navController.navigate(Routes.Settings.Home) {
                 popUpTo(navController.graph.id) { inclusive = true }
@@ -212,10 +232,27 @@ private fun ColumnScope.LanguageStep() {
     val subtypeManager by context.subtypeManager()
     val subtypes by subtypeManager.subtypesFlow.collectAsState()
     val presets by keyboardManager.resources.subtypePresets.collectAsState()
-    val layouts by keyboardManager.resources.layouts.collectAsState()
-    val activePalette = rememberActivePreviewPalette()
+
+    // 처음 들어오면 두벌식을 미리 체크해 둔다. 마지막 하나는 지울 수 없으니 이후로도 비지 않는다.
+    LaunchedEffect(presets, subtypes.isEmpty()) {
+        if (presets.isNotEmpty()) ensureDefaultSubtype(context)
+    }
 
     MalangInfoCard("쓰고 싶은 자판을 모두 골라주세요. 여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
+
+    KeyboardLayoutPicker()
+}
+
+/** 언어 탭과 자판 카드(실제 키보드 미리보기). 간단 설정과 '키보드 언어 및 레이아웃' 화면이 같이 쓴다. */
+@Composable
+internal fun ColumnScope.KeyboardLayoutPicker() {
+    val context = LocalContext.current
+    val keyboardManager by context.keyboardManager()
+    val subtypeManager by context.subtypeManager()
+    val subtypes by subtypeManager.subtypesFlow.collectAsState()
+    val presets by keyboardManager.resources.subtypePresets.collectAsState()
+    val layouts by keyboardManager.resources.layouts.collectAsState()
+    val activePalette = rememberActivePreviewPalette()
 
     val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
     fun toggle(preset: SubtypePreset) {

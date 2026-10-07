@@ -62,18 +62,10 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                 MalangSwitchRow(
                     prefs.inputFeedback.audioEnabled,
                     title = "키 소리",
-                    summary = "키를 누를 때 소리를 냅니다.",
+                    summary = "키를 누를 때 소리를 냅니다. 휴대폰이 무음·진동 모드면 소리가 나지 않아요.",
                 )
             },
             { KeySoundPicker(enabled = audioEnabled) },
-            {
-                MalangChoiceRow(
-                    prefs.inputFeedback.audioActivationMode,
-                    title = "무음 모드에서",
-                    entries = ActivationModeEntries,
-                    enabled = audioEnabled,
-                )
-            },
             {
                 MalangValueDialogRow(
                     prefs.inputFeedback.audioVolume,

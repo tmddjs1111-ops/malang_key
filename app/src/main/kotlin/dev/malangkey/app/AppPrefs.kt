@@ -391,6 +391,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val audioActivationMode = enum(
             key = "input_feedback__audio_activation_mode",
+            // 더 이상 쓰지 않는다. 키 소리는 스위치와 휴대폰 무음·진동 모드만 따른다.
             default = InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS,
         )
         val audioVolume = int(

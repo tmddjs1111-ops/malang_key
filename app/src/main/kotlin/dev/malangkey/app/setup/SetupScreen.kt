@@ -112,6 +112,7 @@ fun SetupScreen() = FlorisScreen {
         }
 
         val finish: () -> Unit = {
+            ensureDefaultSubtype(context)
             scope.launch { prefs.internal.isImeSetUp.set(true) }
             navController.navigate(Routes.Settings.Home) {
                 popUpTo(navController.graph.id) { inclusive = true }

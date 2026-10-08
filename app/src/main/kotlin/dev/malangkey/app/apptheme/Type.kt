@@ -49,19 +49,22 @@ val TuntunFontFamily = FontFamily(Font(R.font.tuntun, FontWeight.Normal))
 val TmonFontFamily = FontFamily(Font(R.font.tmon, FontWeight.Normal))
 val MPlusRoundedFontFamily = FontFamily(Font(R.font.m_plus_rounded_1c, FontWeight.Normal))
 
+/** 키보드 글꼴 설정값(prefs.malang.keyboardFontFamily)에 맞는 글꼴. "system"이나 모르는 값은 기본 글꼴. */
+fun keyboardFontFamilyFor(fontFamilyId: String): FontFamily = when (fontFamilyId) {
+    "jua" -> JuaFontFamily
+    "gmarket_sans" -> GmarketSansFontFamily
+    "pretendard" -> PretendardFontFamily
+    "noto_sans" -> NotoSansFontFamily
+    "nanum_gothic" -> NanumGothicFontFamily
+    "nanum_myeongjo" -> NanumMyeongjoFontFamily
+    "handwriting" -> HandwritingFontFamily
+    "tuntun" -> TuntunFontFamily
+    "tmon" -> TmonFontFamily
+    else -> FontFamily.Default
+}
+
 fun getTypographyFor(fontFamilyId: String): Typography {
-    val fontFamily = when (fontFamilyId) {
-        "jua" -> JuaFontFamily
-        "gmarket_sans" -> GmarketSansFontFamily
-        "pretendard" -> PretendardFontFamily
-        "noto_sans" -> NotoSansFontFamily
-        "nanum_gothic" -> NanumGothicFontFamily
-        "nanum_myeongjo" -> NanumMyeongjoFontFamily
-        "handwriting" -> HandwritingFontFamily
-        "tuntun" -> TuntunFontFamily
-        "tmon" -> TmonFontFamily
-        else -> FontFamily.Default
-    }
+    val fontFamily = keyboardFontFamilyFor(fontFamilyId)
 
     return Typography(
         displayLarge = TextStyle(

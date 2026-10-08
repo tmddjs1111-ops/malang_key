@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -159,6 +160,7 @@ fun KeyboardPreview(
     palette: PreviewPalette,
     modifier: Modifier = Modifier,
     height: Dp = 104.dp,
+    fontFamily: FontFamily? = null,
 ) {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
@@ -192,7 +194,7 @@ fun KeyboardPreview(
                 if (growSum == 0f && extra > 0.01f) Spacer(modifier = Modifier.weight(extra / 2))
                 for (key in row) {
                     val width = key.flayWidthFactor + if (growSum > 0f) extra * key.flayGrow / growSum else 0f
-                    PreviewKey(key, palette, Modifier.weight(width))
+                    PreviewKey(key, palette, fontFamily, Modifier.weight(width))
                 }
                 if (growSum == 0f && extra > 0.01f) Spacer(modifier = Modifier.weight(extra / 2))
             }
@@ -201,7 +203,7 @@ fun KeyboardPreview(
 }
 
 @Composable
-private fun PreviewKey(key: TextKey, palette: PreviewPalette, modifier: Modifier) {
+private fun PreviewKey(key: TextKey, palette: PreviewPalette, fontFamily: FontFamily?, modifier: Modifier) {
     val (bg, fg) = remember(key, palette) { palette.colorsFor(key.computedData.code) }
     Box(
         modifier = modifier
@@ -221,6 +223,7 @@ private fun PreviewKey(key: TextKey, palette: PreviewPalette, modifier: Modifier
                 color = fg,
                 fontSize = 8.sp,
                 lineHeight = 9.sp,
+                fontFamily = fontFamily,
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
             )

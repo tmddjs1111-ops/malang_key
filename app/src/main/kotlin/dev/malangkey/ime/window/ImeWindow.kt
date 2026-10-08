@@ -39,6 +39,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import dev.malangkey.app.FlorisPreferenceStore
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -155,6 +161,18 @@ fun BoxScope.ImeWindow() {
 
     FloatingDockToFixedIndicator()
 
+    // 배경 사진 자르기 틀이 실제 키보드 모양과 같도록, 고정 키보드의 가로÷세로 비율을 남겨 둔다.
+    // 이모티콘 검색창처럼 자판 위로 올라온 창이 있을 때는 높이가 달라서 기록하지 않는다.
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val keyboardManager by LocalContext.current.keyboardManager()
+    val keyboardState by keyboardManager.activeState.collectAsState()
+    val isEmoticonSearchVisible by keyboardManager.isEmoticonSearchVisible.collectAsState()
+    // 가로 화면은 키보드가 납작해서 틀 비율로 쓰면 안 된다. 세로 화면일 때만 기록한다.
+    val isPortrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+    val isFixedWindow = windowSpec is ImeWindowSpec.Fixed && isPortrait &&
+        keyboardState.imeUiMode == ImeUiMode.TEXT && !isEmoticonSearchVisible
+
     SnyggBox(
         elementName = FlorisImeUi.Window.elementName,
         attributes = attributes,
@@ -174,8 +192,16 @@ fun BoxScope.ImeWindow() {
                 val boundsPx = coords.boundsInRoot().roundToIntRect()
                 val newInsets = with(density) { ImeInsets.Window.of(boundsPx) }
                 windowController.updateWindowInsets(newInsets)
+                if (isFixedWindow && boundsPx.width > 0 && boundsPx.height > 0) {
+                    val aspect = boundsPx.width.toFloat() / boundsPx.height
+                    if (abs(aspect - prefs.malang.keyboardWindowAspect.get()) > 0.01f) {
+                        scope.launch { prefs.malang.keyboardWindowAspect.set(aspect) }
+                    }
+                }
             },
         supportsBackgroundImage = true,
+        // 자판 위로 창이 올라와 키보드가 높아져도, 배경 사진은 자판 쪽(아래)에 붙어 그대로 있게 한다.
+        backgroundImageAlignment = Alignment.BottomCenter,
         allowClip = false,
     ) {
         OneHandedPanel()

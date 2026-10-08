@@ -24,7 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -32,7 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.core.Subtype
+import android.graphics.BitmapFactory
+import dev.malangkey.ime.theme.CustomThemeImage
+import dev.malangkey.ime.theme.CustomThemeLibrary
 import dev.malangkey.ime.theme.ThemeMode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.keyboard.TextKey
@@ -43,12 +53,16 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/** 미리보기에 쓰는 테마 색. [byCode]는 특정 키(엔터, 시프트 등)의 배경·글자색이다. */
+/**
+ * 미리보기에 쓰는 테마 색. [byCode]는 특정 키(엔터, 시프트 등)의 배경·글자색이다.
+ * [backgroundImage]가 있으면 판 맨 아래에 깔고 [background]를 그 위에 덮는다.
+ */
 data class PreviewPalette(
     val background: Color,
     val keyBackground: Color,
     val keyForeground: Color,
     val byCode: Map<Int, Pair<Color, Color>> = emptyMap(),
+    val backgroundImage: ImageBitmap? = null,
 ) {
     fun colorsFor(code: Int): Pair<Color, Color> = byCode[code] ?: (keyBackground to keyForeground)
 }
@@ -109,23 +123,77 @@ fun rememberCustomPreviewPalette(): PreviewPalette {
     val customSpecialText by prefs.malang.customEnterKeyTextColor.collectAsState()
     val customEnter by prefs.malang.customRealEnterKeyBgColor.collectAsState()
     val customEnterText by prefs.malang.customRealEnterKeyTextColor.collectAsState()
-    return remember(customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText) {
-        fun Color.or(fallback: Color) = if (this == Color.Unspecified) fallback else this
-        val d = DefaultPreviewPalette
-        val special = customSpecial.or(Color(0xFF311D18)) to customSpecialText.or(d.keyBackground)
-        PreviewPalette(
-            background = customBg.or(d.background),
-            keyBackground = customKey.or(d.keyBackground),
-            keyForeground = customText.or(d.keyForeground),
-            byCode = mapOf(
-                KeyCode.ENTER to (customEnter.or(Color(0xFF5D4037)) to customEnterText.or(Color.White)),
-                KeyCode.SHIFT to special,
-                KeyCode.DELETE to special,
-                KeyCode.VIEW_SYMBOLS to special,
-                KeyCode.VIEW_CHARACTERS to special,
-            ),
+    val bgImageFile by prefs.malang.customBgImageFile.collectAsState()
+    val bgImageDim by prefs.malang.customBgImageDim.collectAsState()
+    val bgImageKeyOpacity by prefs.malang.customBgImageKeyOpacity.collectAsState()
+    val context = LocalContext.current
+    val bgImage by produceState<ImageBitmap?>(initialValue = null, bgImageFile) {
+        value = withContext(Dispatchers.IO) {
+            CustomThemeImage.loadThumbnail(context, bgImageFile, maxSidePx = 480)?.asImageBitmap()
+        }
+    }
+    return remember(customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText, bgImage, bgImageDim, bgImageKeyOpacity) {
+        customPreviewPalette(
+            customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText,
+            bgImage, bgImageDim, bgImageKeyOpacity,
         )
     }
+}
+
+/** 저장해 둔 내 테마의 미리보기 색. */
+@Composable
+fun rememberSavedThemePreviewPalette(theme: CustomThemeLibrary.SavedTheme): PreviewPalette {
+    val context = LocalContext.current
+    val bgImage by produceState<ImageBitmap?>(initialValue = null, theme.id, theme.bgImage) {
+        value = withContext(Dispatchers.IO) {
+            CustomThemeLibrary.imageFile(context, theme)?.let { file ->
+                BitmapFactory.decodeFile(file.absolutePath, BitmapFactory.Options().apply { inSampleSize = 4 })
+            }?.asImageBitmap()
+        }
+    }
+    return remember(theme, bgImage) {
+        fun Int?.color() = if (this == null) Color.Unspecified else Color(this)
+        customPreviewPalette(
+            theme.keyboardBg.color(), theme.keyBg.color(), theme.keyText.color(), theme.specialBg.color(),
+            theme.specialText.color(), theme.enterBg.color(), theme.enterText.color(),
+            bgImage, theme.dim, theme.keyOpacity,
+        )
+    }
+}
+
+/** 커스텀 색으로 미리보기 색을 만든다. 고르지 않은 색은 기본 크림 테마를 따른다. */
+private fun customPreviewPalette(
+    customBg: Color,
+    customKey: Color,
+    customText: Color,
+    customSpecial: Color,
+    customSpecialText: Color,
+    customEnter: Color,
+    customEnterText: Color,
+    bgImage: ImageBitmap?,
+    bgImageDim: Int,
+    bgImageKeyOpacity: Int,
+): PreviewPalette {
+    fun Color.or(fallback: Color) = if (this == Color.Unspecified) fallback else this
+    // 키보드와 같게, 사진이 있으면 판은 덮개로, 키는 반투명하게 그린다.
+    val boardAlpha = if (bgImage != null) bgImageDim / 100f else 1f
+    val keyAlpha = if (bgImage != null) bgImageKeyOpacity / 100f else 1f
+    fun Color.key() = copy(alpha = alpha * keyAlpha)
+    val d = DefaultPreviewPalette
+    val special = customSpecial.or(Color(0xFF311D18)).key() to customSpecialText.or(d.keyBackground)
+    return PreviewPalette(
+        background = customBg.or(d.background).let { it.copy(alpha = it.alpha * boardAlpha) },
+        keyBackground = customKey.or(d.keyBackground).key(),
+        keyForeground = customText.or(d.keyForeground),
+        byCode = mapOf(
+            KeyCode.ENTER to (customEnter.or(Color(0xFF5D4037)).key() to customEnterText.or(Color.White)),
+            KeyCode.SHIFT to special,
+            KeyCode.DELETE to special,
+            KeyCode.VIEW_SYMBOLS to special,
+            KeyCode.VIEW_CHARACTERS to special,
+        ),
+        backgroundImage = bgImage,
+    )
 }
 
 /** 지금 키보드에 적용된 테마의 미리보기 색. 커스텀 테마면 사용자가 고른 색을 쓴다. */
@@ -171,6 +239,13 @@ fun KeyboardPreview(
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(10.dp))
+            .then(
+                if (palette.backgroundImage != null) {
+                    Modifier.paint(BitmapPainter(palette.backgroundImage), contentScale = ContentScale.Crop)
+                } else {
+                    Modifier
+                }
+            )
             .background(palette.background)
             .padding(3.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),

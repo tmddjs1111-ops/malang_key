@@ -48,6 +48,7 @@ import org.florisboard.lib.snygg.SnyggStylesheet
  * @param propagateMinConstraints Whether the incoming min constraints should be passed to content.
  * @param supportsBackgroundImage controls if this Box supports background images.
  * @param backgroundImageDescription The content description of the background image.
+ * @param backgroundImageAlignment How the background image is aligned within this box.
  * @param allowClip If clipping should be allowed on this box.
  * @param content The content of the Box
  *
@@ -66,6 +67,7 @@ fun SnyggBox(
     propagateMinConstraints: Boolean = false,
     supportsBackgroundImage: Boolean = false,
     backgroundImageDescription: String? = null,
+    backgroundImageAlignment: Alignment = Alignment.Center,
     allowClip: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -102,6 +104,7 @@ fun SnyggBox(
                         .allowHardware(false) // slower, but hey at least it doesn't crash out of the blue
                         .build(),
                     contentScale = style.contentScale(),
+                    alignment = backgroundImageAlignment,
                     contentDescription = backgroundImageDescription,
                 )
             }

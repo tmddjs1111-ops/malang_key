@@ -90,6 +90,8 @@ import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.key.KeyType
 import dev.malangkey.ime.text.key.KeyVariation
 import dev.malangkey.ime.theme.FlorisImeUi
+import dev.malangkey.ime.theme.GridKeyBorderStepDp
+import dev.malangkey.ime.theme.QwertyKeyBorderStepDp
 import dev.malangkey.ime.window.LocalWindowController
 import dev.malangkey.keyboardManager
 import dev.malangkey.subtypeManager
@@ -368,6 +370,11 @@ fun TextKeyboardLayout(
         val qwertyHintSize by prefs.malang.keyHintFontSizeMultiplier.collectAsState()
         val gridLabelSize by prefs.malang.gridKeyFontSizeMultiplier.collectAsState()
         val gridHintSize by prefs.malang.gridKeyHintFontSizeMultiplier.collectAsState()
+        // 외곽선은 키 사이 간격 쪽으로 먼저 넓혀 그린다. 간격보다 굵으면 나머지는 키 안쪽으로 들어간다.
+        val keyBorderThickness by prefs.malang.keyBorderThickness.collectAsState()
+        val keyBorderStepDp = if (isGridLayout) GridKeyBorderStepDp else QwertyKeyBorderStepDp
+        val keyBorderOutsetPx = (keyBorderThickness.coerceAtLeast(0) * keyBorderStepDp).dp.toPx()
+            .coerceAtMost(minOf(keyMarginH, keyMarginV))
         val keyTextScale = KeyTextScale(
             label = (if (isGridLayout) gridLabelSize else qwertyLabelSize) / 100f,
             hint = (if (isGridLayout) gridHintSize else qwertyHintSize) / 100f,
@@ -468,6 +475,7 @@ fun TextKeyboardLayout(
                 debugShowTouchBoundaries,
                 keyTextScale,
                 useCheonjiinVowelStyle = isCheonjiin,
+                borderOutsetPx = keyBorderOutsetPx,
             )
         }
 
@@ -499,6 +507,7 @@ private fun TextKeyButton(
     debugShowTouchBoundaries: Boolean,
     textScale: KeyTextScale,
     useCheonjiinVowelStyle: Boolean,
+    borderOutsetPx: Float,
 ) = with(LocalDensity.current) {
     val styleCode = key.computedData.code.let { code ->
         if (!useCheonjiinVowelStyle && code in CheonjiinVowelStyleCodes) KeyCode.UNSPECIFIED else code
@@ -532,15 +541,19 @@ private fun TextKeyButton(
     } else {
         listOf(null)
     }
+    // 외곽선이 키 면을 파고들지 않게, 외곽선 굵기만큼 키를 간격 쪽으로 넓혀 그린다.
+    val outset = borderOutsetPx.toDp()
+    val outsetOffset = Offset(borderOutsetPx, borderOutsetPx)
     for (face in faces) {
     var keyModifier = if (face == null) {
         Modifier
-            .requiredSize(size)
-            .absoluteOffset { key.visibleBounds.topLeft.toIntOffset() }
+            .requiredSize(size.width + outset * 2, size.height + outset * 2)
+            .absoluteOffset { (key.visibleBounds.topLeft - outsetOffset).toIntOffset() }
     } else {
+        val faceSize = face.size.toDpSize()
         Modifier
-            .requiredSize(face.size.toDpSize())
-            .absoluteOffset { face.topLeft.toIntOffset() }
+            .requiredSize(faceSize.width + outset * 2, faceSize.height + outset * 2)
+            .absoluteOffset { (face.topLeft - outsetOffset).toIntOffset() }
     }
         
     SnyggBox(

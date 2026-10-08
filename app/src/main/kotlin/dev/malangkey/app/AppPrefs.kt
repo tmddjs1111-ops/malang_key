@@ -781,6 +781,46 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
+        /** 커스텀 테마 배경 사진의 파일 이름. 비어 있으면 사진 없이 색만 쓴다. */
+        val customBgImageFile = string(
+            key = "malang__custom_bg_image_file",
+            default = "",
+        )
+        /** 위치를 다시 맞출 때 쓰는 원본 사진의 파일 이름. */
+        val customBgImageSource = string(
+            key = "malang__custom_bg_image_source",
+            default = "",
+        )
+        /** 원본 사진에서 잘라 쓴 영역. "왼,위,오른,아래" 비율(0~1). */
+        val customBgImageCrop = string(
+            key = "malang__custom_bg_image_crop",
+            default = "",
+        )
+        /** 키보드 창의 가로÷세로 비율. 키보드가 뜰 때 기록해서 사진 자르기 틀에 쓴다. */
+        val keyboardWindowAspect = float(
+            key = "malang__keyboard_window_aspect",
+            default = 1.45f,
+        )
+        /** 배경 사진 흐림 단계(0~10). 0이면 흐리게 하지 않는다. */
+        val customBgImageBlur = int(
+            key = "malang__custom_bg_image_blur",
+            default = 0,
+        )
+        /** 내 테마 목록(JSON). [dev.malangkey.ime.theme.CustomThemeLibrary]가 읽고 쓴다. */
+        val customThemeLibrary = string(
+            key = "malang__custom_theme_library",
+            default = "[]",
+        )
+        /** 배경 사진 위에 배경 색상을 덮는 정도(%). */
+        val customBgImageDim = int(
+            key = "malang__custom_bg_image_dim",
+            default = 15,
+        )
+        /** 배경 사진이 있을 때 키캡 불투명도(%). */
+        val customBgImageKeyOpacity = int(
+            key = "malang__custom_bg_image_key_opacity",
+            default = 55,
+        )
         val keyboardFontFamily = string(
             key = "malang__keyboard_font_family",
             default = "jua",
@@ -808,7 +848,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val keyBorderOpacity = int(
             key = "malang__key_border_opacity",
-            default = 20,
+            default = 100,
         )
         val bgImageUri = string(
             key = "malang__bg_image_uri",

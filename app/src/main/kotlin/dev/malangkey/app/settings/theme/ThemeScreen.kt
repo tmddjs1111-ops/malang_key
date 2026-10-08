@@ -16,6 +16,29 @@
 
 package dev.malangkey.app.settings.theme
 
+import android.widget.Toast
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.FileProvider
+import java.io.File
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.malangkey.app.apptheme.MalangSliderRow
+import dev.malangkey.ime.theme.CustomThemeImage
+import dev.malangkey.ime.theme.CustomThemeLibrary
+import dev.malangkey.app.setup.rememberSavedThemePreviewPalette
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items as lazyRowItems
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.style.TextOverflow
+import dev.malangkey.app.apptheme.MalangSettingsSummary
 import androidx.compose.ui.platform.LocalContext
 import dev.malangkey.app.setup.DefaultPreviewPalette
 import dev.malangkey.app.setup.KeyboardPreview
@@ -217,7 +240,20 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                     }
                     
                     val isCustomThemeSelected = dayThemeId.componentId == "custom"
+
+                    item(span = { GridItemSpan(2) }) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                            MyThemesSection(canSaveCurrent = isCustomThemeSelected)
+                        }
+                    }
+
                     if (isCustomThemeSelected) {
+                        item(span = { GridItemSpan(2) }) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                                CustomBgImageSection()
+                            }
+                        }
+
                         item(span = { GridItemSpan(2) }) {
                             Column(
                                 modifier = Modifier.fillMaxWidth()
@@ -315,6 +351,354 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
             }
         }
     }
+}
+
+/** 커스텀 테마 배경 사진 고르기와, 사진 위 덮개·키 투명도 조절. */
+@Composable
+private fun CustomBgImageSection() {
+    val context = LocalContext.current
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val imageFile by prefs.malang.customBgImageFile.collectAsState()
+    val hasImage = imageFile.isNotEmpty()
+    val sourceFile by prefs.malang.customBgImageSource.collectAsState()
+    val savedCrop by prefs.malang.customBgImageCrop.collectAsState()
+    var importing by remember { mutableStateOf(false) }
+    // 위치를 맞추는 중인 원본. 새로 고른 사진이면 취소할 때 지운다.
+    var cropping by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
+
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        importing = true
+        scope.launch {
+            CustomThemeImage.importSource(context, uri)
+                .onSuccess { cropping = it to true }
+                .onFailure { Toast.makeText(context, "사진을 불러오지 못했어요.", Toast.LENGTH_SHORT).show() }
+            importing = false
+        }
+    }
+
+    // 흐림 단계가 바뀌면 원본에서 다시 잘라 흐리게 저장한다. 처음 그릴 때는 이미 맞는 사진이라 건너뛴다.
+    val blur by prefs.malang.customBgImageBlur.collectAsState()
+    var appliedBlur by remember { mutableStateOf(blur) }
+    LaunchedEffect(blur) {
+        if (blur == appliedBlur) return@LaunchedEffect
+        appliedBlur = blur
+        val crop = CustomThemeImage.Crop.deserialize(savedCrop) ?: return@LaunchedEffect
+        if (sourceFile.isEmpty()) return@LaunchedEffect
+        importing = true
+        CustomThemeImage.saveCropped(context, sourceFile, crop, blur)
+            .onSuccess { prefs.malang.customBgImageFile.set(it) }
+        importing = false
+    }
+
+    cropping?.let { (source, isNew) ->
+        BgImageCropDialog(
+            sourceName = source,
+            initialCrop = if (isNew) null else CustomThemeImage.Crop.deserialize(savedCrop),
+            onDismiss = {
+                if (isNew) CustomThemeImage.file(context, source)?.delete()
+                cropping = null
+            },
+            onConfirm = { crop ->
+                cropping = null
+                importing = true
+                scope.launch {
+                    CustomThemeImage.saveCropped(context, source, crop, blur)
+                        .onSuccess { background ->
+                            prefs.malang.customBgImageSource.set(source)
+                            prefs.malang.customBgImageCrop.set(crop.serialize())
+                            prefs.malang.customBgImageFile.set(background)
+                            // 처음 설치한 상태(시스템 따라가기)에서는 다크 모드일 때 밤 테마와 섞이므로 커스텀으로 고정한다.
+                            applyMalangTheme(prefs, malangThemes.first { it.compId == "custom" })
+                        }
+                        .onFailure { Toast.makeText(context, "사진을 저장하지 못했어요.", Toast.LENGTH_SHORT).show() }
+                    importing = false
+                }
+            },
+        )
+    }
+
+    val items = buildList<@Composable () -> Unit> {
+        add {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Text(
+                    if (hasImage) "고른 사진이 키보드 배경으로 깔려요." else "갤러리 사진으로 나만의 키보드를 만들어 보세요.",
+                    color = MalangText,
+                    fontSize = 14.sp,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MalangButton(
+                        when {
+                            importing -> "불러오는 중…"
+                            hasImage -> "사진 바꾸기"
+                            else -> "사진 고르기"
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !importing,
+                        onClick = {
+                            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        },
+                    )
+                    if (hasImage && sourceFile.isNotEmpty()) {
+                        MalangButton(
+                            "위치 맞추기",
+                            modifier = Modifier.weight(1f),
+                            primary = false,
+                            enabled = !importing,
+                            onClick = { cropping = sourceFile to false },
+                        )
+                    }
+                }
+                if (hasImage) {
+                    MalangButton(
+                        "사진 지우기",
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        primary = false,
+                        enabled = !importing,
+                        onClick = { scope.launch { CustomThemeImage.reset(context, prefs) } },
+                    )
+                }
+            }
+        }
+        if (hasImage) {
+            add { MalangSliderRow(prefs.malang.customBgImageKeyOpacity, "키 불투명도", min = 0, max = 100, step = 5) }
+            add { MalangSliderRow(prefs.malang.customBgImageDim, "사진 위 배경색 덮기", min = 0, max = 80, step = 5) }
+            if (sourceFile.isNotEmpty()) {
+                add {
+                    MalangSliderRow(
+                        prefs.malang.customBgImageBlur, "사진 흐리게", min = 0, max = 10,
+                        enabled = !importing,
+                        valueLabel = { if (it == 0) "없음" else "${it}단계" },
+                    )
+                }
+            }
+        }
+    }
+    MalangSettingsSection(title = "배경 사진", items = items)
+}
+
+/** 저장해 둔 커스텀 테마 목록. 누르면 불러오고, 길게 누르면 이름 바꾸기·지우기. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MyThemesSection(canSaveCurrent: Boolean) {
+    val context = LocalContext.current
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val libraryJson by prefs.malang.customThemeLibrary.collectAsState()
+    val themes = remember(libraryJson) { CustomThemeLibrary.decode(libraryJson) }
+    var naming by remember { mutableStateOf<CustomThemeLibrary.SavedTheme?>(null) }
+    var savingNew by remember { mutableStateOf(false) }
+    var managing by remember { mutableStateOf<CustomThemeLibrary.SavedTheme?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val customTheme = remember { malangThemes.first { it.compId == "custom" } }
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    val importTheme = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        busy = true
+        scope.launch {
+            CustomThemeLibrary.import(context, prefs, uri)
+                .onSuccess { Toast.makeText(context, "'${it.name}'을(를) 내 테마에 넣었어요.", Toast.LENGTH_SHORT).show() }
+                .onFailure { Toast.makeText(context, "말랑키 테마 파일이 아니에요.", Toast.LENGTH_SHORT).show() }
+            busy = false
+        }
+    }
+
+    val items = buildList<@Composable () -> Unit> {
+        add {
+            Column(modifier = Modifier.padding(vertical = 14.dp)) {
+                if (themes.isEmpty()) {
+                    Text(
+                        "커스텀 테마를 꾸민 뒤 저장해 두면, 언제든 눌러서 다시 쓸 수 있어요.",
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MalangText,
+                        fontSize = 14.sp,
+                    )
+                } else {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        lazyRowItems(themes, key = { it.id }) { theme ->
+                            Column(
+                                modifier = Modifier
+                                    .width(132.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .combinedClickable(
+                                        enabled = !busy,
+                                        onClick = {
+                                            busy = true
+                                            scope.launch {
+                                                CustomThemeLibrary.apply(context, prefs, theme)
+                                                    .onSuccess { applyMalangTheme(prefs, customTheme) }
+                                                    .onFailure { Toast.makeText(context, "테마를 불러오지 못했어요.", Toast.LENGTH_SHORT).show() }
+                                                busy = false
+                                            }
+                                        },
+                                        onLongClick = { managing = theme },
+                                    )
+                                    .padding(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                KeyboardPreview(
+                                    subtype = activeSubtype,
+                                    palette = rememberSavedThemePreviewPalette(theme),
+                                    height = 72.dp,
+                                )
+                                Text(
+                                    theme.name,
+                                    modifier = Modifier.padding(top = 6.dp),
+                                    color = MalangSettingsTitle,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        "누르면 적용, 길게 누르면 공유·이름 바꾸기·지우기",
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                        color = MalangSettingsSummary,
+                        fontSize = 12.sp,
+                    )
+                }
+                if (canSaveCurrent) {
+                    MalangButton(
+                        "지금 테마 저장하기",
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
+                        primary = false,
+                        enabled = !busy && themes.size < CustomThemeLibrary.MaxThemes,
+                        onClick = { savingNew = true },
+                    )
+                }
+                MalangButton(
+                    "받은 테마 파일 가져오기",
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                    primary = false,
+                    enabled = !busy && themes.size < CustomThemeLibrary.MaxThemes,
+                    // 메신저로 받은 파일은 형식이 제각각이라 모든 파일을 보여 주고, 읽을 때 확인한다.
+                    onClick = { importTheme.launch(arrayOf("*/*")) },
+                )
+            }
+        }
+    }
+    MalangSettingsSection(title = "내 테마", items = items)
+
+    if (savingNew) {
+        ThemeNameDialog(
+            title = "테마 저장하기",
+            initialName = "내 테마 ${themes.size + 1}",
+            onDismiss = { savingNew = false },
+            onConfirm = { name ->
+                savingNew = false
+                busy = true
+                scope.launch {
+                    CustomThemeLibrary.saveCurrent(context, prefs, name)
+                        .onSuccess { Toast.makeText(context, "'$name'을(를) 저장했어요.", Toast.LENGTH_SHORT).show() }
+                        .onFailure { Toast.makeText(context, "테마를 저장하지 못했어요.", Toast.LENGTH_SHORT).show() }
+                    busy = false
+                }
+            },
+        )
+    }
+    managing?.let { theme ->
+        AlertDialog(
+            onDismissRequest = { managing = null },
+            containerColor = MalangSettingsCard,
+            title = { Text(theme.name, color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
+            text = {
+                Column {
+                    @Composable
+                    fun MenuRow(label: String, onClick: () -> Unit) {
+                        Text(
+                            label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable(onClick = onClick)
+                                .padding(horizontal = 8.dp, vertical = 14.dp),
+                            color = MalangSettingsTitle,
+                            fontSize = 16.sp,
+                        )
+                    }
+                    MenuRow("공유하기") {
+                        managing = null
+                        scope.launch {
+                            CustomThemeLibrary.export(context, theme)
+                                .onSuccess { file -> shareThemeFile(context, file) }
+                                .onFailure { Toast.makeText(context, "테마 파일을 만들지 못했어요.", Toast.LENGTH_SHORT).show() }
+                        }
+                    }
+                    MenuRow("이름 바꾸기") { managing = null; naming = theme }
+                    MenuRow("지우기") {
+                        managing = null
+                        scope.launch { CustomThemeLibrary.delete(context, prefs, theme.id) }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { managing = null }) { Text("닫기", color = MalangSettingsSummary) }
+            },
+        )
+    }
+    naming?.let { theme ->
+        ThemeNameDialog(
+            title = "이름 바꾸기",
+            initialName = theme.name,
+            onDismiss = { naming = null },
+            onConfirm = { name ->
+                naming = null
+                scope.launch { CustomThemeLibrary.rename(prefs, theme.id, name) }
+            },
+        )
+    }
+}
+
+/** 테마 파일을 메신저 등 다른 앱으로 보낸다. */
+private fun shareThemeFile(context: Context, file: File) {
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider.file", file)
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "application/octet-stream"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(send, "테마 공유하기"))
+}
+
+@Composable
+private fun ThemeNameDialog(
+    title: String,
+    initialName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var name by remember { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MalangSettingsCard,
+        title = { Text(title, color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it.take(20) },
+                singleLine = true,
+                placeholder = { Text("테마 이름") },
+            )
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank(),
+                onClick = { onConfirm(name.trim()) },
+            ) { Text("저장", color = MalangSettingsSection) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("취소", color = MalangSettingsSummary) }
+        },
+    )
 }
 
 @OptIn(dev.patrickgold.jetpref.material.ui.ExperimentalJetPrefMaterial3Ui::class)

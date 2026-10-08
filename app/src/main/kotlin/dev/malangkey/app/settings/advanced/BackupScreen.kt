@@ -70,6 +70,7 @@ import dev.malangkey.lib.devtools.flogError
 import dev.malangkey.lib.ext.ExtensionManager
 import dev.malangkey.lib.io.FileRegistry
 import dev.malangkey.lib.io.ZipUtils
+import dev.malangkey.ime.theme.CustomThemeImage
 import dev.patrickgold.jetpref.datastore.runtime.AndroidAppDataStorage
 import dev.patrickgold.jetpref.datastore.runtime.FileBasedStorage
 import dev.patrickgold.jetpref.material.ui.JetPrefListItem
@@ -195,6 +196,10 @@ fun BackupScreen() {
             FlorisPreferenceStore.export(fileBasedStorage).getOrThrow()
         }
         val workspaceFilesDir = workspace.inputDir.subDir("files")
+        if (backupFilesSelector.jetprefDatastore) {
+            // 커스텀 테마 설정이 가리키는 배경 사진도 함께 넣어야 복원했을 때 사진이 남는다.
+            CustomThemeImage.backupTo(context, workspaceFilesDir)
+        }
         if (backupFilesSelector.imeKeyboard) {
             context.filesDir.subDir(ExtensionManager.IME_KEYBOARD_PATH).let { dir ->
                 dir.copyRecursively(workspaceFilesDir.subDir(ExtensionManager.IME_KEYBOARD_PATH))

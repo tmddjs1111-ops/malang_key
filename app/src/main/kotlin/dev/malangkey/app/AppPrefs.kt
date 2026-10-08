@@ -531,7 +531,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val capitalizationBehavior = enum(
             key = "keyboard__capitalization_behavior",
-            default = CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP,
+            default = CapitalizationBehavior.CAPSLOCK_BY_CYCLE,
         )
         val fontSizeMultiplierPortrait = int(
             key = "keyboard__font_size_multiplier_portrait",

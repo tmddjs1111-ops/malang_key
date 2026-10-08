@@ -605,7 +605,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.SHIFT] down event.
      */
     private fun handleShiftDown(data: KeyData) {
-        // 한 번 누르면 다음 한 글자만 쌍자음·대문자, 두 번 연달아 누르면 고정한다.
+        // 기본(CYCLE): 1번 누르면 다음 한 글자만 쌍자음·대문자, Shift 상태에서 한 번 더 누르면 고정,
+        // 고정 상태에서 한 번 더 누르면 풀린다. 누르는 빠르기와 상관없다.
         activeState.inputShiftState = when (prefs.keyboard.capitalizationBehavior.get()) {
             CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP -> when {
                 inputEventDispatcher.isConsecutiveDown(data) -> InputShiftState.CAPS_LOCK
@@ -615,7 +616,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             CapitalizationBehavior.CAPSLOCK_BY_CYCLE -> when (activeState.inputShiftState) {
                 InputShiftState.UNSHIFTED -> InputShiftState.SHIFTED_MANUAL
                 InputShiftState.SHIFTED_MANUAL -> InputShiftState.CAPS_LOCK
-                InputShiftState.SHIFTED_AUTOMATIC -> InputShiftState.UNSHIFTED
+                // 문장 첫 글자 자동 대문자도 화면엔 Shift 상태로 보이므로, 한 번 더 누르면 고정한다.
+                InputShiftState.SHIFTED_AUTOMATIC -> InputShiftState.CAPS_LOCK
                 InputShiftState.CAPS_LOCK -> InputShiftState.UNSHIFTED
             }
         }

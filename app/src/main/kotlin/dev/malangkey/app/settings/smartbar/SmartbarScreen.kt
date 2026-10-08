@@ -192,7 +192,7 @@ fun MalangSlotsEditor() {
             QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
             QuickAction.InsertKey(TextKeyData.CLIPBOARD_CUT),
             QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
-            QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT),
+            // '선택'은 '전체 선택'과 아이콘이 같고 쓰임이 적어 뺐다. 이미 슬롯에 있으면 그대로 동작한다.
             QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
             QuickAction.InsertKey(TextKeyData.UNDO),
             QuickAction.InsertKey(TextKeyData.REDO),

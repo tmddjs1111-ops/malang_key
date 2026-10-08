@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -158,13 +159,27 @@ private fun MalangSettingsHeader(
 
 @Composable
 fun MalangTestInputBar() {
-    var text by remember { mutableStateOf("") }
-    Box(
+    var text by remember { mutableStateOf(TextFieldValue("")) }
+    MalangTestInputBar(value = text, onValueChange = { text = it })
+}
+
+/** 입력 내용을 바깥에서 들고 있는 테스트 입력창. [header]는 입력창 위, 같은 어두운 띠 안에 놓인다. */
+@Composable
+fun MalangTestInputBar(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    placeholder: String = "여기에 입력해 보세요…",
+    header: (@Composable () -> Unit)? = null,
+) {
+    val text = value.text
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MalangDarkCard)
-            .padding(horizontal = 29.dp, vertical = 8.dp)
+            .padding(horizontal = 29.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        header?.invoke()
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -175,11 +190,11 @@ fun MalangTestInputBar() {
             contentAlignment = Alignment.CenterStart,
         ) {
             if (text.isEmpty()) {
-                Text("여기에 입력해 보세요…", color = MalangSettingsSummary, fontSize = 13.sp)
+                Text(placeholder, color = MalangSettingsSummary, fontSize = 13.sp)
             }
             BasicTextField(
-                value = text,
-                onValueChange = { text = it },
+                value = value,
+                onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 textStyle = TextStyle(color = MalangSettingsTitle, fontSize = 14.sp),
@@ -339,6 +354,7 @@ fun MalangSliderRow(
     step: Int = 1,
     unit: String = "%",
     enabled: Boolean = true,
+    valueLabel: (Int) -> String = { "$it$unit" },
 ) {
     val stored by pref.collectAsState()
     val scope = rememberCoroutineScope()
@@ -354,7 +370,7 @@ fun MalangSliderRow(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text("$shown$unit", color = MalangSettingsSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(valueLabel(shown), color = MalangSettingsSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
         MalangSlider(
             value = shown.toFloat(),
@@ -368,8 +384,8 @@ fun MalangSliderRow(
             range = min.toFloat()..max.toFloat(),
         )
         Row {
-            Text("$min$unit", modifier = Modifier.weight(1f), color = MalangSettingsSummary, fontSize = 13.sp)
-            Text("$max$unit", color = MalangSettingsSummary, fontSize = 13.sp, textAlign = TextAlign.End)
+            Text(valueLabel(min), modifier = Modifier.weight(1f), color = MalangSettingsSummary, fontSize = 13.sp)
+            Text(valueLabel(max), color = MalangSettingsSummary, fontSize = 13.sp, textAlign = TextAlign.End)
         }
     }
 }

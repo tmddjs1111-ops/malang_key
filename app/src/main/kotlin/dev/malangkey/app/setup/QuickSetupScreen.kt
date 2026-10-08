@@ -38,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,22 @@ import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.malangkey.app.apptheme.MalangButton
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangDarkCard
+import android.content.ClipboardManager
+import android.os.SystemClock
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import dev.malangkey.ime.smartbar.SmartbarHighlight
+import dev.malangkey.ime.text.key.KeyCode
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import dev.malangkey.app.apptheme.KoreanWordBreak
+import dev.malangkey.app.apptheme.MalangDarkCardSub
+import dev.malangkey.app.apptheme.MalangDarkCardTitle
+import dev.malangkey.ime.keyboard.LayoutArrangementComponent
+import dev.malangkey.lib.ext.ExtensionComponentName
+import kotlinx.serialization.json.Json
 import dev.malangkey.app.apptheme.MalangInfoCard
 import dev.malangkey.app.apptheme.MalangNavRow
 import dev.malangkey.app.apptheme.MalangSettingsBg
@@ -122,6 +139,121 @@ fun QuickSetupScreen() = FlorisScreen {
         val step = steps[stepIndex]
         val isLast = stepIndex == steps.lastIndex
 
+        val subtypeManager by context.subtypeManager()
+        val keyboardManager by context.keyboardManager()
+        val subtypes by subtypeManager.subtypesFlow.collectAsState()
+        val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+        val layouts by keyboardManager.resources.layouts.collectAsState()
+        val quickPhrasesJson by prefs.clipboard.quickPhrases.collectPrefAsState()
+        val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectPrefAsState()
+        val phrases = remember(quickPhrasesJson) {
+            runCatching { Json.decodeFromString<List<String>>(quickPhrasesJson) }
+                .getOrDefault(emptyList())
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
+
+        // 단계마다 아래 입력창에서 직접 해 보는 미션. 끝낸 단계는 진행 바에 체크가 찍힌다.
+        val doneSteps = remember { mutableStateListOf<QuickStep>() }
+        // 스마트 바 단계는 틀린 문장을 미리 써 둔다. 사용자는 고치기·복사·붙여넣기만 해 본다.
+        var testText by remember(step) {
+            val initial = if (step == QuickStep.SMARTBAR) TypoSentence else ""
+            mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
+        }
+        var lastToggleAt by remember { mutableLongStateOf(0L) }
+        var seenSubtypeId by remember(step) { mutableLongStateOf(activeSubtype.id) }
+        var layoutSwitched by remember { mutableStateOf(false) }
+        var typoFixed by remember { mutableStateOf(false) }
+        var copied by remember { mutableStateOf(false) }
+        var pasteCount by remember { mutableIntStateOf(0) }
+        var phraseInserted by remember { mutableStateOf(false) }
+
+        LaunchedEffect(step, activeSubtype.id) {
+            if (step != QuickStep.LANGUAGE || activeSubtype.id == seenSubtypeId) return@LaunchedEffect
+            // 카드를 눌러 자판을 더하거나 빼도 활성 자판이 바뀌므로, 그 직후의 변화는 세지 않는다.
+            if (subtypes.size >= 2 && SystemClock.uptimeMillis() - lastToggleAt > 1500L) layoutSwitched = true
+            seenSubtypeId = activeSubtype.id
+        }
+
+        val onTestTextChange: (TextFieldValue) -> Unit = { newValue ->
+            val new = newValue.text
+            val inserted = insertedText(testText.text, new)
+            testText = newValue
+            when (step) {
+                QuickStep.SMARTBAR -> {
+                    val fixed = FixedSentence.replace(" ", "")
+                    if (!typoFixed && new.replace(" ", "").contains(fixed) && newValue.composition == null) {
+                        typoFixed = true
+                        // 고친 문장을 골라 둔다. 바로 복사 버튼만 누르면 된다.
+                        testText = newValue.copy(selection = TextRange(0, new.length))
+                    } else if (typoFixed && !copied &&
+                        clipboardText(context)?.replace(" ", "")?.contains(fixed) == true
+                    ) {
+                        copied = true
+                    }
+                    if (copied && inserted.replace(" ", "").contains(fixed)) pasteCount++
+                }
+                QuickStep.CLIPBOARD -> {
+                    if (inserted.isNotBlank() && phrases.any { inserted.contains(it) }) phraseInserted = true
+                }
+                else -> Unit
+            }
+        }
+
+        val triggerName = when (triggerKey) {
+            QuickPhraseTriggerKey.PERIOD -> "마침표(.)"
+            QuickPhraseTriggerKey.COMMA -> "쉼표(,)"
+            QuickPhraseTriggerKey.ENTER -> "엔터"
+        }
+        val mission: StepMission? = when (step) {
+            QuickStep.LANGUAGE -> when {
+                subtypes.size < 2 -> StepMission(
+                    "자판을 하나 더 골라주세요",
+                    "두 개 이상이어야 스페이스바로 바꿔 쓸 수 있어요. 예: 영어 쿼티",
+                )
+                layoutSwitched -> StepMission("자판 바꾸기 성공!", "스페이스바를 밀 때마다 다음 자판으로 넘어가요", "1 / 1", done = true)
+                else -> StepMission(
+                    "스페이스바를 옆으로 밀어 자판을 바꿔 보세요",
+                    "지금 자판: ${subtypeName(activeSubtype, layouts)}",
+                    "0 / 1",
+                )
+            }
+            QuickStep.SMARTBAR -> when {
+                !typoFixed -> StepMission(
+                    "‘말랑킬’을 ‘말랑키’로 고쳐 보세요",
+                    "반짝이는 ‹ 버튼으로 ‘킬’ 뒤로 가서 지우고 ‘키’를 써요",
+                    "1 / 3",
+                )
+                !copied -> StepMission("반짝이는 복사 버튼을 눌러 보세요", "고친 문장을 골라 뒀어요", "2 / 3")
+                pasteCount < 5 -> StepMission(
+                    "반짝이는 붙여넣기 버튼을 5번 눌러 보세요",
+                    "복사한 문장이 뒤에 계속 붙어요",
+                    "$pasteCount / 5",
+                )
+                else -> StepMission("커서 · 복사 · 붙여넣기 완료!", "스마트 바 버튼은 아래에서 바꿀 수 있어요", "3 / 3", done = true)
+            }
+            QuickStep.CLIPBOARD -> if (phraseInserted) {
+                StepMission("상용구 넣기 성공!", "문구는 아래 표에서 바로 바꿀 수 있어요", "1 / 1", done = true)
+            } else {
+                StepMission("$triggerName 키를 꾹 눌러 상용구를 넣어 보세요", "표가 뜨면 원하는 칸으로 밀고 손을 떼요", "0 / 1")
+            }
+            else -> null
+        }
+        LaunchedEffect(step, mission?.done) {
+            if (mission?.done == true && step !in doneSteps) doneSteps.add(step)
+        }
+
+        // 지금 눌러 볼 스마트 바 버튼을 키보드에서 반짝이게 한다.
+        val highlight = when {
+            step != QuickStep.SMARTBAR -> emptySet()
+            !typoFixed -> setOf(KeyCode.ARROW_LEFT, KeyCode.ARROW_RIGHT)
+            !copied -> setOf(KeyCode.CLIPBOARD_COPY)
+            pasteCount < 5 -> setOf(KeyCode.CLIPBOARD_PASTE)
+            else -> emptySet()
+        }
+        LaunchedEffect(highlight) { SmartbarHighlight.keyCodes.value = highlight }
+        DisposableEffect(Unit) { onDispose { SmartbarHighlight.keyCodes.value = emptySet() } }
+
         val finish: () -> Unit = {
             ensureDefaultSubtype(context)
             scope.launch { prefs.internal.isImeSetUp.set(true) }
@@ -152,11 +284,14 @@ fun QuickSetupScreen() = FlorisScreen {
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                 )
+                // 건너뛰기는 이 단계만 넘긴다. 자판을 두 개 이상 고르기 전에는 넘길 수 없다.
+                val canSkip = subtypes.size >= 2
                 Text(
                     "건너뛰기",
                     modifier = Modifier
+                        .alpha(if (canSkip) 1f else 0.35f)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = finish)
+                        .clickable(enabled = canSkip) { if (isLast) finish() else stepIndex++ }
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     color = MalangSettingsSection,
                     fontSize = 15.sp,
@@ -169,14 +304,27 @@ fun QuickSetupScreen() = FlorisScreen {
                     .padding(horizontal = 24.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                steps.forEachIndexed { index, _ ->
+                steps.forEachIndexed { index, s ->
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(if (index <= stepIndex) MalangSettingsSection else MalangSettingsBorder)
-                    )
+                        modifier = Modifier.weight(1f).height(16.dp),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(if (index <= stepIndex) MalangSettingsSection else MalangSettingsBorder)
+                        )
+                        if (s in doneSteps) {
+                            Box(
+                                modifier = Modifier.size(16.dp).clip(CircleShape).background(MissionGreen),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
+                            }
+                        }
+                    }
                 }
             }
             Column(modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 4.dp)) {
@@ -193,7 +341,7 @@ fun QuickSetupScreen() = FlorisScreen {
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 when (step) {
-                    QuickStep.LANGUAGE -> LanguageStep()
+                    QuickStep.LANGUAGE -> LanguageStep(onToggle = { lastToggleAt = SystemClock.uptimeMillis() })
                     QuickStep.FEEDBACK -> FeedbackStep()
                     QuickStep.SMARTBAR -> SmartbarStep()
                     QuickStep.CLIPBOARD -> ClipboardStep()
@@ -213,20 +361,24 @@ fun QuickSetupScreen() = FlorisScreen {
                 MalangButton(
                     if (isLast) "시작하기" else "다음",
                     primary = true,
+                    // 자판은 두 개 이상 골라야 넘어간다. 미션은 해 보지 않아도 넘어갈 수 있다.
+                    enabled = !(step == QuickStep.LANGUAGE && subtypes.size < 2),
                     modifier = Modifier.weight(if (stepIndex > 0) 2f else 1f),
                 ) {
                     if (isLast) finish() else stepIndex++
                 }
             }
-            if (step == QuickStep.FEEDBACK || step == QuickStep.THEME) {
-                MalangTestInputBar()
-            }
+            MalangTestInputBar(
+                value = testText,
+                onValueChange = onTestTextChange,
+                header = mission?.let { { MissionRow(it) } },
+            )
         }
     }
 }
 
 @Composable
-private fun ColumnScope.LanguageStep() {
+private fun ColumnScope.LanguageStep(onToggle: () -> Unit) {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
@@ -238,14 +390,14 @@ private fun ColumnScope.LanguageStep() {
         if (presets.isNotEmpty()) ensureDefaultSubtype(context)
     }
 
-    MalangInfoCard("쓰고 싶은 자판을 모두 골라주세요. 여러 개를 고르면 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
+    MalangInfoCard("자판을 두 개 이상 골라주세요. 스페이스바를 좌우로 밀어서 바꿔 쓸 수 있어요.")
 
-    KeyboardLayoutPicker()
+    KeyboardLayoutPicker(onToggle)
 }
 
 /** 언어 탭과 자판 카드(실제 키보드 미리보기). 간단 설정과 '키보드 언어 및 레이아웃' 화면이 같이 쓴다. */
 @Composable
-internal fun ColumnScope.KeyboardLayoutPicker() {
+internal fun ColumnScope.KeyboardLayoutPicker(onToggle: () -> Unit = {}) {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
@@ -256,6 +408,7 @@ internal fun ColumnScope.KeyboardLayoutPicker() {
 
     val isEnabled = { preset: SubtypePreset -> subtypes.any { it.equalsExcludingId(preset.toSubtype()) } }
     fun toggle(preset: SubtypePreset) {
+        onToggle()
         val subtype = preset.toSubtype()
         val existing = subtypes.find { it.equalsExcludingId(subtype) }
         if (existing != null) {
@@ -500,5 +653,97 @@ private fun CheckRow(title: String, checked: Boolean, onToggle: () -> Unit) {
     ) {
         Text(title, modifier = Modifier.weight(1f), color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         MalangToggle(checked = checked, onCheckedChange = { onToggle() })
+    }
+}
+
+private const val TypoSentence = "안녕하세요 말랑킬 입니다"
+private const val FixedSentence = "안녕하세요 말랑키 입니다"
+private val MissionGreen = Color(0xFF3E9B5F)
+
+/** 단계 아래 입력창에서 해 보는 미션 한 줄. [badge]는 오른쪽의 진행 표시("2 / 5"). */
+private data class StepMission(
+    val title: String,
+    val summary: String,
+    val badge: String? = null,
+    val done: Boolean = false,
+)
+
+/** [old]가 [new]로 바뀔 때 새로 들어온 글자. 지우거나 조합 중인 글자만 바뀌었으면 빈 문자열. */
+private fun insertedText(old: String, new: String): String {
+    if (new.length <= old.length) return ""
+    var start = 0
+    while (start < old.length && old[start] == new[start]) start++
+    var end = 0
+    while (end < old.length - start && old[old.length - 1 - end] == new[new.length - 1 - end]) end++
+    return new.substring(start, new.length - end)
+}
+
+private fun clipboardText(context: Context): String? {
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return null
+    val clip = clipboard.primaryClip?.takeIf { it.itemCount > 0 } ?: return null
+    return clip.getItemAt(0).coerceToText(context)?.toString()
+}
+
+private fun subtypeName(
+    subtype: Subtype,
+    layouts: Map<LayoutType, Map<ExtensionComponentName, LayoutArrangementComponent>>,
+): String {
+    val label = layouts[LayoutType.CHARACTERS]?.get(subtype.layoutMap.characters)?.label
+    return keyboardDisplayName(subtype.primaryLocale, label)
+}
+
+@Composable
+private fun MissionRow(mission: StepMission) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (mission.done) MissionGreen else Color.White.copy(alpha = 0.08f))
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(if (mission.done) Color.White else MalangDarkCardTitle.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (mission.done) {
+                Icon(Icons.Default.Check, contentDescription = null, tint = MissionGreen, modifier = Modifier.size(16.dp))
+            } else {
+                Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MalangDarkCardTitle))
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                mission.title,
+                color = if (mission.done) Color.White else MalangDarkCardTitle,
+                fontSize = 14.sp,
+                lineHeight = 19.sp,
+                fontWeight = FontWeight.Bold,
+                style = KoreanWordBreak,
+            )
+            Text(
+                mission.summary,
+                color = if (mission.done) Color.White.copy(alpha = 0.85f) else MalangDarkCardSub,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                style = KoreanWordBreak,
+            )
+        }
+        if (mission.badge != null) {
+            Text(
+                mission.badge,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (mission.done) Color.White else MalangDarkCardTitle)
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                color = if (mission.done) MissionGreen else MalangDarkCard,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
     }
 }

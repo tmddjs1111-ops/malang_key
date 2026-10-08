@@ -1,0 +1,120 @@
+# 새 버전을 Google Play Console에 올린다.
+#
+# 쓰는 법
+#   1. gradle.properties 의 projectVersionCode(숫자, 매번 1 이상 올림)와 projectVersionName 을 올린다.
+#   2. 커밋하고, 같은 버전으로 태그를 달아 푸시한다.  예) git tag v1.53 && git push origin v1.53
+#   3. 이 워크플로가 서명된 AAB를 빌드해 프로덕션 트랙에 올린다. (Google 검토 후 사용자에게 배포)
+#   Actions 탭에서 직접 실행하면 트랙(internal / production)을 고를 수 있다.
+#
+# 필요한 저장소 Secrets (Settings > Secrets and variables > Actions)
+#   PLAY_SERVICE_ACCOUNT_JSON  Play Console API용 서비스 계정 키(JSON 전체 내용)
+#   UPLOAD_KEYSTORE_BASE64     업로드 키스토어(.jks)를 base64로 바꾼 값
+#   UPLOAD_KEYSTORE_PASSWORD   키스토어 비밀번호
+#   UPLOAD_KEY_ALIAS           키 별칭 (지금은 upload)
+#   UPLOAD_KEY_PASSWORD        키 비밀번호
+#
+# 출시 노트는 distribution/whatsnew/whatsnew-ko-KR 파일이 있으면 함께 올린다. (500자 이내)
+
+name: Release to Google Play
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      track:
+        description: '올릴 트랙'
+        type: choice
+        options:
+          - internal
+          - production
+        default: internal
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-play
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    env:
+      TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.track || 'production' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches app version
+        if: github.event_name == 'push'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          name="$(grep '^projectVersionName=' gradle.properties | cut -d= -f2)"
+          if [ "$tag" != "$name" ]; then
+            echo "::error::태그($GITHUB_REF_NAME)와 gradle.properties 의 projectVersionName($name)이 다릅니다."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare upload signing key
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$UPLOAD_KEYSTORE_BASE64" ]; then
+            echo "::error::UPLOAD_KEYSTORE_BASE64 Secret 이 없습니다."
+            exit 1
+          fi
+          keystore="$RUNNER_TEMP/upload.jks"
+          echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          {
+            echo "upload.storeFile=$keystore"
+            echo "upload.keyAlias=$UPLOAD_KEY_ALIAS"
+            echo "upload.storePassword=$UPLOAD_KEYSTORE_PASSWORD"
+            echo "upload.keyPassword=$UPLOAD_KEY_PASSWORD"
+          } > local.properties
+
+      - name: Build release bundle
+        run: ./gradlew :app:bundleRelease --no-configuration-cache
+
+      - name: Upload to Google Play (with release notes)
+        if: hashFiles('distribution/whatsnew/*') != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.malangkey
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+          whatsNewDirectory: distribution/whatsnew
+          track: ${{ env.TRACK }}
+          status: completed
+
+      - name: Upload to Google Play
+        if: hashFiles('distribution/whatsnew/*') == ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.malangkey
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+          track: ${{ env.TRACK }}
+          status: completed
+
+      - name: Keep the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ github.ref_name }}
+          path: |
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/mapping/release/mapping.txt
+          retention-days: 30

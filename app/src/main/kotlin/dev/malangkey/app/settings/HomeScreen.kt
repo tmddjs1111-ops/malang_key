@@ -66,7 +66,6 @@ import org.florisboard.lib.compose.*
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
 import dev.malangkey.subtypeManager
-import dev.malangkey.keyboardManager
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Row
@@ -76,6 +75,15 @@ val MalangJuaFont = JuaFontFamily
 val MalangGowunFont = GmarketSansFontFamily
 
 private enum class HomeTab { MAIN, THEME, GAME }
+
+/** 피그마 "Malang Key / Main" 카드 한 장의 내용과 아이콘 배치 (카드 기준 dp). */
+private data class MainTile(
+    val title: String,
+    val subtitle: String,
+    @DrawableRes val iconRes: Int,
+    val accent: Boolean,
+    val onClick: () -> Unit,
+)
 
 @Composable
 fun HomeScreen() = FlorisScreen {
@@ -95,15 +103,24 @@ fun HomeScreen() = FlorisScreen {
             .fillMaxSize()
             .background(MalangButter)
         ) {
+            // 무늬 배경은 메인 탭에만 둔다. 다른 탭은 글자가 무늬에 묻히지 않게 단색으로 둔다.
             if (selectedTab == HomeTab.MAIN) {
-                // 하단 탭바(높이 72 + 여백 28)에 마지막 항목이 가리지 않게 아래를 띄운다.
+                Image(
+                    painter = painterResource(R.drawable.mk_main_bg_pattern),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().alpha(0.5f),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+
+            if (selectedTab == HomeTab.MAIN) {
+                // 메인 탭은 스크롤 없이 한 화면에 맞춘다 (하단 탭바 높이 72 + 여백 28 + 간격 12)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
-                        .verticalScroll(rememberScrollState())
                         .navigationBarsPadding()
-                        .padding(top = 8.dp, bottom = 120.dp)
+                        .padding(top = 16.dp, bottom = 112.dp)
                 ) {
                     MainTabContent(navController, context)
                 }
@@ -144,235 +161,157 @@ private fun ColumnScope.MainTabContent(
     navController: androidx.navigation.NavController,
     context: android.content.Context
 ) {
-    val prefs by FlorisPreferenceStore
-    val scope = rememberCoroutineScope()
     val isFlorisBoardEnabled by dev.malangkey.lib.util.InputMethodUtils.observeIsFlorisboardEnabled(foregroundOnly = true)
     val isFlorisBoardSelected by dev.malangkey.lib.util.InputMethodUtils.observeIsFlorisboardSelected(foregroundOnly = true)
     val subtypeManager by context.subtypeManager()
-    val keyboardManager by context.keyboardManager()
     val subtypes by subtypeManager.subtypesFlow.collectAsState()
-    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
-    val layouts by keyboardManager.resources.layouts.collectAsState()
-    val audioEnabled by prefs.inputFeedback.audioEnabled.collectAsState()
-    val hapticEnabled by prefs.inputFeedback.hapticEnabled.collectAsState()
-    val keySound by prefs.inputFeedback.keySoundStyle.collectAsState()
-    val themeMode by prefs.theme.mode.collectAsState()
-    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
-    val nightThemeId by prefs.theme.nightThemeId.collectAsState()
-    val quickPhrasesJson by prefs.clipboard.quickPhrases.collectAsState()
-    val palette = dev.malangkey.app.setup.rememberActivePreviewPalette()
 
-    fun layoutName(subtype: dev.malangkey.ime.core.Subtype): String {
-        val label = layouts[dev.malangkey.ime.keyboard.LayoutType.CHARACTERS]?.get(subtype.layoutMap.characters)?.label
-        return dev.malangkey.app.settings.keyboard.keyboardDisplayName(subtype.primaryLocale, label).substringAfterLast(" - ")
+    val warningModifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+    if (!isFlorisBoardEnabled) {
+        MalangErrorCard(
+            modifier = warningModifier,
+            text = "말랑키가 꺼져 있어요. 눌러서 켜 주세요.",
+            onClick = { dev.malangkey.lib.util.InputMethodUtils.showImeEnablerActivity(context) },
+        )
+    } else if (!isFlorisBoardSelected) {
+        MalangWarningCard(
+            modifier = warningModifier,
+            text = "지금 키보드가 말랑키가 아니에요. 눌러서 말랑키로 바꿔 주세요.",
+            onClick = { dev.malangkey.lib.util.InputMethodUtils.showImePicker(context) },
+        )
+    } else if (subtypes.isEmpty()) {
+        MalangErrorCard(
+            modifier = warningModifier,
+            text = "현재 말랑키 키보드 설정이 안되어있습니다\n키보드를 선택해주세요",
+            onClick = { navController.navigate(Routes.Settings.Keyboard) },
+        )
     }
-    val themeName = dev.malangkey.app.settings.theme.malangThemes.firstOrNull {
-        dev.malangkey.app.settings.theme.isMalangThemeSelected(it, themeMode, dayThemeId, nightThemeId)
-    }?.name ?: "테마"
-    val phraseCount = remember(quickPhrasesJson) {
-        runCatching { kotlinx.serialization.json.Json.decodeFromString<List<String>>(quickPhrasesJson) }
-            .getOrDefault(emptyList()).count { it.isNotBlank() }
-    }
-    val openQuickSetup = {
-        if (isFlorisBoardEnabled && isFlorisBoardSelected) {
-            navController.navigate(Routes.Setup.Quick)
-        } else {
-            navController.navigate(Routes.Setup.Screen)
-        }
-    }
+
+    val tiles = listOf(
+        MainTile("소리·진동", "Sound & Haptic", R.drawable.mk_ic_sound, accent = false) {
+            navController.navigate(Routes.Settings.InputFeedback)
+        },
+        MainTile("스마트 바", "Smart Bar", R.drawable.mk_ic_smartbar, accent = false) {
+            navController.navigate(Routes.Settings.Smartbar)
+        },
+        MainTile("클립보드", "Clipboard", R.drawable.mk_ic_clipboard, accent = true) {
+            navController.navigate(Routes.Settings.Clipboard)
+        },
+        MainTile("제스처", "Gesture", R.drawable.mk_ic_gesture, accent = true) {
+            navController.navigate(Routes.Settings.Gestures)
+        },
+        MainTile("이모지", "Emoji", R.drawable.mk_ic_emoji, accent = false) {
+            navController.navigate(Routes.Settings.Media)
+        },
+        MainTile("빠른 설정", "Quick Settings", R.drawable.mk_ic_quick, accent = false) {
+            // 키보드가 이미 켜져 있고 선택돼 있으면 바로 간단 설정으로 간다.
+            if (isFlorisBoardEnabled && isFlorisBoardSelected) {
+                navController.navigate(Routes.Setup.Quick)
+            } else {
+                navController.navigate(Routes.Setup.Screen)
+            }
+        },
+    )
 
     Column(
         modifier = Modifier
+            .weight(1f)
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            "말랑키",
-            modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 2.dp),
-            color = MalangCocoa,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = PretendardFontFamily,
-            letterSpacing = (-0.5).sp,
+        // 카드 높이는 남은 화면 높이를 피그마 비율(히어로 180 : 타일 164)로 나눠 정한다
+        MainHeroCard(
+            modifier = Modifier.weight(180f),
+            onClick = { navController.navigate(Routes.Settings.Keyboard) },
         )
 
-        if (!isFlorisBoardEnabled) {
-            MalangErrorCard(
-                text = "말랑키가 꺼져 있어요. 눌러서 켜 주세요.",
-                onClick = { dev.malangkey.lib.util.InputMethodUtils.showImeEnablerActivity(context) },
-            )
-        } else if (!isFlorisBoardSelected) {
-            MalangWarningCard(
-                text = "지금 키보드가 말랑키가 아니에요. 눌러서 말랑키로 바꿔 주세요.",
-                onClick = { dev.malangkey.lib.util.InputMethodUtils.showImePicker(context) },
-            )
-        } else if (subtypes.isEmpty()) {
-            MalangErrorCard(
-                text = "고른 자판이 없어요. 눌러서 자판을 골라 주세요.",
-                onClick = { navController.navigate(Routes.Settings.Keyboard) },
-            )
+        for (row in tiles.chunked(2)) {
+            Row(
+                modifier = Modifier.weight(164f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                for (tile in row) {
+                    MainTileCard(tile, Modifier.weight(1f).fillMaxHeight())
+                }
+            }
         }
+    }
+}
 
-        // 지금 쓰는 키보드를 실제 테마 색으로 보여주고, 소리·진동은 여기서 바로 끄고 켠다.
-        Column(
+/**
+ * 피그마 기준 카드 크기 대비 실제 카드 크기의 비율. 아이콘·글자·여백을 함께 키우거나 줄여
+ * 화면 크기가 달라도 카드 안 배치가 유지되게 한다.
+ */
+private fun cardScale(width: Dp, height: Dp, designWidth: Dp, designHeight: Dp): Float =
+    minOf(width / designWidth, height / designHeight).coerceIn(0.55f, 1.3f)
+
+@Composable
+private fun MainHeroCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(MalangCocoa)
+            .clickable(onClick = onClick),
+    ) {
+        val s = cardScale(maxWidth, maxHeight, designWidth = 372.dp, designHeight = 180.dp)
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(MalangCocoa)
-                .clickable { navController.navigate(Routes.Settings.Keyboard) }
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .fillMaxSize()
+                .padding(start = 24.dp * s, top = 16.dp * s, end = 20.dp * s, bottom = 16.dp * s),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("지금 쓰는 키보드", color = MalangCardSubMuted, fontSize = 13.sp, fontFamily = PretendardFontFamily)
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        layoutName(activeSubtype),
-                        color = MalangCardText,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = PretendardFontFamily,
-                        letterSpacing = (-0.5).sp,
-                    )
-                    if (subtypes.size > 1) {
-                        Text(
-                            "  외 ${subtypes.size - 1}개",
-                            modifier = Modifier.padding(bottom = 3.dp),
-                            color = MalangCardSubLight,
-                            fontSize = 15.sp,
-                            fontFamily = PretendardFontFamily,
-                        )
-                    }
-                }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp * s),
+            ) {
+                Text("키보드 선택", color = MalangCardText, fontSize = 36.sp * s, lineHeight = 40.sp * s, fontFamily = MalangJuaFont, maxLines = 1)
+                Text("언어 및 종류 선택", color = MalangCardSubLight, fontSize = 16.sp * s, fontFamily = MalangGowunFont, maxLines = 1)
+                Text("Keyboard Select", color = MalangCardSubMuted, fontSize = 13.sp * s, fontFamily = MalangGowunFont, maxLines = 1)
             }
-            dev.malangkey.app.setup.KeyboardPreview(subtype = activeSubtype, palette = palette, height = 118.dp)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                HeroChip("소리", audioEnabled, Modifier.weight(1f)) {
-                    scope.launch { prefs.inputFeedback.audioEnabled.set(!audioEnabled) }
-                }
-                HeroChip("진동", hapticEnabled, Modifier.weight(1f)) {
-                    scope.launch { prefs.inputFeedback.hapticEnabled.set(!hapticEnabled) }
-                }
-                HeroChip(themeName, null, Modifier.weight(1.3f)) {
-                    navController.navigate(Routes.Settings.Theme)
-                }
-            }
+            Image(
+                painter = painterResource(R.drawable.mk_main_keyboard),
+                contentDescription = null,
+                modifier = Modifier.size(124.dp * s),
+                contentScale = ContentScale.Fit,
+            )
         }
-
-        HomeSection("입력")
-        MalangSettingsSection(
-            items = listOf(
-                {
-                    MalangNavRow(
-                        title = "자판",
-                        summary = subtypes.joinToString(" · ") { layoutName(it) }.ifEmpty { "아직 고른 자판이 없어요" },
-                        onClick = { navController.navigate(Routes.Settings.Keyboard) },
-                    )
-                },
-                {
-                    MalangNavRow(
-                        title = "소리 · 진동",
-                        summary = if (audioEnabled) keySound.label else "소리 꺼짐",
-                        onClick = { navController.navigate(Routes.Settings.InputFeedback) },
-                    )
-                },
-                {
-                    MalangNavRow(
-                        title = "제스처",
-                        summary = "밀기 · 길게 누르기 동작",
-                        onClick = { navController.navigate(Routes.Settings.Gestures) },
-                    )
-                },
-            ),
-        )
-
-        HomeSection("키보드 위 버튼")
-        MalangSettingsSection(
-            items = listOf(
-                {
-                    MalangNavRow(
-                        title = "스마트 바",
-                        summary = "키보드 위 버튼 줄",
-                        onClick = { navController.navigate(Routes.Settings.Smartbar) },
-                    )
-                },
-                {
-                    MalangNavRow(
-                        title = "상용구",
-                        summary = "마침표 길게 누르기 · ${phraseCount}개",
-                        onClick = { navController.navigate(Routes.Settings.Clipboard) },
-                    )
-                },
-                {
-                    MalangNavRow(
-                        title = "이모지",
-                        summary = "최근 쓴 이모지 · 이모지 추천",
-                        onClick = { navController.navigate(Routes.Settings.Media) },
-                    )
-                },
-            ),
-        )
-
-        MalangSettingsSection(
-            items = listOf(
-                {
-                    MalangNavRow(
-                        title = "처음 설정 다시 하기",
-                        summary = "자판부터 테마까지 차례로 골라요",
-                        onClick = openQuickSetup,
-                    )
-                },
-            ),
-        )
     }
 }
 
 @Composable
-private fun HomeSection(title: String) {
-    Text(
-        title,
-        modifier = Modifier.padding(start = 6.dp, top = 6.dp),
-        color = MalangSettingsSummary,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Bold,
-        fontFamily = PretendardFontFamily,
-    )
-}
-
-/** 히어로 카드 아래 칩. [on]이 null이면 토글이 아니라 이동 버튼이다. */
-@Composable
-private fun HeroChip(label: String, on: Boolean?, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val active = on != false
-    Row(
+private fun MainTileCard(tile: MainTile, modifier: Modifier = Modifier) {
+    BoxWithConstraints(
         modifier = modifier
-            .height(40.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (on == true) MalangCardText else MalangMushroom)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+            .clip(RoundedCornerShape(24.dp))
+            .background(if (tile.accent) MalangMushroom else MalangCocoa)
+            .clickable(onClick = tile.onClick),
     ) {
-        Text(
-            when (on) {
-                true -> "$label 켬"
-                false -> "$label 끔"
-                null -> label
-            },
-            color = if (on == true) MalangCocoa else MalangCardText.copy(alpha = if (active) 1f else 0.6f),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = PretendardFontFamily,
-            maxLines = 1,
-        )
-        if (on == null) {
+        val s = cardScale(maxWidth, maxHeight, designWidth = 180.dp, designHeight = 164.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(18.dp * s),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
             Icon(
-                Icons.Default.KeyboardArrowRight,
+                painter = painterResource(tile.iconRes),
                 contentDescription = null,
                 tint = MalangCardText,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(60.dp * s),
             )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp * s)) {
+                Text(tile.title, color = MalangCardText, fontSize = 24.sp * s, lineHeight = 28.sp * s, fontFamily = MalangJuaFont, maxLines = 1)
+                Text(
+                    tile.subtitle,
+                    color = if (tile.accent) MalangCardSubLight else MalangCardSubMuted,
+                    fontSize = 13.sp * s,
+                    fontFamily = MalangGowunFont,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }

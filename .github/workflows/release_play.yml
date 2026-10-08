@@ -3,8 +3,12 @@
 # 쓰는 법
 #   1. gradle.properties 의 projectVersionCode(숫자, 매번 1 이상 올림)와 projectVersionName 을 올린다.
 #   2. 커밋하고, 같은 버전으로 태그를 달아 푸시한다.  예) git tag v1.53 && git push origin v1.53
-#   3. 이 워크플로가 서명된 AAB를 빌드해 프로덕션 트랙에 올린다. (Google 검토 후 사용자에게 배포)
-#   Actions 탭에서 직접 실행하면 트랙(internal / production)을 고를 수 있다.
+#   3. 이 워크플로가 서명된 AAB를 빌드해 PLAY_TRACK 트랙에 올린다. (Google 검토 후 배포)
+#   Actions 탭에서 직접 실행하면 트랙을 고를 수 있다.
+#
+# 올릴 트랙: 저장소 Variables 의 PLAY_TRACK (없으면 alpha = 비공개 테스트 기본 트랙)
+#   신규 개인 계정은 비공개 테스트(12명 × 14일)를 마쳐야 프로덕션이 열린다.
+#   프로덕션 권한을 받으면 PLAY_TRACK 을 production 으로 바꾸면 된다.
 #
 # 필요한 저장소 Secrets (Settings > Secrets and variables > Actions)
 #   PLAY_SERVICE_ACCOUNT_JSON  Play Console API용 서비스 계정 키(JSON 전체 내용)
@@ -27,9 +31,10 @@ on:
         description: '올릴 트랙'
         type: choice
         options:
+          - alpha
           - internal
           - production
-        default: internal
+        default: alpha
 
 permissions:
   contents: read
@@ -42,7 +47,7 @@ jobs:
   release:
     runs-on: ubuntu-24.04
     env:
-      TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.track || 'production' }}
+      TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.track || vars.PLAY_TRACK || 'alpha' }}
 
     steps:
       - uses: actions/checkout@v4

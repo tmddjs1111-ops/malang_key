@@ -60,6 +60,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -150,6 +151,12 @@ private fun AnthemPlay(targets: List<String>, onFinished: (TypingScore.Result) -
         }
     }
 
+    // 엔터는 줄의 마지막 글자까지 쳤을 때만 받는다. 중간에 잘못 눌러 줄이 넘어가지 않게 한다.
+    // 마지막 글자가 아직 조합 중이어도 글자 수는 찼으므로 넘어간다.
+    fun onEnter(text: String = input.text) {
+        if (text.length >= target.length) submitLine()
+    }
+
     val live = if (startedAt > 0L && elapsed > 0L) {
         TypingScore.result(typedLines + input.text, targets.take(lineIndex + 1), elapsed)
     } else {
@@ -199,8 +206,9 @@ private fun AnthemPlay(targets: List<String>, onFinished: (TypingScore.Result) -
         onValueChange = { value ->
             // 엔터는 줄바꿈 글자로 들어오기도 한다. 그러면 줄바꿈을 지우고 다음 줄로 넘긴다.
             if (value.text.contains('\n')) {
-                input = TextFieldValue(value.text.replace("\n", ""))
-                submitLine()
+                val text = value.text.replace("\n", "")
+                input = TextFieldValue(text, TextRange(text.length))
+                onEnter(text)
                 return@BasicTextField
             }
             if (startedAt == 0L && value.text.isNotEmpty()) startedAt = System.currentTimeMillis()
@@ -214,7 +222,7 @@ private fun AnthemPlay(targets: List<String>, onFinished: (TypingScore.Result) -
             // 말랑키는 이런 입력칸에서 엔터를 '다음' 동작이 아니라 엔터 키로 보내므로 키를 직접 받는다.
             .onPreviewKeyEvent { event ->
                 val isEnter = event.key == Key.Enter || event.key == Key.NumPadEnter
-                if (isEnter && event.type == KeyEventType.KeyUp) submitLine()
+                if (isEnter && event.type == KeyEventType.KeyUp) onEnter()
                 isEnter
             }
             .clip(RoundedCornerShape(18.dp))
@@ -225,11 +233,11 @@ private fun AnthemPlay(targets: List<String>, onFinished: (TypingScore.Result) -
         cursorBrush = SolidColor(MalangSettingsSection),
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-        keyboardActions = KeyboardActions(onNext = { submitLine() }, onDone = { submitLine() }),
+        keyboardActions = KeyboardActions(onNext = { onEnter() }, onDone = { onEnter() }),
     )
     Text(
         if (startedAt == 0L) "위 가사를 따라 치면 시간이 시작돼요. 한 줄을 다 치면 엔터를 누르세요."
-        else "틀려도 엔터를 누르면 다음 줄로 넘어가요. 오타는 점수에서 깎여요.",
+        else "줄 끝까지 치고 엔터를 누르면 틀려도 다음 줄로 넘어가요. 오타는 점수에서 깎여요.",
         color = MalangSettingsSummary,
         fontSize = 13.sp,
         lineHeight = 19.sp,

@@ -551,6 +551,43 @@ fun MalangValueDialogRow(
     }
 }
 
+/** 화면 안에서 내용을 바꾸는 탭 줄. 고른 칸만 흰 바탕으로 띄운다. */
+@Composable
+fun <T> MalangTabRow(
+    tabs: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MalangSettingsBorder.copy(alpha = 0.55f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        for ((value, label) in tabs) {
+            val isSelected = value == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isSelected) MalangSettingsCard else Color.Transparent)
+                    .selectable(selected = isSelected) { onSelect(value) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    color = if (isSelected) MalangSettingsTitle else MalangSettingsSummary,
+                    fontSize = 15.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                )
+            }
+        }
+    }
+}
+
 /** 섹션 위에 두는 안내 문구 카드. */
 @Composable
 fun MalangInfoCard(text: String) {

@@ -16,7 +16,16 @@
 
 package dev.malangkey.app.settings.keyboard
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState as collectFlowAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +34,7 @@ import androidx.compose.runtime.setValue
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.LocalNavController
 import dev.malangkey.app.Routes
+import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.malangkey.app.apptheme.MalangChoiceDialog
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangNavRow
@@ -32,8 +42,12 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSliderRow
 import dev.malangkey.app.apptheme.MalangSwitchRow
+import dev.malangkey.app.apptheme.MalangTabRow
+import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.isGridLayoutId
+import dev.malangkey.subtypeManager
 import dev.malangkey.ime.text.key.KeyHintMode
 import dev.patrickgold.jetpref.datastore.model.PreferenceData
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -45,8 +59,28 @@ private val HintModeEntries = listOf(
     KeyHintMode.SMART_PRIORITY to "스마트 우선",
 )
 
+/** 키보드 설정 화면의 탭. 크기·간격 설정은 한 탭에 모은다. */
+enum class KeyboardTab { GENERAL, SIZE }
+
 @Composable
-fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
+fun KeyboardScreen(initialTab: KeyboardTab = KeyboardTab.GENERAL) = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
+    var tab by rememberSaveable { mutableStateOf(initialTab) }
+
+    MalangTabRow(
+        tabs = listOf(KeyboardTab.GENERAL to "기본 설정", KeyboardTab.SIZE to "크기·간격"),
+        selected = tab,
+        onSelect = { tab = it },
+    )
+
+    when (tab) {
+        KeyboardTab.GENERAL -> KeyboardGeneralTab()
+        KeyboardTab.SIZE -> KeyboardSizeTab()
+    }
+}
+
+/** 기본 설정 탭: 언어와 레이아웃, 키 표시, 누르기, 백업, 앱 정보. */
+@Composable
+private fun KeyboardGeneralTab() {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val numberRow by prefs.keyboard.numberRow.collectAsState()
@@ -112,57 +146,6 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
     )
 
     MalangSettingsSection(
-        title = "레이아웃 및 크기",
-        items = listOf(
-            { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "전체 글자 배율 (세로 화면)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "전체 글자 배율 (가로 화면)", min = 50, max = 150) },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "쿼티 자판 (두벌식·영어)",
-        items = listOf(
-            { MalangSliderRow(prefs.malang.keyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
-            { MalangSliderRow(prefs.malang.keyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.keySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
-            { MalangSliderRow(prefs.keyboard.keySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "격자 자판 (천지인·연타형·20키)",
-        items = listOf(
-            { MalangSliderRow(prefs.malang.gridKeyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
-            { MalangSliderRow(prefs.malang.gridKeyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
-            { MalangSliderRow(prefs.keyboard.gridKeySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
-            { MalangSliderRow(prefs.keyboard.gridKeySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
-        ),
-    )
-
-    MalangSettingsSection(
-        title = "폴더블·분리 자판",
-        items = listOf(
-            {
-                MalangSwitchRow(
-                    prefs.keyboard.splitWhenUnfolded,
-                    title = "펼쳤을 때 자판 나누기",
-                    summary = "폴더블 폰을 펼치면 쿼티 자판을 가운데에서 나눠 양손으로 치기 쉽게 합니다. 태블릿에도 적용돼요.",
-                )
-            },
-            {
-                MalangSwitchRow(
-                    prefs.keyboard.splitWhenFolded,
-                    title = "접었을 때도 나누기",
-                    summary = "일반 폰 화면에서도 자판을 나눕니다.",
-                )
-            },
-            { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
-        ),
-    )
-
-    MalangSettingsSection(
         title = "기타 설정",
         items = listOf(
             {
@@ -222,6 +205,90 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                     onClick = { navController.navigate(Routes.Settings.About) },
                 )
             },
+        ),
+    )
+}
+
+/**
+ * 크기·간격 탭: 키보드 전체 높이·글자 배율, 자판 종류별 글자·간격, 분리 자판.
+ * 자판별 설정은 쿼티와 격자 중 하나만 보여주고, 처음에는 지금 쓰는 자판 쪽을 연다.
+ */
+@Composable
+private fun KeyboardSizeTab() {
+    val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectFlowAsState()
+    var showGrid by rememberSaveable { mutableStateOf(isGridLayoutId(activeSubtype.layoutMap.characters.componentId)) }
+
+    MalangSettingsSection(
+        title = "키보드 전체",
+        items = listOf(
+            { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "전체 글자 배율 (세로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "전체 글자 배율 (가로 화면)", min = 50, max = 150) },
+        ),
+    )
+
+    Column {
+        Text(
+            text = "자판별 글자·간격",
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
+            color = MalangSettingsSection,
+            fontSize = 23.sp,
+            fontFamily = JuaFontFamily,
+        )
+        MalangTabRow(
+            tabs = listOf(false to "쿼티 자판", true to "격자 자판"),
+            selected = showGrid,
+            onSelect = { showGrid = it },
+        )
+        Text(
+            text = if (showGrid) "천지인·연타형·획추가형·20키에 적용돼요." else "두벌식·영어 등 쿼티 배열 자판에 적용돼요.",
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 10.dp),
+            color = MalangSettingsSummary,
+            fontSize = 13.sp,
+        )
+        if (showGrid) {
+            MalangSettingsSection(
+                items = listOf(
+                    { MalangSliderRow(prefs.malang.gridKeyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
+                    { MalangSliderRow(prefs.malang.gridKeyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
+                    { MalangSliderRow(prefs.keyboard.gridKeySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
+                    { MalangSliderRow(prefs.keyboard.gridKeySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
+                ),
+            )
+        } else {
+            MalangSettingsSection(
+                items = listOf(
+                    { MalangSliderRow(prefs.malang.keyFontSizeMultiplier, "글자 크기", min = 50, max = 150) },
+                    { MalangSliderRow(prefs.malang.keyHintFontSizeMultiplier, "힌트 크기 (숫자·기호)", min = 50, max = 150) },
+                    { MalangSliderRow(prefs.keyboard.keySpacingHorizontal, "키 가로 간격", min = 0, max = 200, step = 5) },
+                    { MalangSliderRow(prefs.keyboard.keySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
+                ),
+            )
+        }
+    }
+
+    MalangSettingsSection(
+        title = "폴더블·분리 자판",
+        items = listOf(
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenUnfolded,
+                    title = "펼쳤을 때 자판 나누기",
+                    summary = "폴더블 폰을 펼치면 쿼티 자판을 가운데에서 나눠 양손으로 치기 쉽게 합니다. 태블릿에도 적용돼요.",
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenFolded,
+                    title = "접었을 때도 나누기",
+                    summary = "일반 폰 화면에서도 자판을 나눕니다.",
+                )
+            },
+            { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
         ),
     )
 }

@@ -339,14 +339,7 @@ class LayoutManager(context: Context) {
 
         when (keyboardMode) {
             KeyboardMode.CHARACTERS -> {
-                val charId = subtype.layoutMap.characters.componentId
-                val isStandaloneGrid = charId.contains("_16") ||
-                    charId.contains("sky") ||
-                    charId.contains("cheonjiin") ||
-                    charId.contains("naratgul") ||
-                    charId.contains("danmoeum") ||
-                    charId == "japanese_20key"
-                if (isStandaloneGrid) {
+                if (isGridLayoutId(subtype.layoutMap.characters.componentId)) {
                     main = LTN(LayoutType.CHARACTERS, subtype.layoutMap.characters)
                     return@async mergeLayouts(KeyboardMode.GRID_16KEY, subtype, main, null, null)
                 }
@@ -410,3 +403,12 @@ class LayoutManager(context: Context) {
         ioScope.cancel()
     }
 }
+
+/** 천지인·연타형·획추가형·단모음·20키처럼 격자(GRID_16KEY)로 그리는 글자 자판인지. */
+fun isGridLayoutId(charactersLayoutId: String): Boolean =
+    charactersLayoutId.contains("_16") ||
+        charactersLayoutId.contains("sky") ||
+        charactersLayoutId.contains("cheonjiin") ||
+        charactersLayoutId.contains("naratgul") ||
+        charactersLayoutId.contains("danmoeum") ||
+        charactersLayoutId == "japanese_20key"

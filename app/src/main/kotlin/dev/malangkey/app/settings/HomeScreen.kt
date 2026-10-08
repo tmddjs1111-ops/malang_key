@@ -578,7 +578,7 @@ private fun ThemeTabContent(
                     MalangNavRow(
                         title = "글자 크기·키 간격",
                         summary = "쿼티와 격자 자판(천지인·20키)을 따로 조절해요.",
-                        onClick = { navController.navigate(Routes.Settings.Keyboard) },
+                        onClick = { navController.navigate(Routes.Settings.KeyboardSize) },
                     )
                 },
             ),

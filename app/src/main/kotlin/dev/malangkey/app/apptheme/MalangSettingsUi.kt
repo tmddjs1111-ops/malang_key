@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 // 피그마 설정 화면 공통 색상 (Malang Key / Keyboard Settings 등)
-val MalangSettingsBg = Color(0xFFFBF0D1)
+val MalangSettingsBg = MalangButter // 홈 화면과 같은 바탕색
 val MalangSettingsCard = Color(0xFFFFFDFB)
 val MalangSettingsBorder = Color(0xFFE5D8C6)
 val MalangSettingsDivider = Color(0xFFE9DCCB)

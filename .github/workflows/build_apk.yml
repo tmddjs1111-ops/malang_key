@@ -2,7 +2,8 @@
 #
 # 쓰는 법
 #   - claude/** 브랜치에 푸시하면 자동으로 돈다. Actions 탭에서 직접 실행해도 된다.
-#   - 끝나면 실행 화면 아래 Artifacts 의 malang-key-debug-apk 를 내려받아 압축을 풀고 설치한다.
+#   - 끝나면 Releases 의 debug-latest 에 APK가 올라간다. 휴대폰에서 바로 내려받아 설치하면 된다.
+#     https://github.com/<저장소>/releases/tag/debug-latest
 #   - 디버그 빌드는 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치된다.
 
 name: Build debug APK
@@ -14,7 +15,7 @@ on:
       - 'claude/**'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-apk-${{ github.ref }}
@@ -45,3 +46,16 @@ jobs:
           name: malang-key-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
+
+      - name: Publish APK to the debug-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          apk="$RUNNER_TEMP/malang-key-debug.apk"
+          cp app/build/outputs/apk/debug/*.apk "$apk"
+          gh release delete debug-latest --cleanup-tag --yes || true
+          gh release create debug-latest "$apk" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "디버그 APK (${GITHUB_REF_NAME}, ${GITHUB_SHA::7})" \
+            --notes "테스트용 디버그 빌드입니다. 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치됩니다."

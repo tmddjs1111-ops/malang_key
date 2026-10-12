@@ -41,6 +41,7 @@ import android.graphics.BitmapFactory
 import dev.malangkey.ime.theme.CustomThemeImage
 import dev.malangkey.ime.theme.CustomThemeLibrary
 import dev.malangkey.ime.theme.ThemeMode
+import dev.malangkey.ime.theme.parseCustomBaseThemeId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -112,10 +113,25 @@ fun loadPreviewPalette(context: Context, extId: String, compId: String): Preview
     PreviewPalette(background, keyBackground, keyForeground, byCode)
 }.getOrNull()
 
-/** 사용자가 고른 커스텀 색으로 만든 미리보기 색. 고르지 않은 색은 기본 크림 테마를 따른다. */
+/** 커스텀 테마가 바탕으로 쓰는 테마의 색. 바탕이 없거나 읽지 못하면 기본 크림 테마. */
+fun loadCustomBasePalette(context: Context, baseThemeId: String?): PreviewPalette =
+    parseCustomBaseThemeId(baseThemeId)?.let { loadPreviewPalette(context, it.extensionId, it.componentId) }
+        ?: DefaultPreviewPalette
+
+/** 지금 커스텀 테마의 바탕 테마 색. */
+@Composable
+fun rememberCustomBasePalette(): PreviewPalette {
+    val prefs by FlorisPreferenceStore
+    val baseThemeId by prefs.malang.customBaseThemeId.collectAsState()
+    val context = LocalContext.current
+    return remember(baseThemeId) { loadCustomBasePalette(context, baseThemeId) }
+}
+
+/** 사용자가 고른 커스텀 색으로 만든 미리보기 색. 고르지 않은 색은 바탕 테마를 따른다. */
 @Composable
 fun rememberCustomPreviewPalette(): PreviewPalette {
     val prefs by FlorisPreferenceStore
+    val base = rememberCustomBasePalette()
     val customBg by prefs.malang.customKeyboardBgColor.collectAsState()
     val customKey by prefs.malang.customKeyBgColor.collectAsState()
     val customText by prefs.malang.customKeyTextColor.collectAsState()
@@ -132,9 +148,9 @@ fun rememberCustomPreviewPalette(): PreviewPalette {
             CustomThemeImage.loadThumbnail(context, bgImageFile, maxSidePx = 480)?.asImageBitmap()
         }
     }
-    return remember(customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText, bgImage, bgImageDim, bgImageKeyOpacity) {
+    return remember(base, customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText, bgImage, bgImageDim, bgImageKeyOpacity) {
         customPreviewPalette(
-            customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText,
+            base, customBg, customKey, customText, customSpecial, customSpecialText, customEnter, customEnterText,
             bgImage, bgImageDim, bgImageKeyOpacity,
         )
     }
@@ -154,15 +170,16 @@ fun rememberSavedThemePreviewPalette(theme: CustomThemeLibrary.SavedTheme): Prev
     return remember(theme, bgImage) {
         fun Int?.color() = if (this == null) Color.Unspecified else Color(this)
         customPreviewPalette(
-            theme.keyboardBg.color(), theme.keyBg.color(), theme.keyText.color(), theme.specialBg.color(),
+            loadCustomBasePalette(context, theme.baseTheme), theme.keyboardBg.color(), theme.keyBg.color(), theme.keyText.color(), theme.specialBg.color(),
             theme.specialText.color(), theme.enterBg.color(), theme.enterText.color(),
             bgImage, theme.dim, theme.keyOpacity,
         )
     }
 }
 
-/** 커스텀 색으로 미리보기 색을 만든다. 고르지 않은 색은 기본 크림 테마를 따른다. */
+/** 커스텀 색으로 미리보기 색을 만든다. 고르지 않은 색은 [base] 테마를 따른다. */
 private fun customPreviewPalette(
+    base: PreviewPalette,
     customBg: Color,
     customKey: Color,
     customText: Color,
@@ -179,14 +196,21 @@ private fun customPreviewPalette(
     val boardAlpha = if (bgImage != null) bgImageDim / 100f else 1f
     val keyAlpha = if (bgImage != null) bgImageKeyOpacity / 100f else 1f
     fun Color.key() = copy(alpha = alpha * keyAlpha)
-    val d = DefaultPreviewPalette
-    val special = customSpecial.or(Color(0xFF311D18)).key() to customSpecialText.or(d.keyBackground)
+    val keyBackground = customKey.or(base.keyBackground)
+    val keyForeground = customText.or(base.keyForeground)
+    // 특수 키는 바탕 테마의 시프트 키 색을 따른다. 바탕에 따로 없으면 일반 키와 같은 색을 쓴다.
+    val (baseSpecial, baseSpecialText) = base.byCode[KeyCode.SHIFT] ?: (keyBackground to keyForeground)
+    val special = customSpecial.or(baseSpecial).key() to customSpecialText.or(baseSpecialText)
+    // 엔터는 따로 고른 색 → 특수 키 색 → 바탕 테마의 엔터 색 순서로 따른다.
+    val (baseEnter, baseEnterText) = base.byCode[KeyCode.ENTER] ?: (baseSpecial to baseSpecialText)
+    val enter = customEnter.or(customSpecial.or(baseEnter)).key() to
+        customEnterText.or(customSpecialText.or(baseEnterText))
     return PreviewPalette(
-        background = customBg.or(d.background).let { it.copy(alpha = it.alpha * boardAlpha) },
-        keyBackground = customKey.or(d.keyBackground).key(),
-        keyForeground = customText.or(d.keyForeground),
+        background = customBg.or(base.background).let { it.copy(alpha = it.alpha * boardAlpha) },
+        keyBackground = keyBackground.key(),
+        keyForeground = keyForeground,
         byCode = mapOf(
-            KeyCode.ENTER to (customEnter.or(Color(0xFF5D4037)).key() to customEnterText.or(Color.White)),
+            KeyCode.ENTER to enter,
             KeyCode.SHIFT to special,
             KeyCode.DELETE to special,
             KeyCode.VIEW_SYMBOLS to special,

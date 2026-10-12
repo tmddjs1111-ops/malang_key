@@ -44,6 +44,10 @@ import dev.malangkey.app.setup.DefaultPreviewPalette
 import dev.malangkey.app.setup.KeyboardPreview
 import dev.malangkey.app.setup.loadPreviewPalette
 import dev.malangkey.app.setup.rememberCustomPreviewPalette
+import androidx.compose.foundation.isSystemInDarkTheme
+import dev.malangkey.ime.text.key.KeyCode
+import dev.malangkey.ime.theme.CustomThemeId
+import dev.malangkey.app.setup.rememberCustomBasePalette
 import dev.malangkey.subtypeManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -133,10 +137,24 @@ val malangThemes = listOf(
     MalangThemeInfo("dev.malangkey.colors", "custom", "커스텀", Color(0xFFE0E0E0))
 )
 
-/** 테마를 키보드에 적용한다. 커스텀이 아닌 테마는 키 모양 효과를 기본값으로 되돌린다. */
-suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThemeInfo) {
+/**
+ * 테마를 키보드에 적용한다.
+ *
+ * 커스텀은 따로 정해진 모양이 없고, 지금 쓰던 테마([currentThemeId])를 바탕으로 새로 만든다.
+ * 다른 테마에서 커스텀으로 넘어오면 바탕을 그 테마로 바꾸고 고른 색을 비워, 그 테마 모양에서 시작한다.
+ * 이미 커스텀이거나 [currentThemeId]가 null이면(저장한 내 테마 불러오기 등) 바탕과 색을 그대로 둔다.
+ */
+suspend fun applyMalangTheme(
+    prefs: FlorisPreferenceModel,
+    themeInfo: MalangThemeInfo,
+    currentThemeId: ExtensionComponentName? = null,
+) {
     val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
     if (themeInfo.compId == "custom") {
+        if (currentThemeId != null && currentThemeId != CustomThemeId) {
+            prefs.malang.customBaseThemeId.set(currentThemeId.toString())
+            prefs.malang.clearCustomColors()
+        }
         prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
         prefs.theme.dayThemeId.set(themeCompName)
         return
@@ -148,6 +166,29 @@ suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThem
         prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
         prefs.theme.dayThemeId.set(themeCompName)
     }
+}
+
+/** 커스텀 색을 모두 비워 바탕 테마 색을 그대로 따르게 한다. */
+suspend fun FlorisPreferenceModel.Malang.clearCustomColors() {
+    customKeyboardBgColor.set(Color.Unspecified)
+    customKeyBgColor.set(Color.Unspecified)
+    customKeyTextColor.set(Color.Unspecified)
+    customEnterKeyBgColor.set(Color.Unspecified)
+    customEnterKeyTextColor.set(Color.Unspecified)
+    customRealEnterKeyBgColor.set(Color.Unspecified)
+    customRealEnterKeyTextColor.set(Color.Unspecified)
+}
+
+/** 지금 키보드에 보이는 테마의 이름. 밤/낮 설정을 따른다. */
+@Composable
+fun rememberCurrentThemeId(): ExtensionComponentName {
+    val prefs by FlorisPreferenceStore
+    val mode by prefs.theme.mode.collectAsState()
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val nightThemeId by prefs.theme.nightThemeId.collectAsState()
+    val isNight = mode == ThemeMode.ALWAYS_NIGHT ||
+        (mode == ThemeMode.FOLLOW_SYSTEM && isSystemInDarkTheme())
+    return if (isNight) nightThemeId else dayThemeId
 }
 
 /** 현재 적용된 테마인지 여부. */
@@ -176,6 +217,8 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
         val nightThemeId by florisPrefs.theme.nightThemeId.collectAsState()
         val currentMode by florisPrefs.theme.mode.collectAsState()
         val coroutineScope = rememberCoroutineScope()
+        val currentThemeId = rememberCurrentThemeId()
+        val basePalette = rememberCustomBasePalette()
         // 간단 설정처럼 지금 쓰는 자판에 각 테마 색을 입혀 미리 보여 준다.
         val context = LocalContext.current
         val subtypeManager by context.subtypeManager()
@@ -204,7 +247,7 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(if (isSelected) MalangSettingsSection else MalangSettingsCard)
                                 .clickable {
-                                    coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo) }
+                                    coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo, currentThemeId) }
                                 }
                                 .border(1.dp, if (isSelected) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(24.dp))
                                 .padding(vertical = 12.dp, horizontal = 10.dp),
@@ -277,16 +320,19 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                 ColorSwatchCard(
                                     title = "배경 색상",
                                     pref = florisPrefs.malang.customKeyboardBgColor,
+                                    fallback = basePalette.background,
                                     modifier = Modifier.weight(1f)
                                 )
                                 ColorSwatchCard(
                                     title = "키캡 색상",
                                     pref = florisPrefs.malang.customKeyBgColor,
+                                    fallback = basePalette.keyBackground,
                                     modifier = Modifier.weight(1f)
                                 )
                                 ColorSwatchCard(
                                     title = "글자 색상",
                                     pref = florisPrefs.malang.customKeyTextColor,
+                                    fallback = basePalette.keyForeground,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -300,11 +346,13 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                 ColorSwatchCard(
                                     title = "특수 키캡",
                                     pref = florisPrefs.malang.customEnterKeyBgColor,
+                                    fallback = basePalette.colorsFor(KeyCode.SHIFT).first,
                                     modifier = Modifier.weight(1f)
                                 )
                                 ColorSwatchCard(
                                     title = "특수 글자",
                                     pref = florisPrefs.malang.customEnterKeyTextColor,
+                                    fallback = basePalette.colorsFor(KeyCode.SHIFT).second,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -318,11 +366,13 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                 ColorSwatchCard(
                                     title = "엔터 키 색상",
                                     pref = florisPrefs.malang.customRealEnterKeyBgColor,
+                                    fallback = basePalette.colorsFor(KeyCode.ENTER).first,
                                     modifier = Modifier.weight(1f)
                                 )
                                 ColorSwatchCard(
                                     title = "엔터 글자 색상",
                                     pref = florisPrefs.malang.customRealEnterKeyTextColor,
+                                    fallback = basePalette.colorsFor(KeyCode.ENTER).second,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -330,19 +380,12 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
 
                         item(span = { GridItemSpan(2) }) {
                             MalangButton(
-                                "기본 커스텀 색으로 되돌리기",
+                                "바꾼 색 모두 되돌리기",
                                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                                 primary = false,
                                 onClick = {
-                                    coroutineScope.launch {
-                                        florisPrefs.malang.customKeyboardBgColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customKeyBgColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customKeyTextColor.set(Color(0xFF311D18))
-                                        florisPrefs.malang.customEnterKeyBgColor.set(Color(0xFF311D18))
-                                        florisPrefs.malang.customEnterKeyTextColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customRealEnterKeyBgColor.set(Color(0xFF5D4037))
-                                        florisPrefs.malang.customRealEnterKeyTextColor.set(Color(0xFFFFFFFF))
-                                    }
+                                    // 커스텀을 시작한 테마의 색으로 돌아간다.
+                                    coroutineScope.launch { florisPrefs.malang.clearCustomColors() }
                                 },
                             )
                         }
@@ -706,9 +749,12 @@ private fun ThemeNameDialog(
 fun ColorSwatchCard(
     title: String,
     pref: PreferenceData<Color>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fallback: Color = Color.Unspecified,
 ) {
-    val color by pref.collectAsState()
+    // 고르지 않은 색은 바탕 테마 색([fallback])을 보여 준다.
+    val picked by pref.collectAsState()
+    val color = if (picked == Color.Unspecified) fallback else picked
     var showDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     

@@ -781,6 +781,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
+        /**
+         * 커스텀 테마가 바탕으로 쓰는 테마("확장:테마"). 커스텀으로 바꿀 때 쓰던 테마가 들어간다.
+         * 비어 있으면 말랑키 기본 크림 테마를 바탕으로 쓴다. 고르지 않은(Unspecified) 커스텀 색은 이 테마 색을 따른다.
+         */
+        val customBaseThemeId = string(
+            key = "malang__custom_base_theme_id",
+            default = "",
+        )
         /** 커스텀 테마 배경 사진의 파일 이름. 비어 있으면 사진 없이 색만 쓴다. */
         val customBgImageFile = string(
             key = "malang__custom_bg_image_file",

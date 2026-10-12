@@ -57,6 +57,8 @@ object CustomThemeLibrary {
         val dim: Int = 15,
         val keyOpacity: Int = 55,
         val blur: Int = 0,
+        /** 이 커스텀이 바탕으로 쓴 테마("확장:테마"). 없으면 기본 크림 테마. */
+        val baseTheme: String? = null,
     )
 
     fun decode(value: String): List<SavedTheme> =
@@ -100,6 +102,7 @@ object CustomThemeLibrary {
                     dim = m.customBgImageDim.get(),
                     keyOpacity = m.customBgImageKeyOpacity.get(),
                     blur = m.customBgImageBlur.get(),
+                    baseTheme = parseCustomBaseThemeId(m.customBaseThemeId.get())?.toString(),
                 )
                 prefs.malang.customThemeLibrary.set(encode(themes + theme))
                 theme
@@ -121,6 +124,7 @@ object CustomThemeLibrary {
                 val bg = copyIn(theme.bgImage, "bg")
                 val src = if (bg.isEmpty()) "" else copyIn(theme.bgSource, "src")
                 val m = prefs.malang
+                m.customBaseThemeId.set(parseCustomBaseThemeId(theme.baseTheme)?.toString() ?: "")
                 m.customKeyboardBgColor.set(theme.keyboardBg.toColor())
                 m.customKeyBgColor.set(theme.keyBg.toColor())
                 m.customKeyTextColor.set(theme.keyText.toColor())
@@ -209,6 +213,7 @@ object CustomThemeLibrary {
                     dim = shared.dim.coerceIn(0, 80),
                     keyOpacity = shared.keyOpacity.coerceIn(0, 100),
                     blur = shared.blur.coerceIn(0, 10),
+                    baseTheme = parseCustomBaseThemeId(shared.baseTheme)?.toString(),
                 )
                 prefs.malang.customThemeLibrary.set(encode(themes + theme))
                 theme

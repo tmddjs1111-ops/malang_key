@@ -63,6 +63,7 @@ import org.florisboard.lib.snygg.value.SnyggCustomFontFamilyValue
 import org.florisboard.lib.snygg.value.SnyggGenericFontFamilyValue
 import org.florisboard.lib.snygg.value.SnyggSpSizeValue
 import androidx.compose.ui.unit.sp
+import dev.malangkey.app.setup.loadCustomBasePalette
 
 @Composable
 fun FlorisImeTheme(content: @Composable () -> Unit) {
@@ -88,6 +89,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val customRealEnterKeyBgColor by prefs.malang.customRealEnterKeyBgColor.collectAsState()
     val customRealEnterKeyTextColor by prefs.malang.customRealEnterKeyTextColor.collectAsState()
     val customBgImageFile by prefs.malang.customBgImageFile.collectAsState()
+    val customBaseThemeId by prefs.malang.customBaseThemeId.collectAsState()
     val customBgImageDim by prefs.malang.customBgImageDim.collectAsState()
     val customBgImageKeyOpacity by prefs.malang.customBgImageKeyOpacity.collectAsState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -113,6 +115,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         customRealEnterKeyBgColor,
         customRealEnterKeyTextColor,
         customBgImageFile,
+        customBaseThemeId,
         customBgImageDim,
         customBgImageKeyOpacity,
         keyboardFontFamily,
@@ -131,13 +134,18 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         val hasBgImage = isCustomThemeSelected && customBgImageFile.isNotEmpty() &&
             CustomThemeImage.file(context, customBgImageFile) != null
 
-        // 배경 사진이 있으면 고르지 않은 색도 기본 커스텀 색으로 채운다. 그래야 판과 키를 반투명하게 만들 수 있다.
+        // 배경 사진이 있으면 고르지 않은 색도 바탕 테마의 색으로 채운다. 그래야 판과 키를 반투명하게 만들 수 있다.
+        val basePalette = loadCustomBasePalette(context, customBaseThemeId)
+        val (baseSpecialBg, baseSpecialText) = basePalette.byCode[KeyCode.SHIFT]
+            ?: (basePalette.keyBackground to basePalette.keyForeground)
         fun Color.orImageDefault(default: Color) = if (hasBgImage && this == Color.Unspecified) default else this
-        val customKeyboardBgColor = customKeyboardBgColor.orImageDefault(prefs.malang.customKeyboardBgColor.default)
-        val customKeyBgColor = customKeyBgColor.orImageDefault(prefs.malang.customKeyBgColor.default)
-        val customKeyTextColor = customKeyTextColor.orImageDefault(prefs.malang.customKeyTextColor.default)
-        val customEnterKeyBgColor = customEnterKeyBgColor.orImageDefault(prefs.malang.customEnterKeyBgColor.default)
-        val customEnterKeyTextColor = customEnterKeyTextColor.orImageDefault(prefs.malang.customEnterKeyTextColor.default)
+        val customKeyboardBgColor = customKeyboardBgColor.orImageDefault(basePalette.background)
+        val customKeyBgColor = customKeyBgColor.orImageDefault(basePalette.keyBackground)
+        val customKeyTextColor = customKeyTextColor.orImageDefault(basePalette.keyForeground)
+        val customEnterKeyBgColor = customEnterKeyBgColor.orImageDefault(baseSpecialBg)
+        val customEnterKeyTextColor = customEnterKeyTextColor.orImageDefault(baseSpecialText)
+        // 바탕 테마를 고르기 전(기본 크림 테마)에만 엔터를 말랑키 기본 갈색으로 칠한다. 바탕이 있으면 그 테마의 엔터를 따른다.
+        val useCreamEnter = isCustomThemeSelected && parseCustomBaseThemeId(customBaseThemeId) == null
         // 사진이 있으면 판(자판·상단바)은 비우고, 덮개는 window-inner 한 장으로만 얹는다.
         // 그래야 상단바와 자판 사이에 경계 없이 사진이 이어진다. 키캡은 사진이 비쳐 보이게 투명도를 준다.
         val keyAlpha = if (hasBgImage) customBgImageKeyOpacity / 100f else 1f
@@ -287,7 +295,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                             propEditor.properties["background"] = keyColor(customRealEnterKeyBgColor)
                         } else if (isEnterKeyBgCustom) {
                             propEditor.properties["background"] = keyColor(customEnterKeyBgColor)
-                        } else if (isCustomThemeSelected) {
+                        } else if (useCreamEnter) {
                             propEditor.properties["background"] = keyColor(Color(0xFF311D18))
                         }
                     } else if (isSpaceCode) {
@@ -303,7 +311,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                             propEditor.properties["foreground"] = SnyggStaticColorValue(customRealEnterKeyTextColor)
                         } else if (isEnterKeyTextCustom) {
                             propEditor.properties["foreground"] = SnyggStaticColorValue(customEnterKeyTextColor)
-                        } else if (isCustomThemeSelected) {
+                        } else if (useCreamEnter) {
                             propEditor.properties["foreground"] = SnyggStaticColorValue(Color(0xFFFCF5D6))
                         }
                     } else if (isSpaceCode) {

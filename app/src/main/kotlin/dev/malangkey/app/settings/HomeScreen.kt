@@ -521,6 +521,7 @@ private fun ThemeTabContent(
                 TextButton(onClick = {
                     confirmReset = false
                     scope.launch {
+                        prefs.malang.customBaseThemeId.set("")
                         prefs.malang.customKeyboardBgColor.set(Color.Unspecified)
                         prefs.malang.customKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customKeyTextColor.set(Color.Unspecified)

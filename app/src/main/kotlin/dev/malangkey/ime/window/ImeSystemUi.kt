@@ -83,14 +83,8 @@ fun ImeSystemUi() {
 
     val backgroundQuery = rememberSnyggThemeQuery(FlorisImeUi.Window.elementName)
     val backgroundColor = backgroundQuery.background()
-    val backgroundImage = backgroundQuery.backgroundImage.uriOrNull()
-
-    val hasBackgroundImage = backgroundImage != null
-    val useDarkIcons = if (backgroundImage == null) {
-        backgroundColor.luminance() >= 0.5
-    } else {
-        false
-    }
+    // 배경 사진은 소프트바 위에서 끝나서, 소프트바 뒤에는 항상 배경색만 보인다.
+    val useDarkIcons = backgroundColor.luminance() >= 0.5
 
     val view = LocalView.current
     val window = view.context.findWindow()!!
@@ -104,10 +98,10 @@ fun ImeSystemUi() {
         }
     }
 
-    LaunchedEffect(useDarkIcons, hasBackgroundImage) {
+    LaunchedEffect(useDarkIcons) {
         windowInsetsController.isAppearanceLightNavigationBars = useDarkIcons
         if (AndroidVersion.ATLEAST_API29_Q) {
-            window.isNavigationBarContrastEnforced = hasBackgroundImage
+            window.isNavigationBarContrastEnforced = false
         }
     }
 }

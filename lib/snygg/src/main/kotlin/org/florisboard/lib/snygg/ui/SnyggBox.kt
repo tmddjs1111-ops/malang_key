@@ -18,12 +18,14 @@ package org.florisboard.lib.snygg.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -49,6 +51,7 @@ import org.florisboard.lib.snygg.SnyggStylesheet
  * @param supportsBackgroundImage controls if this Box supports background images.
  * @param backgroundImageDescription The content description of the background image.
  * @param backgroundImageAlignment How the background image is aligned within this box.
+ * @param backgroundImageBottomInset Space at the bottom of this box the background image is kept out of.
  * @param allowClip If clipping should be allowed on this box.
  * @param content The content of the Box
  *
@@ -68,6 +71,7 @@ fun SnyggBox(
     supportsBackgroundImage: Boolean = false,
     backgroundImageDescription: String? = null,
     backgroundImageAlignment: Alignment = Alignment.Center,
+    backgroundImageBottomInset: Dp = 0.dp,
     allowClip: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -97,6 +101,7 @@ fun SnyggBox(
                 AsyncImage(
                     modifier = Modifier
                         .matchParentSize()
+                        .padding(bottom = backgroundImageBottomInset)
                         .clip(style.shape()),
                     // https://github.com/coil-kt/coil/issues/159
                     model = ImageRequest.Builder(context)

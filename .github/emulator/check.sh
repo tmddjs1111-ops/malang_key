@@ -47,7 +47,8 @@ PY
 }
 
 open_theme_screen() {
-  adb shell am start -W -a android.intent.action.VIEW -d ui://malangkey/settings/theme $PKG >/dev/null
+  adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
+    -d ui://malangkey/settings/theme $PKG >/dev/null
   sleep 4
 }
 
@@ -76,8 +77,12 @@ PY
 
 log "install"
 adb install -r apk/malang-key-debug.apk | tee -a "$OUT/log.txt"
-adb shell ime enable "$IME" | tee -a "$OUT/log.txt"
-adb shell ime set "$IME" | tee -a "$OUT/log.txt"
+adb shell ime enable "$IME" 2>&1 | tee -a "$OUT/log.txt"
+adb shell ime set "$IME" 2>&1 | tee -a "$OUT/log.txt"
+# ime set 이 먹지 않을 때가 있어서 시스템 설정에도 직접 넣는다.
+adb shell settings put secure enabled_input_methods "$IME"
+adb shell settings put secure default_input_method "$IME"
+adb shell settings get secure default_input_method 2>&1 | tee -a "$OUT/log.txt"
 # 3버튼 소프트바로 맞춘다. (사진이 소프트바 위에서 끝나는지 보기 쉽게)
 adb shell cmd overlay enable com.android.internal.systemui.navbar.threebutton
 sleep 2

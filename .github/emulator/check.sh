@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 에뮬레이터에서 디버그 APK를 설치하고, 테마를 바꿔 가며 키보드 화면을 찍는다.
-# 결과 사진은 shots/ 에 남는다. (.github/workflows/emulator_check.yml 에서 실행)
+# 결과 사진은 shots/ 에 남는다. (.github/workflows/build_apk.yml 의 emulator 작업에서 실행)
 set -u
 PKG=dev.malangkey.debug
 IME=$PKG/dev.malangkey.FlorisImeService

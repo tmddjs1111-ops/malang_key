@@ -5,6 +5,8 @@
 #   - 끝나면 Releases 의 debug-latest 에 APK가 올라간다. 휴대폰에서 바로 내려받아 설치하면 된다.
 #     https://github.com/<저장소>/releases/tag/debug-latest
 #   - 디버그 빌드는 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치된다.
+#   - 커밋 메시지에 [emu] 가 있거나 직접 실행하면, 빌드한 APK를 에뮬레이터에 깔아
+#     .github/emulator/check.sh 대로 화면을 찍어 Releases 의 emulator-shots 에 올린다.
 
 name: Build debug APK
 
@@ -59,3 +61,59 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "디버그 APK (${GITHUB_REF_NAME}, ${GITHUB_SHA::7})" \
             --notes "테스트용 디버그 빌드입니다. 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치됩니다."
+
+  emulator:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[emu]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: malang-key-debug-apk
+          path: apk-build
+
+      - name: Prepare APK
+        run: |
+          mkdir -p apk
+          cp apk-build/*.apk apk/malang-key-debug.apk
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash .github/emulator/check.sh
+
+      - name: Publish screenshots
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la shots || exit 0
+          gh release delete emulator-shots --cleanup-tag --yes || true
+          gh release create emulator-shots shots/* \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "에뮬레이터 확인 (${GITHUB_SHA::7})" \
+            --notes "에뮬레이터에서 찍은 키보드 화면입니다."

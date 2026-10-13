@@ -284,13 +284,13 @@ fun ThemeScreen() = MalangSettingsScreen(title = "테마 꾸미기", subtitle = 
                 CustomSmartbarSection()
                 val navController = LocalNavController.current
                 MalangSettingsSection(
-                    items = listOf {
+                    items = listOf<@Composable () -> Unit>({
                         MalangNavRow(
                             title = "스마트바 버튼 바꾸기",
                             summary = "버튼 종류와 순서는 스마트바 설정에서 바꿔요.",
                             onClick = { navController.navigate(Routes.Settings.Smartbar) },
                         )
-                    },
+                    }),
                 )
             }
         }
@@ -375,7 +375,7 @@ fun CurrentThemeCard(onCustomize: () -> Unit) {
     val palette = rememberActivePreviewPalette()
     MalangSettingsSection(
         title = "지금 키보드",
-        items = listOf {
+        items = listOf<@Composable () -> Unit>({
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
                 KeyboardPreview(subtype = activeSubtype, palette = palette, height = 120.dp)
                 MalangButton(
@@ -384,7 +384,7 @@ fun CurrentThemeCard(onCustomize: () -> Unit) {
                     onClick = onCustomize,
                 )
             }
-        },
+        }),
     )
 }
 
@@ -821,5 +821,3 @@ private fun ThemeNameDialog(
         },
     )
 }
-
-@OptIn(dev.patrickgold.jetpref.material.ui.ExperimentalJetPrefMaterial3Ui::class)

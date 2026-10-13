@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>A/S 안내 인서트</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
+<style>
+  @page { size: A4; margin: 0; }
+  :root{
+    --ink:#111; --sub:#555; --mute:#8a8a8a; --line:#dcdcdc; --soft:#f4f4f4; --hl:#ffe14d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#fff}
+  body{font-family:'Noto Sans KR',sans-serif;letter-spacing:-.01em;color:var(--ink);-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .page{width:794px;height:1123px;padding:34px 48px 26px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+  /* header */
+  .head{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:2px solid var(--ink)}
+  .logo{width:34px;height:34px;background:var(--ink);color:#fff;font-size:8px;display:flex;align-items:center;justify-content:center;letter-spacing:.05em}
+  .wordmark{font-weight:800;font-size:17px;letter-spacing:.18em}
+  .title{margin-top:18px;display:flex;align-items:flex-end;justify-content:space-between}
+  .title h1{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .title p{font-size:12.5px;color:var(--sub);margin-top:6px}
+  .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--mute)}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:18px;position:relative}
+  .steps::before{content:"";position:absolute;top:27px;left:12.5%;right:12.5%;height:1px;background:var(--ink)}
+  .step{text-align:center;padding:0 8px;position:relative}
+  .ic{width:56px;height:56px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);margin:0 auto;display:flex;align-items:center;justify-content:center;position:relative}
+  .ic svg{width:26px;height:26px;fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .num{position:absolute;top:-4px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .step h3{font-size:14px;font-weight:700;margin-top:9px}
+  .step p{font-size:11px;color:var(--sub);line-height:1.5;margin-top:3px}
+  .step b{color:var(--ink);font-weight:700}
+
+  /* branch */
+  .branch{margin-top:18px;border:1.5px dashed #9a9a9a;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:16px}
+  .tag{flex:none;background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px}
+  .flow{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;flex-wrap:wrap}
+  .flow i{font-style:normal;color:var(--mute)}
+  .branch small{display:block;font-size:10.5px;color:var(--sub);margin-top:3px;font-weight:400}
+
+  /* info grid */
+  .info{display:grid;grid-template-columns:1.05fr 1fr;gap:12px;margin-top:18px}
+  .card{background:var(--soft);border-radius:12px;padding:15px 18px}
+  .card h4{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--mute);margin-bottom:8px}
+  .tel{font-size:28px;font-weight:800;letter-spacing:-.01em;line-height:1}
+  .hours{font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.6}
+  .addr{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.55}
+  .addr b{display:block;font-size:13.5px;font-weight:700}
+  .check{list-style:none;font-size:12.5px;line-height:1.5}
+  .check li{display:flex;gap:9px;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--line)}
+  .check li:last-child{border-bottom:0}
+  .box{flex:none;width:14px;height:14px;border:1.5px solid var(--ink);border-radius:3px;margin-top:2px}
+  .check small{display:block;font-size:10.5px;color:var(--sub)}
+
+  /* policy */
+  .policy{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px}
+  .sec h2{font-size:15px;font-weight:800;padding-bottom:8px;border-bottom:1.5px solid var(--ink);margin-bottom:4px}
+  .row{display:grid;grid-template-columns:72px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px;line-height:1.5}
+  .row dt{font-weight:700}
+  .row dd{color:#333}
+  .row em{font-style:normal;font-weight:700;color:var(--ink);background:linear-gradient(transparent 60%,var(--hl) 60%)}
+
+  /* event */
+  .event{margin-top:auto;background:var(--ink);color:#fff;border-radius:14px;padding:18px 22px;display:grid;grid-template-columns:1fr 124px;gap:22px}
+  .event .eyebrow{color:#9c9c9c}
+  .event h2{font-size:21px;font-weight:800;margin-top:6px;letter-spacing:-.01em}
+  .event h2 span{color:var(--hl)}
+  .period{display:inline-block;margin-top:8px;font-size:11.5px;border:1px solid #555;border-radius:20px;padding:3px 11px;color:#ddd}
+  .period b{color:#fff}
+  .esteps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .es{border-top:1px solid #444;padding-top:9px}
+  .es b{display:block;font-size:10.5px;color:var(--hl);letter-spacing:.08em}
+  .es strong{display:block;font-size:13px;margin-top:3px}
+  .es p{font-size:10.5px;color:#bbb;margin-top:3px;line-height:1.5}
+  .excl{font-size:10.5px;color:#cfcfcf;margin-top:10px}
+  .qr{background:#fff;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);padding:10px}
+  .qr .ph{width:96px;height:96px;border:1.5px dashed #aaa;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999}
+  .qr span{font-size:11px;font-weight:700;margin-top:7px}
+
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}
+  .foot p{font-size:9.5px;color:var(--mute)}
+  .barcode{width:150px;height:40px;border:1px dashed #bbb;font-size:9.5px;color:#aaa;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="head">
+    <div class="logo">LOGO</div>
+    <div class="wordmark">SENNHEISER</div>
+  </header>
+
+  <div class="title">
+    <div>
+      <div class="eyebrow">AFTER-SALES SERVICE</div>
+      <h1>A/S 및 초기불량 접수 안내</h1>
+      <p>제품에 이상이 있으신가요? 아래 순서대로 접수해 주세요.</p>
+    </div>
+  </div>
+
+  <section class="steps">
+    <div class="step">
+      <div class="ic"><span class="num">1</span>
+        <svg viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9M7.5 5.2l9 4.5"/></svg></div>
+      <h3>택배 발송</h3>
+      <p>신청서·구매내역서 동봉 후<br><b>선불 택배</b>로 발송</p>
+    </div>
+    <div class="step">
+      <div class="ic"><span class="num">2</span>
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg></div>
+      <h3>접수 · 진단</h3>
+      <p>접수 완료 문자 안내 후<br>엔지니어 진단</p>
+    </div>
+    <div class="step">
+      <div class="ic"><span class="num">3</span>
+        <svg viewBox="0 0 24 24"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.5-2 2-5 2"/></svg></div>
+      <h3>처리 안내</h3>
+      <p>처리 방안 안내<br>유상 수리 시 입금 안내</p>
+    </div>
+    <div class="step">
+      <div class="ic"><span class="num">4</span>
+        <svg viewBox="0 0 24 24"><path d="M2 6h12v10H2zM14 9h4l3 3.5V16h-7z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></div>
+      <h3>완료 · 반송</h3>
+      <p>수리 완료 후<br><b>젠하이저 부담</b>으로 발송</p>
+    </div>
+  </section>
+
+  <div class="branch">
+    <span class="tag">초기불량 · 구매 30일 이내</span>
+    <div>
+      <div class="flow">센터 접수·판정 <i>→</i> 불량판정서 발부 <i>→</i> 구매 사이트 1:1 문의로 교환/반품</div>
+      <small>구매일로부터 30일이 지나면 환불이 아닌 교환으로 전환됩니다.</small>
+    </div>
+  </div>
+
+  <section class="info">
+    <div class="card">
+      <h4>젠하이저 서비스센터</h4>
+      <div class="tel">070-4732-6753</div>
+      <div class="hours">평일 10:00 – 18:00 (점심 12:00 – 13:00)<br>주말 · 공휴일 휴무</div>
+      <div class="addr"><b>보내실 곳</b>경기도 광주시 오포로 517-55 1층<br>노블앤컴퍼니 (젠하이저 서비스센터)</div>
+    </div>
+    <div class="card">
+      <h4>보내기 전 확인하세요</h4>
+      <ul class="check">
+        <li><span class="box"></span><div>서비스 신청서 작성<small>이 안내문 뒷면</small></div></li>
+        <li><span class="box"></span><div>주문내역서 인쇄본<small>구입일 · 구입처 · 구매 가격 · 모델명 확인 가능</small></div></li>
+        <li><span class="box"></span><div>선불 택배로 발송<small>착불 발송 시 반송됩니다</small></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="policy">
+    <div class="sec">
+      <h2>택배 비용</h2>
+      <dl>
+        <div class="row"><dt>접수 시</dt><dd>고객 부담 (선불)</dd></div>
+        <div class="row"><dt>수리 완료 후</dt><dd>젠하이저 부담</dd></div>
+        <div class="row"><dt>초기불량 판정</dt><dd>택배 영수증 제출 시 <em>선불 택배비 전액 환불</em></dd></div>
+      </dl>
+    </div>
+    <div class="sec">
+      <h2>보증 서비스</h2>
+      <dl>
+        <div class="row"><dt>구매 증빙</dt><dd><em>구매 증빙 서류 필수</em> (주문내역서 인쇄본)</dd></div>
+        <div class="row"><dt>A/S 기간</dt><dd>제품별 상이 · 상세페이지 하단 확인</dd></div>
+        <div class="row"><dt>초기불량 환불</dt><dd>구매 후 30일 이내 접수 시 (초과 시 교환)</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="event">
+    <div>
+      <div class="eyebrow">PHOTO REVIEW EVENT</div>
+      <h2>포토리뷰 남기면 <span>N포인트 5,000점</span> 100% 증정</h2>
+      <div class="period">행사기간 <b>2026.00.00 – 2026.00.00</b></div>
+      <div class="esteps">
+        <div class="es"><b>STEP 01</b><strong>본품 구매</strong><p>행사기간 내 젠하이저<br>이어폰·헤드셋 구매</p></div>
+        <div class="es"><b>STEP 02</b><strong>포토 후기 작성</strong><p>쇼핑몰·SNS·블로그·커뮤니티<br>중 한 곳에 사진 후기</p></div>
+        <div class="es"><b>STEP 03</b><strong>QR로 신청</strong><p>QR 스캔 후<br>네이버폼 신청서 작성</p></div>
+      </div>
+      <p class="excl">※ 제외 품목: HD400S, CX80S, CX80U, SOUND PROTEX, BTD600, BTD700</p>
+    </div>
+    <div class="qr"><div class="ph">QR</div><span>포토리뷰 신청</span></div>
+  </section>
+
+  <footer class="foot">
+    <p>서비스 신청서는 뒷면에 있습니다.</p>
+    <div class="barcode">바코드</div>
+  </footer>
+
+</div>
+</body>
+</html>

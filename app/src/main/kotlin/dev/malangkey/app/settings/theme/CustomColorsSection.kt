@@ -37,9 +37,7 @@ import dev.malangkey.app.apptheme.MalangSettingsCard
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangText
-import dev.malangkey.app.setup.KeyboardPreview
 import dev.malangkey.app.setup.PreviewPalette
-import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.text.key.KeyCode
 import dev.patrickgold.jetpref.datastore.model.PreferenceData
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -52,11 +50,11 @@ import kotlinx.coroutines.launch
 private class ColorSlot(val label: String, val pref: PreferenceData<Color>, val fallback: Color)
 
 /**
- * 커스텀 색상. 위에 지금 커스텀 모양의 미리보기를 두고, 아래에 키보드 부위별로 한 줄씩 색을 고른다.
+ * 커스텀 색상. 키보드 부위별로 한 줄씩 색을 고른다. 미리보기는 꾸미기 화면 위에 고정돼 있다.
  * 바꾼 색은 진하게, 바꾸지 않은 색은 바탕 테마 색 그대로 흐리게 보여 준다.
  */
 @Composable
-fun CustomColorsSection(subtype: Subtype, palette: PreviewPalette, basePalette: PreviewPalette) {
+fun CustomColorsSection(basePalette: PreviewPalette) {
     val prefs by FlorisPreferenceStore
     val m = prefs.malang
     val (specialBg, specialFg) = basePalette.colorsFor(KeyCode.SHIFT)
@@ -81,24 +79,7 @@ fun CustomColorsSection(subtype: Subtype, palette: PreviewPalette, basePalette: 
         ),
     )
 
-    Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-        Text(
-            "커스텀 색상",
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-            color = MalangSettingsSection,
-            fontFamily = MalangJuaFont,
-            fontSize = 23.sp,
-        )
-        // 색을 바꾸면 바로 바뀌는 미리보기. 배경 사진도 함께 깔린다.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, MalangSettingsBorder, RoundedCornerShape(20.dp)),
-        ) {
-            KeyboardPreview(subtype = subtype, palette = palette, height = 120.dp)
-        }
-        Spacer(modifier = Modifier.height(12.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

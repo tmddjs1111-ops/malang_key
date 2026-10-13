@@ -122,14 +122,7 @@ fun CustomSmartbarSection() {
         pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-        Text(
-            "스마트바 아이콘",
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-            color = MalangSettingsSection,
-            fontFamily = MalangJuaFont,
-            fontSize = 23.sp,
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

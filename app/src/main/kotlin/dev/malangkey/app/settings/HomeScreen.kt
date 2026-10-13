@@ -39,6 +39,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import dev.malangkey.ime.theme.CustomSmartbarIcons
+import dev.malangkey.ime.theme.rememberIsCustomThemeActive
+import dev.malangkey.app.settings.theme.ThemePickerSection
+import dev.malangkey.app.settings.theme.MyThemesSection
+import dev.malangkey.app.settings.theme.CurrentThemeCard
 import dev.malangkey.ime.theme.CustomThemeImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -453,25 +457,23 @@ private fun ThemeTabContent(
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ThemeHeroCard(onClick = { navController.navigate(Routes.Settings.Theme) })
+        val isCustomActive = rememberIsCustomThemeActive()
+        val openCustomize = { navController.navigate(Routes.Settings.Theme) }
+        CurrentThemeCard(onCustomize = openCustomize)
+        ThemePickerSection(onCustomize = openCustomize)
+        MyThemesSection(canSaveCurrent = isCustomActive)
 
         MalangSettingsSection(
-            title = "외곽선",
+            title = "키 모양",
             items = listOf(
                 {
                     // 0은 외곽선 없음. dp 같은 개발 단위는 보여주지 않는다.
                     MalangSliderRow(
-                        prefs.malang.keyBorderThickness, "두께", min = 0, max = 10,
+                        prefs.malang.keyBorderThickness, "외곽선 두께", min = 0, max = 10,
                         valueLabel = { if (it == 0) "없음" else "$it" },
                     )
                 },
-                { MalangSliderRow(prefs.malang.keyBorderOpacity, "불투명도", min = 0, max = 100) },
-            ),
-        )
-
-        MalangSettingsSection(
-            title = "글꼴",
-            items = listOf(
+                { MalangSliderRow(prefs.malang.keyBorderOpacity, "외곽선 불투명도", min = 0, max = 100) },
                 {
                     MalangChoiceRow(
                         prefs.malang.keyboardFontFamily,
@@ -494,8 +496,8 @@ private fun ThemeTabContent(
             items = listOf(
                 {
                     MalangNavRow(
-                        title = "공유된 테마 가져오기",
-                        summary = "다른 사람이 만든 테마 파일을 불러옵니다.",
+                        title = "테마 확장 파일 가져오기",
+                        summary = "FlorisBoard용 테마 확장을 불러옵니다. 말랑키 테마 파일은 내 테마에서 가져와요.",
                         onClick = { navController.navigate(Routes.Ext.Import(ExtensionImportScreenType.EXT_THEME)) },
                     )
                 },
@@ -547,33 +549,6 @@ private fun ThemeTabContent(
             dismissButton = {
                 TextButton(onClick = { confirmReset = false }) { Text("취소", color = MalangSettingsSummary) }
             },
-        )
-    }
-}
-
-/** 테마 탭 맨 위 카드: 테마 고르기 화면으로 간다. 메인 탭의 큰 카드와 같은 모양. */
-@Composable
-private fun ThemeHeroCard(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(132.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(MalangCocoa)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("테마 고르기", color = MalangCardText, fontSize = 30.sp, lineHeight = 34.sp, fontFamily = MalangJuaFont)
-            Text("키보드 색과 배경을 바꿔요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
-            Text("Keyboard Theme", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
-        }
-        Icon(
-            painter = painterResource(R.drawable.mk_tab_theme),
-            contentDescription = null,
-            tint = MalangCardText,
-            modifier = Modifier.size(64.dp),
         )
     }
 }

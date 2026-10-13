@@ -46,19 +46,6 @@ PY
   return 1
 }
 
-# 테마 화면을 연다. 첫 실행은 느려서 화면 제목이 보일 때까지 다시 연다.
-open_theme_screen() {
-  for attempt in 1 2 3 4; do
-    adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
-      -d ui://malangkey/settings/theme $PKG >/dev/null
-    sleep 4
-    dump_ui
-    grep -q '키보드 테마' /tmp/ui.xml && return 0
-    log "theme screen not shown yet ($attempt)"
-    sleep 4
-  done
-}
-
 # 화면에 [1] 글자가 보일 때까지 아래로 민다.
 scroll_to() {
   for i in 1 2 3 4 5 6; do
@@ -101,70 +88,72 @@ adb shell ime set "$IME" 2>&1 | tee -a "$OUT/log.txt"
 adb shell settings put secure enabled_input_methods "$IME"
 adb shell settings put secure default_input_method "$IME"
 adb shell settings get secure default_input_method 2>&1 | tee -a "$OUT/log.txt"
-# 3버튼 소프트바로 맞춘다. (사진이 소프트바 위에서 끝나는지 보기 쉽게)
 adb shell cmd overlay enable com.android.internal.systemui.navbar.threebutton
 sleep 2
 
-# 0) 지금 앱 화면 둘러보기 (디자인 맞추기용)
 open_route() {
   adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
     -d "ui://malangkey/$1" $PKG >/dev/null
   sleep 5
 }
+
+# 홈 화면의 테마 탭을 연다. 첫 실행은 느려서 '지금 키보드'가 보일 때까지 다시 연다.
+open_theme_tab() {
+  for attempt in 1 2 3 4; do
+    open_route settings/home
+    tap_text "테마" >/dev/null
+    dump_ui
+    grep -q '지금 키보드' /tmp/ui.xml && return 0
+    log "theme tab not shown yet ($attempt)"
+    sleep 4
+  done
+}
+
+# 0) 지금 앱 화면 (디자인 비교용)
 open_route settings/home
 shot 00a_home
-tap_text "테마"
-shot 00b_theme_tab
-adb shell input swipe 540 1700 540 700 300
-shot 00c_theme_tab_more
-open_route settings/keyboard
-shot 00d_keyboard
 open_route settings/keyboard/input-feedback
-shot 00e_sound
+shot 00b_sound
 open_route settings/smartbar
-shot 00f_smartbar
+shot 00c_smartbar_settings
 
-open_theme_screen
-shot 01_theme_screen
+# 1) 테마 탭
+open_theme_tab
+shot 01_theme_tab
+adb shell input swipe 540 1700 540 700 300
+shot 01b_theme_tab_more
+adb shell input swipe 540 1700 540 700 300
+shot 01c_theme_tab_end
 
-# 1) 기본 블랙 → 키보드
+# 2) 기본 블랙 → 키보드
+open_theme_tab
 tap_text "기본 블랙"
 show_keyboard
 shot 02_black_keyboard
 
-# 2) 블랙에서 커스텀 → 키보드 (블랙과 같아야 한다)
-open_theme_screen
-tap_text "커스텀"
-shot 03_custom_selected
-adb shell input swipe 540 1700 540 700 300
-shot 04_custom_colors_from_black
+# 3) 블랙에서 커스텀 카드 → 꾸미기 화면 (블랙과 같아야 한다)
+open_theme_tab
+tap_text "커스텀 ✏️"
+sleep 2
+shot 03_customize_colors
+tap_text "사진"
+shot 03b_customize_photo
+tap_text "스마트바"
+shot 03c_customize_smartbar
 show_keyboard
-shot 05_custom_from_black_keyboard
+shot 04_custom_from_black_keyboard
 
-# 3) 파스텔 핑크 → 커스텀 → 키보드 (핑크와 같아야 한다)
-open_theme_screen
+# 4) 파스텔 핑크 → '지금 테마 꾸미기' 버튼 → 키보드 (핑크와 같아야 한다)
+open_theme_tab
 tap_text "파스텔 핑크"
 show_keyboard
-shot 06_pink_keyboard
-open_theme_screen
-tap_text "커스텀"
+shot 05_pink_keyboard
+open_theme_tab
+tap_text "✏️ 지금 테마 꾸미기"
+sleep 2
+shot 06_customize_from_pink
 show_keyboard
 shot 07_custom_from_pink_keyboard
-
-# 4) 다시 커스텀을 눌러도(이미 커스텀) 그대로여야 한다
-open_theme_screen
-tap_text "커스텀"
-show_keyboard
-shot 08_custom_again_keyboard
-
-# 5) 커스텀 화면의 색상 표와 스마트바 아이콘 칸
-open_theme_screen
-tap_text "커스텀"
-scroll_to '커스텀 색상'
-adb shell input swipe 540 1500 540 1100 300
-shot 09_custom_colors
-scroll_to '사진 아이콘을 넣어'
-shot 10_smartbar_icons
 
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1

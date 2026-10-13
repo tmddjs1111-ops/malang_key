@@ -105,6 +105,25 @@ adb shell settings get secure default_input_method 2>&1 | tee -a "$OUT/log.txt"
 adb shell cmd overlay enable com.android.internal.systemui.navbar.threebutton
 sleep 2
 
+# 0) 지금 앱 화면 둘러보기 (디자인 맞추기용)
+open_route() {
+  adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
+    -d "ui://malangkey/$1" $PKG >/dev/null
+  sleep 5
+}
+open_route settings/home
+shot 00a_home
+tap_text "테마"
+shot 00b_theme_tab
+adb shell input swipe 540 1700 540 700 300
+shot 00c_theme_tab_more
+open_route settings/keyboard
+shot 00d_keyboard
+open_route settings/keyboard/input-feedback
+shot 00e_sound
+open_route settings/smartbar
+shot 00f_smartbar
+
 open_theme_screen
 shot 01_theme_screen
 

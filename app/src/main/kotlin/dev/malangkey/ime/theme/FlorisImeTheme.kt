@@ -90,6 +90,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
     val customRealEnterKeyTextColor by prefs.malang.customRealEnterKeyTextColor.collectAsState()
     val customBgImageFile by prefs.malang.customBgImageFile.collectAsState()
     val customBaseThemeId by prefs.malang.customBaseThemeId.collectAsState()
+    val customSmartbarBgColor by prefs.malang.customSmartbarBgColor.collectAsState()
+    val customSmartbarIconColor by prefs.malang.customSmartbarIconColor.collectAsState()
     val customBgImageDim by prefs.malang.customBgImageDim.collectAsState()
     val customBgImageKeyOpacity by prefs.malang.customBgImageKeyOpacity.collectAsState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -116,6 +118,8 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
         customRealEnterKeyTextColor,
         customBgImageFile,
         customBaseThemeId,
+        customSmartbarBgColor,
+        customSmartbarIconColor,
         customBgImageDim,
         customBgImageKeyOpacity,
         keyboardFontFamily,
@@ -244,22 +248,7 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             }
 
             if (isKeyTextCustom) {
-                val smartbarElements = listOf(
-                    "smartbar-action-key",
-                    "smartbar-action-key:disabled",
-                    "smartbar-action-key:pressed",
-                    "smartbar-action-tile",
-                    "smartbar-action-tile:disabled",
-                    "smartbar-action-tile-icon",
-                    "smartbar-action-tile-text",
-                    "smartbar-shared-actions-toggle",
-                    "smartbar-shared-actions-toggle:disabled",
-                    "smartbar-shared-actions-toggle:pressed",
-                    "smartbar-extended-actions-toggle",
-                    "smartbar-extended-actions-toggle:disabled",
-                    "smartbar-extended-actions-toggle:pressed"
-                )
-                for (element in smartbarElements) {
+                for (element in SmartbarForegroundElements) {
                     val elementRule = SnyggRule.fromOrNull(element)
                     if (elementRule != null) {
                         val elementPropEditor = editor.rules.getOrPut(elementRule) { SnyggSinglePropertySetEditor() } as SnyggSinglePropertySetEditor
@@ -357,6 +346,20 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
             applyGroupedKeyCodeRules(editor)
             applyKeyBorder(editor, keyBorderThickness, keyBorderOpacity)
 
+            // 스마트바 색은 사진 판 정리(applyBgImagePanels)와 글자색보다 뒤에 덮어써야 이긴다.
+            fun setSmartbar(elements: List<String>, property: String, color: Color) {
+                for (element in elements) {
+                    val rule = SnyggRule.fromOrNull(element) ?: continue
+                    val propEditor = editor.rules.getOrPut(rule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: continue
+                    propEditor.properties[property] = SnyggStaticColorValue(color)
+                }
+            }
+            if (isCustomThemeSelected && customSmartbarBgColor != Color.Unspecified) {
+                setSmartbar(SmartbarBackgroundElements, "background", customSmartbarBgColor)
+            }
+            if (isCustomThemeSelected && customSmartbarIconColor != Color.Unspecified) {
+                setSmartbar(SmartbarForegroundElements + "smartbar-candidate-word", "foreground", customSmartbarIconColor)
+            }
             baseStylesheet = editor.build()
         }
         withBaseStyleFallbacks(baseStylesheet)
@@ -487,6 +490,40 @@ private fun applyBgImagePanels(
     BgImageTransparentElements.forEach { set(it, Color.Transparent) }
     BgImageSolidElements.forEach { set(it, solidBackground) }
     BgImageItemElements.forEach { set(it, itemBackground) }
+}
+
+/** 스마트바의 아이콘·글자를 칠하는 요소. 커스텀 글자색이나 스마트바 아이콘 색이 여기에 들어간다. */
+private val SmartbarForegroundElements = listOf(
+    "smartbar-action-key",
+    "smartbar-action-key:disabled",
+    "smartbar-action-key:pressed",
+    "smartbar-action-tile",
+    "smartbar-action-tile:disabled",
+    "smartbar-action-tile-icon",
+    "smartbar-action-tile-text",
+    "smartbar-shared-actions-toggle",
+    "smartbar-shared-actions-toggle:disabled",
+    "smartbar-shared-actions-toggle:pressed",
+    "smartbar-extended-actions-toggle",
+    "smartbar-extended-actions-toggle:disabled",
+    "smartbar-extended-actions-toggle:pressed",
+)
+
+/** 스마트바 배경 요소. */
+private val SmartbarBackgroundElements = listOf(
+    "smartbar",
+    "smartbar-shared-actions-row",
+    "smartbar-extended-actions-row",
+)
+
+/** 키보드에 커스텀 테마가 적용되어 있는지. ([FlorisImeTheme]과 같은 기준) */
+@Composable
+fun rememberIsCustomThemeActive(): Boolean {
+    val prefs by FlorisPreferenceStore
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val themeMode by prefs.theme.mode.collectAsState()
+    return dayThemeId == CustomThemeId &&
+        (themeMode == ThemeMode.ALWAYS_DAY || themeMode == ThemeMode.FOLLOW_SYSTEM)
 }
 
 /** 커스텀 테마가 배경 사진을 쓰는 중인지. 스타일시트 밖에서 색을 직접 칠하는 화면이 쓴다. */

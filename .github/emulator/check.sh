@@ -120,6 +120,17 @@ tap_text "커스텀"
 show_keyboard
 shot 08_custom_again_keyboard
 
+# 5) 커스텀 화면의 스마트바 꾸미기 칸
+open_theme_screen
+tap_text "커스텀"
+for i in 1 2 3 4 5; do
+  dump_ui
+  grep -q '사진 아이콘을 넣어' /tmp/ui.xml && break
+  adb shell input swipe 540 1700 540 900 300
+  sleep 1
+done
+shot 09_smartbar_section
+
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1
 adb logcat -d -t 400 '*:E' > "$OUT/logcat_errors.txt" 2>&1

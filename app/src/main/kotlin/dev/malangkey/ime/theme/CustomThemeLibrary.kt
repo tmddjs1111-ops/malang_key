@@ -59,6 +59,10 @@ object CustomThemeLibrary {
         val blur: Int = 0,
         /** 이 커스텀이 바탕으로 쓴 테마("확장:테마"). 없으면 기본 크림 테마. */
         val baseTheme: String? = null,
+        val smartbarBg: Int? = null,
+        val smartbarIcon: Int? = null,
+        /** 스마트바 버튼 키 → 그 테마 폴더 안의 사진 아이콘 파일 이름. */
+        val smartbarIcons: Map<String, String> = emptyMap(),
     )
 
     fun decode(value: String): List<SavedTheme> =
@@ -86,6 +90,11 @@ object CustomThemeLibrary {
                     return fileName
                 }
                 val m = prefs.malang
+                val icons = CustomSmartbarIcons.decode(m.customSmartbarIcons.get()).mapNotNull { (key, fileName) ->
+                    val source = CustomSmartbarIcons.file(context, fileName) ?: return@mapNotNull null
+                    source.copyTo(File(folder, fileName), overwrite = true)
+                    key to fileName
+                }.toMap()
                 val theme = SavedTheme(
                     id = id,
                     name = name,
@@ -103,6 +112,9 @@ object CustomThemeLibrary {
                     keyOpacity = m.customBgImageKeyOpacity.get(),
                     blur = m.customBgImageBlur.get(),
                     baseTheme = parseCustomBaseThemeId(m.customBaseThemeId.get())?.toString(),
+                    smartbarBg = m.customSmartbarBgColor.get().argbOrNull(),
+                    smartbarIcon = m.customSmartbarIconColor.get().argbOrNull(),
+                    smartbarIcons = icons,
                 )
                 prefs.malang.customThemeLibrary.set(encode(themes + theme))
                 theme
@@ -132,6 +144,14 @@ object CustomThemeLibrary {
                 m.customEnterKeyTextColor.set(theme.specialText.toColor())
                 m.customRealEnterKeyBgColor.set(theme.enterBg.toColor())
                 m.customRealEnterKeyTextColor.set(theme.enterText.toColor())
+                m.customSmartbarBgColor.set(theme.smartbarBg.toColor())
+                m.customSmartbarIconColor.set(theme.smartbarIcon.toColor())
+                val icons = CustomSmartbarIcons.sanitize(theme.smartbarIcons).mapNotNull { (key, fileName) ->
+                    val source = File(folder, fileName).takeIf { it.isFile } ?: return@mapNotNull null
+                    key to CustomSmartbarIcons.importFile(context, source)
+                }.toMap()
+                m.customSmartbarIcons.set(CustomSmartbarIcons.encode(icons))
+                CustomSmartbarIcons.deleteAllExcept(context, icons.values)
                 m.customBgImageDim.set(theme.dim)
                 m.customBgImageKeyOpacity.set(theme.keyOpacity)
                 m.customBgImageBlur.set(theme.blur)
@@ -154,16 +174,21 @@ object CustomThemeLibrary {
             val folder = dir(context, theme.id)
             val image = theme.bgImage?.let { File(folder, it) }?.takeIf { it.isFile }
             val source = theme.bgSource?.let { File(folder, it) }?.takeIf { it.isFile }
+            // 사진 아이콘은 테마 폴더 안 이름(icon_….png) 그대로 항목 이름으로 쓴다.
+            val icons = CustomSmartbarIcons.sanitize(theme.smartbarIcons)
+                .filterValues { File(folder, it).isFile }
             val shared = theme.copy(
                 id = "",
                 bgImage = image?.let { SharedImageName },
                 bgSource = source?.let { SharedSourceName },
+                smartbarIcons = icons,
             )
             ZipOutputStream(out.outputStream().buffered()).use { zip ->
                 zip.putNextEntry(ZipEntry(SharedJsonName))
                 zip.write(json.encodeToString(shared).toByteArray())
                 zip.closeEntry()
-                for ((file, entryName) in listOf(image to SharedImageName, source to SharedSourceName)) {
+                val iconFiles = icons.values.distinct().map { File(folder, it) to it }
+                for ((file, entryName) in listOf(image to SharedImageName, source to SharedSourceName) + iconFiles) {
                     file ?: continue
                     zip.putNextEntry(ZipEntry(entryName))
                     file.inputStream().use { it.copyTo(zip) }
@@ -186,7 +211,9 @@ object CustomThemeLibrary {
                 ZipInputStream(stream.buffered()).use { zip ->
                     while (true) {
                         val entry = zip.nextEntry ?: break
-                        if (entry.name in SharedEntryNames && entry.name !in entries) {
+                        val wanted = entry.name in SharedEntryNames ||
+                            (CustomSmartbarIcons.isValidFileName(entry.name) && entries.size < SharedEntryNames.size + CustomSmartbarIcons.MaxIcons)
+                        if (wanted && entry.name !in entries) {
                             entries[entry.name] = zip.readLimited(MaxSharedEntryBytes)
                         }
                     }
@@ -205,6 +232,10 @@ object CustomThemeLibrary {
                     return entryName
                 }
                 val bgImage = saveImage(SharedImageName)
+                val icons = CustomSmartbarIcons.sanitize(shared.smartbarIcons)
+                    .filterValues { it in entries }
+                    .mapNotNull { (key, fileName) -> saveImage(fileName)?.let { key to it } }
+                    .toMap()
                 val theme = shared.copy(
                     id = id,
                     name = shared.name.take(20).ifBlank { "받은 테마" },
@@ -214,6 +245,7 @@ object CustomThemeLibrary {
                     keyOpacity = shared.keyOpacity.coerceIn(0, 100),
                     blur = shared.blur.coerceIn(0, 10),
                     baseTheme = parseCustomBaseThemeId(shared.baseTheme)?.toString(),
+                    smartbarIcons = icons,
                 )
                 prefs.malang.customThemeLibrary.set(encode(themes + theme))
                 theme

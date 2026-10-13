@@ -177,6 +177,8 @@ suspend fun FlorisPreferenceModel.Malang.clearCustomColors() {
     customEnterKeyTextColor.set(Color.Unspecified)
     customRealEnterKeyBgColor.set(Color.Unspecified)
     customRealEnterKeyTextColor.set(Color.Unspecified)
+    customSmartbarBgColor.set(Color.Unspecified)
+    customSmartbarIconColor.set(Color.Unspecified)
 }
 
 /** 지금 키보드에 보이는 테마의 이름. 밤/낮 설정을 따른다. */
@@ -376,6 +378,10 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                     modifier = Modifier.weight(1f)
                                 )
                             }
+                        }
+
+                        item(span = { GridItemSpan(2) }) {
+                            CustomSmartbarSection(basePalette)
                         }
 
                         item(span = { GridItemSpan(2) }) {

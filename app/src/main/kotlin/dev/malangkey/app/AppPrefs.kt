@@ -789,6 +789,23 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__custom_base_theme_id",
             default = "",
         )
+        /** 커스텀 테마의 스마트바 배경색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarBgColor = custom(
+            key = "malang__custom_smartbar_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마의 스마트바 아이콘·글자 색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarIconColor = custom(
+            key = "malang__custom_smartbar_icon_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마에서 스마트바 버튼 대신 쓰는 사진. [dev.malangkey.ime.theme.CustomSmartbarIcons] 참고. */
+        val customSmartbarIcons = string(
+            key = "malang__custom_smartbar_icons",
+            default = "",
+        )
         /** 커스텀 테마 배경 사진의 파일 이름. 비어 있으면 사진 없이 색만 쓴다. */
         val customBgImageFile = string(
             key = "malang__custom_bg_image_file",

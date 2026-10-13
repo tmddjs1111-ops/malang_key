@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import dev.malangkey.ime.theme.CustomSmartbarIcons
 import dev.malangkey.ime.theme.CustomThemeImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -516,7 +517,7 @@ private fun ThemeTabContent(
             onDismissRequest = { confirmReset = false },
             containerColor = MalangSettingsCard,
             title = { Text("처음 모양으로 되돌릴까요?", color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
-            text = { Text("커스텀 색과 배경 사진, 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요. 저장해 둔 내 테마는 남아요.", color = MalangSettingsSummary) },
+            text = { Text("커스텀 색과 배경 사진, 스마트바 사진 아이콘, 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요. 저장해 둔 내 테마는 남아요.", color = MalangSettingsSummary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReset = false
@@ -536,7 +537,10 @@ private fun ThemeTabContent(
                         prefs.malang.gridKeyHintFontSizeMultiplier.set(100)
                         prefs.malang.keyBorderThickness.set(0)
                         prefs.malang.keyBorderOpacity.set(prefs.malang.keyBorderOpacity.default)
+                        prefs.malang.customSmartbarBgColor.set(Color.Unspecified)
+                        prefs.malang.customSmartbarIconColor.set(Color.Unspecified)
                         CustomThemeImage.reset(context, prefs)
+                        CustomSmartbarIcons.reset(context, prefs)
                     }
                 }) { Text("되돌리기", color = MalangSettingsSection) }
             },

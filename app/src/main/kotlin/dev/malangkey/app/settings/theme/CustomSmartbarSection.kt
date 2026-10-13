@@ -48,7 +48,6 @@ import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangText
-import dev.malangkey.app.setup.PreviewPalette
 import dev.malangkey.ime.keyboard.computeImageVector
 import dev.malangkey.ime.smartbar.SmartbarLayout
 import dev.malangkey.ime.smartbar.quickaction.QuickAction
@@ -60,11 +59,11 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
 
 /**
- * 커스텀 테마의 스마트바 꾸미기. 스마트바 배경·아이콘 색과, 버튼마다 기본 아이콘 대신 쓸 사진을 고른다.
- * [basePalette]는 고르지 않은 색이 따라가는 바탕 테마 색이다.
+ * 커스텀 테마의 스마트바 아이콘. 버튼마다 기본 아이콘 대신 쓸 사진을 고른다.
+ * 스마트바 배경·아이콘 색은 [CustomColorsSection]에서 고른다.
  */
 @Composable
-fun CustomSmartbarSection(basePalette: PreviewPalette) {
+fun CustomSmartbarSection() {
     val context = LocalContext.current
     val prefs by FlorisPreferenceStore
     val scope = rememberCoroutineScope()
@@ -125,31 +124,12 @@ fun CustomSmartbarSection(basePalette: PreviewPalette) {
 
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
         Text(
-            "스마트바",
-            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+            "스마트바 아이콘",
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
             color = MalangSettingsSection,
             fontFamily = MalangJuaFont,
             fontSize = 23.sp,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            ColorSwatchCard(
-                title = "스마트바 배경",
-                pref = prefs.malang.customSmartbarBgColor,
-                fallback = basePalette.background,
-                modifier = Modifier.weight(1f),
-            )
-            ColorSwatchCard(
-                title = "아이콘 색",
-                pref = prefs.malang.customSmartbarIconColor,
-                fallback = basePalette.keyForeground,
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()

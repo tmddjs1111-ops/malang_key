@@ -46,10 +46,28 @@ PY
   return 1
 }
 
+# 테마 화면을 연다. 첫 실행은 느려서 화면 제목이 보일 때까지 다시 연다.
 open_theme_screen() {
-  adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
-    -d ui://malangkey/settings/theme $PKG >/dev/null
-  sleep 4
+  for attempt in 1 2 3 4; do
+    adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE \
+      -d ui://malangkey/settings/theme $PKG >/dev/null
+    sleep 4
+    dump_ui
+    grep -q '키보드 테마' /tmp/ui.xml && return 0
+    log "theme screen not shown yet ($attempt)"
+    sleep 4
+  done
+}
+
+# 화면에 [1] 글자가 보일 때까지 아래로 민다.
+scroll_to() {
+  for i in 1 2 3 4 5 6; do
+    dump_ui
+    grep -q "$1" /tmp/ui.xml && return 0
+    adb shell input swipe 540 1700 540 900 300
+    sleep 1
+  done
+  log "NOT FOUND while scrolling: '$1'"
 }
 
 # 연락처 추가 화면의 입력칸을 눌러 키보드를 띄운다.
@@ -120,16 +138,14 @@ tap_text "커스텀"
 show_keyboard
 shot 08_custom_again_keyboard
 
-# 5) 커스텀 화면의 스마트바 꾸미기 칸
+# 5) 커스텀 화면의 색상 표와 스마트바 아이콘 칸
 open_theme_screen
 tap_text "커스텀"
-for i in 1 2 3 4 5; do
-  dump_ui
-  grep -q '사진 아이콘을 넣어' /tmp/ui.xml && break
-  adb shell input swipe 540 1700 540 900 300
-  sleep 1
-done
-shot 09_smartbar_section
+scroll_to '커스텀 색상'
+adb shell input swipe 540 1500 540 1100 300
+shot 09_custom_colors
+scroll_to '사진 아이콘을 넣어'
+shot 10_smartbar_icons
 
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1

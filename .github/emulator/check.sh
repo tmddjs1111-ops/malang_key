@@ -190,11 +190,12 @@ if [ -n "${y2:-}" ]; then
   sleep 1
 fi
 shot 11_outline_max_setting
-for theme in "말랑키 바닐라" "파스텔 핑크" "기본 화이트" "기본 블랙"; do
+# 사진 파일 이름은 영어로 둔다. (릴리스에 올릴 때 한글이 지워져 이름이 겹친다)
+for pair in "말랑키 바닐라:vanilla" "파스텔 핑크:pink" "기본 화이트:white" "기본 블랙:black"; do
   open_theme_tab
-  tap_text "$theme"
+  tap_text "${pair%%:*}"
   show_keyboard
-  shot "12_outline_$(echo "$theme" | tr ' ' '_')"
+  shot "12_outline_${pair##*:}"
 done
 
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)

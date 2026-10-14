@@ -111,6 +111,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -la shots || exit 0
+          # 빈 파일(오류가 없을 때의 logcat 등)은 릴리스에 올릴 수 없다.
+          find shots -type f -empty -delete
           gh release delete emulator-shots --cleanup-tag --yes || true
           gh release create emulator-shots shots/* \
             --prerelease \

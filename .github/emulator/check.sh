@@ -113,13 +113,13 @@ open_theme_tab() {
   done
 }
 
-# 0) 처음 설치한 상태의 키보드 (기본 테마가 바닐라여야 한다)
-show_keyboard
-shot 00_default_keyboard
-
-# 0) 지금 앱 화면 (디자인 비교용)
+# 0) 지금 앱 화면 (디자인 비교용). 앱을 한 번 열어야 키보드가 준비된다.
 open_route settings/home
 shot 00a_home
+
+# 처음 설치한 상태의 키보드 (기본 테마 바닐라, 외곽선 '테마 기본')
+show_keyboard
+shot 00_default_keyboard
 open_route settings/keyboard/input-feedback
 shot 00b_sound
 open_route settings/smartbar

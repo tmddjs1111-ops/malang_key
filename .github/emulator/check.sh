@@ -185,8 +185,8 @@ open_theme_tab
 scroll_to '외곽선 두께'
 read x1 y1 x2 y2 <<< "$(bounds_of '외곽선 두께')"
 if [ -n "${y2:-}" ]; then
-  # 제목 바로 아래 슬라이더를 왼쪽 끝에서 오른쪽 끝까지 끈다.
-  adb shell input swipe 90 $((y2 + 55)) 1000 $((y2 + 55)) 600
+  # 제목 바로 아래 슬라이더의 오른쪽 끝을 눌러 가장 굵게 한다.
+  adb shell input tap 985 $((y2 + 55))
   sleep 1
 fi
 shot 11_outline_max_setting

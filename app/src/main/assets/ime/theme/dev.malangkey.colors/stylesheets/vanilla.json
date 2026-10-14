@@ -1,10 +1,10 @@
 {
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
-    "--bg": "#fcf5d6",
+    "--bg": "#efe4bd",
     "--key-bg": "#fcf5d6",
     "--key-fg": "#311d18",
-    "--key-bg-pressed": "#e8e1c3",
+    "--key-bg-pressed": "#e2d6ab",
     "--action-bg": "#311d18",
     "--action-fg": "#fcf5d6",
     "--action-bg-pressed": "#4a2d25",

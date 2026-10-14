@@ -134,6 +134,7 @@ data class MalangThemeInfo(
 )
 
 val malangThemes = listOf(
+    MalangThemeInfo("dev.malangkey.colors", "vanilla", "말랑키 바닐라", Color(0xFFFCF5D6)),
     MalangThemeInfo("dev.malangkey.pastel", "pink", "파스텔 핑크", Color(0xFFFFD1DC)),
     MalangThemeInfo("dev.malangkey.pastel", "mint", "민트 그린", Color(0xFFC1F0D4)),
     MalangThemeInfo("dev.malangkey.pastel", "yellow", "바나나 옐로우", Color(0xFFFFF59D)),

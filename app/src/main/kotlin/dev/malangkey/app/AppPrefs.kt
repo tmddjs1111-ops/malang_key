@@ -917,14 +917,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__mode",
             default = ThemeMode.FOLLOW_SYSTEM,
         )
+        // 처음 설치하면 말랑키 바닐라로 시작한다. 밤 테마도 같게 두어 다크 모드에서도 같은 모양이 나온다.
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

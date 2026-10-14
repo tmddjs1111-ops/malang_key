@@ -109,6 +109,10 @@ open_theme_tab() {
   done
 }
 
+# 0) 처음 설치한 상태의 키보드 (기본 테마가 바닐라여야 한다)
+show_keyboard
+shot 00_default_keyboard
+
 # 0) 지금 앱 화면 (디자인 비교용)
 open_route settings/home
 shot 00a_home

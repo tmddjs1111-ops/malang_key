@@ -169,6 +169,34 @@ shot 09_theme_tab_after_save
 scroll_to '받은 테마 파일 가져오기'
 shot 10_my_themes
 
+# 6) 외곽선을 가장 굵게 하고 테마별 키보드 (바닐라에서 외곽선이 안 보이던 문제 확인)
+bounds_of() {
+  dump_ui
+  python3 - "$1" <<'PY'
+import re, sys, xml.etree.ElementTree as ET
+root = ET.parse('/tmp/ui.xml').getroot()
+for n in root.iter('node'):
+    if n.get('text') == sys.argv[1]:
+        print(*map(int, re.findall(r'\d+', n.get('bounds'))))
+        break
+PY
+}
+open_theme_tab
+scroll_to '외곽선 두께'
+read x1 y1 x2 y2 <<< "$(bounds_of '외곽선 두께')"
+if [ -n "${y2:-}" ]; then
+  # 제목 바로 아래 슬라이더를 왼쪽 끝에서 오른쪽 끝까지 끈다.
+  adb shell input swipe 90 $((y2 + 55)) 1000 $((y2 + 55)) 600
+  sleep 1
+fi
+shot 11_outline_max_setting
+for theme in "말랑키 바닐라" "파스텔 핑크" "기본 화이트" "기본 블랙"; do
+  open_theme_tab
+  tap_text "$theme"
+  show_keyboard
+  shot "12_outline_$(echo "$theme" | tr ' ' '_')"
+done
+
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1
 adb logcat -d -t 400 '*:E' > "$OUT/logcat_errors.txt" 2>&1

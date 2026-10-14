@@ -124,6 +124,8 @@ adb shell input swipe 540 1700 540 700 300
 shot 01b_theme_tab_more
 adb shell input swipe 540 1700 540 700 300
 shot 01c_theme_tab_end
+adb shell input swipe 540 1700 540 700 300
+shot 01d_theme_tab_bottom
 
 # 2) 기본 블랙 → 키보드
 open_theme_tab
@@ -131,29 +133,41 @@ tap_text "기본 블랙"
 show_keyboard
 shot 02_black_keyboard
 
-# 3) 블랙에서 커스텀 카드 → 꾸미기 화면 (블랙과 같아야 한다)
+# 3) 블랙에서 '꾸미기' → 꾸미기 화면 (블랙과 같아야 한다)
 open_theme_tab
-tap_text "커스텀 ✏️"
+tap_text "✏️ 꾸미기"
 sleep 2
 shot 03_customize_colors
-tap_text "사진"
+tap_text "배경 사진"
 shot 03b_customize_photo
 tap_text "스마트바"
 shot 03c_customize_smartbar
 show_keyboard
 shot 04_custom_from_black_keyboard
 
-# 4) 파스텔 핑크 → '지금 테마 꾸미기' 버튼 → 키보드 (핑크와 같아야 한다)
+# 4) 파스텔 핑크 → '꾸미기' → 키보드 (핑크와 같아야 한다)
 open_theme_tab
 tap_text "파스텔 핑크"
 show_keyboard
 shot 05_pink_keyboard
 open_theme_tab
-tap_text "✏️ 지금 테마 꾸미기"
+tap_text "✏️ 꾸미기"
 sleep 2
 shot 06_customize_from_pink
 show_keyboard
 shot 07_custom_from_pink_keyboard
+
+# 5) 꾸민 모양을 내 테마로 저장 → 테마 탭 위쪽 이름과 내 테마 목록
+open_route settings/theme
+scroll_to '내 테마로 저장'
+tap_text "내 테마로 저장"
+shot 08_save_dialog
+tap_text "저장"
+sleep 2
+open_theme_tab
+shot 09_theme_tab_after_save
+scroll_to '받은 테마 파일 가져오기'
+shot 10_my_themes
 
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1

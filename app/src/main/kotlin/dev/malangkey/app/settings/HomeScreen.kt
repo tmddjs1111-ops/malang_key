@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import dev.malangkey.ime.theme.CustomSmartbarIcons
-import dev.malangkey.ime.theme.rememberIsCustomThemeActive
 import dev.malangkey.app.settings.theme.ThemePickerSection
 import dev.malangkey.app.settings.theme.MyThemesSection
 import dev.malangkey.app.settings.theme.CurrentThemeCard
@@ -457,11 +456,9 @@ private fun ThemeTabContent(
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        val isCustomActive = rememberIsCustomThemeActive()
-        val openCustomize = { navController.navigate(Routes.Settings.Theme) }
-        CurrentThemeCard(onCustomize = openCustomize)
-        ThemePickerSection(onCustomize = openCustomize)
-        MyThemesSection(canSaveCurrent = isCustomActive)
+        CurrentThemeCard(onCustomize = { navController.navigate(Routes.Settings.Theme) })
+        ThemePickerSection()
+        MyThemesSection()
 
         MalangSettingsSection(
             title = "키 모양",

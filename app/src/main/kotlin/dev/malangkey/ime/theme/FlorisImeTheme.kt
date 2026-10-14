@@ -559,19 +559,15 @@ private fun applyKeyBorder(editor: SnyggStylesheetEditor, thickness: Int, opacit
         is SnyggDefinedVarValue -> resolveColor(defines?.properties?.get(value.key))
         else -> null
     }
+    // 0은 '테마 기본': 테마에 들어 있는 테두리를 그대로 둔다. 바닐라·화이트처럼 키와 판 색이 같은 테마는
+    // 이 얇은 테두리로 키를 구분하므로 지우면 키가 판에 묻힌다.
+    if (thickness <= 0) return
     for ((rule, set) in editor.rules) {
         if (rule !is SnyggElementRule || rule.elementName != FlorisImeUi.Key.elementName) continue
         val props = (set as? SnyggSinglePropertySetEditor)?.properties ?: continue
         val isBase = rule.attributes.isEmpty() && rule.selector == SnyggSelector.NONE
         props.remove("border-width")
         props.remove("border-color")
-        if (thickness <= 0) {
-            if (isBase) {
-                props["border-width"] = SnyggDpSizeValue(0.dp)
-                props["border-color"] = SnyggStaticColorValue(Color.Transparent)
-            }
-            continue
-        }
         // 글자색을 정하지 않은 규칙은 외곽선 색도 정하지 않아, 같은 키의 다른 규칙 색을 그대로 받는다.
         val textColor = resolveColor(props["foreground"]) ?: if (isBase) Color.Black else continue
         props["border-color"] = SnyggStaticColorValue(
@@ -581,11 +577,9 @@ private fun applyKeyBorder(editor: SnyggStylesheetEditor, thickness: Int, opacit
             props["border-width"] = SnyggDpSizeValue((thickness * QwertyKeyBorderStepDp).dp)
         }
     }
-    if (thickness > 0) {
-        val gridRule = SnyggRule.fromOrNull("${FlorisImeUi.Key.elementName}[mode=`${KeyboardMode.GRID_16KEY}`]") ?: return
-        val props = editor.rules.getOrPut(gridRule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: return
-        props.properties["border-width"] = SnyggDpSizeValue((thickness * GridKeyBorderStepDp).dp)
-    }
+    val gridRule = SnyggRule.fromOrNull("${FlorisImeUi.Key.elementName}[mode=`${KeyboardMode.GRID_16KEY}`]") ?: return
+    val props = editor.rules.getOrPut(gridRule) { SnyggSinglePropertySetEditor() } as? SnyggSinglePropertySetEditor ?: return
+    props.properties["border-width"] = SnyggDpSizeValue((thickness * GridKeyBorderStepDp).dp)
 }
 
 /**

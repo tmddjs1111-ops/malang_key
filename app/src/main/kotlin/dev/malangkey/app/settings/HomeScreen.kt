@@ -464,10 +464,10 @@ private fun ThemeTabContent(
             title = "키 모양",
             items = listOf(
                 {
-                    // 0은 외곽선 없음. dp 같은 개발 단위는 보여주지 않는다.
+                    // 0은 테마에 들어 있는 테두리 그대로. dp 같은 개발 단위는 보여주지 않는다.
                     MalangSliderRow(
                         prefs.malang.keyBorderThickness, "외곽선 두께", min = 0, max = 10,
-                        valueLabel = { if (it == 0) "없음" else "$it" },
+                        valueLabel = { if (it == 0) "테마 기본" else "$it" },
                     )
                 },
                 { MalangSliderRow(prefs.malang.keyBorderOpacity, "외곽선 불투명도", min = 0, max = 100) },

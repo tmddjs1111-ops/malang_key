@@ -2,9 +2,9 @@
   "$schema": "https://schemas.florisboard.org/snygg/v2/stylesheet",
   "@defines": {
     "--bg": "#fcf5d6",
-    "--key-bg": "#fffdf6",
+    "--key-bg": "#fcf5d6",
     "--key-fg": "#311d18",
-    "--key-bg-pressed": "#efe6c4",
+    "--key-bg-pressed": "#e8e1c3",
     "--action-bg": "#311d18",
     "--action-fg": "#fcf5d6",
     "--action-bg-pressed": "#4a2d25",

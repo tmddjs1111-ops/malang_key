@@ -61,8 +61,12 @@ scroll_to() {
 show_keyboard() {
   adb shell am force-stop com.android.contacts
   adb shell am start -W -a android.intent.action.INSERT -t vnd.android.cursor.dir/contact >/dev/null
-  sleep 4
-  dump_ui
+  # 처음 여는 연락처 앱은 늦게 떠서, 입력칸이 보일 때까지 잠깐씩 기다린다.
+  for wait in 1 2 3 4 5; do
+    sleep 4
+    dump_ui
+    grep -q 'android.widget.EditText' /tmp/ui.xml && break
+  done
   pos=$(python3 - <<'PY'
 import re, xml.etree.ElementTree as ET
 try:

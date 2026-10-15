@@ -470,7 +470,11 @@ private fun ThemeTabContent(
                         valueLabel = { if (it == 0) "테마 기본" else "$it" },
                     )
                 },
-                { MalangSliderRow(prefs.malang.keyBorderOpacity, "외곽선 불투명도", min = 0, max = 100) },
+                {
+                    // '테마 기본'(0)에서는 테마 테두리를 그대로 쓰므로 불투명도가 적용되지 않는다.
+                    val thickness by prefs.malang.keyBorderThickness.collectAsState()
+                    MalangSliderRow(prefs.malang.keyBorderOpacity, "외곽선 불투명도", min = 0, max = 100, enabled = thickness > 0)
+                },
                 {
                     MalangChoiceRow(
                         prefs.malang.keyboardFontFamily,

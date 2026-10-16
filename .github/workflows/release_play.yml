@@ -118,7 +118,8 @@ jobs:
       - name: Keep the bundle
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-${{ github.ref_name }}
+          # 브랜치에서 직접 실행하면 ref_name 에 / 가 들어가 이름으로 쓸 수 없어 실행 번호를 쓴다.
+          name: app-release-${{ github.run_number }}
           path: |
             app/build/outputs/bundle/release/app-release.aab
             app/build/outputs/mapping/release/mapping.txt

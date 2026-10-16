@@ -8,11 +8,30 @@ OUT=shots
 mkdir -p "$OUT"
 log() { echo "== $*" | tee -a "$OUT/log.txt"; }
 
-shot() { sleep 2; adb exec-out screencap -p > "$OUT/$1.png"; log "shot $1"; }
+shot() { sleep 2; dump_ui; adb exec-out screencap -p > "$OUT/$1.png"; log "shot $1"; }
 
 dump_ui() {
   adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
   adb pull /sdcard/ui.xml /tmp/ui.xml >/dev/null 2>&1
+  # 에뮬레이터의 다른 앱(런처 등)이 '응답 없음' 창을 띄우면 화면이 가려진다. '기다리기'로 닫고 다시 읽는다.
+  if grep -q "isn't responding\|응답하지 않습니다" /tmp/ui.xml 2>/dev/null; then
+    log "dismiss ANR dialog"
+    adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1
+    pos=$(python3 - <<'PY'
+import re, xml.etree.ElementTree as ET
+root = ET.parse('/tmp/ui.xml').getroot()
+for n in root.iter('node'):
+    if n.get('text') in ('Wait', '기다리기'):
+        x1, y1, x2, y2 = map(int, re.findall(r'\d+', n.get('bounds')))
+        print((x1 + x2) // 2, (y1 + y2) // 2)
+        break
+PY
+)
+    [ -n "$pos" ] && adb shell input tap $pos
+    sleep 2
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+    adb pull /sdcard/ui.xml /tmp/ui.xml >/dev/null 2>&1
+  fi
 }
 
 # 화면에서 글자(또는 설명)가 [1]인 요소를 찾아 누른다. 없으면 아래로 밀어 가며 다시 찾는다.

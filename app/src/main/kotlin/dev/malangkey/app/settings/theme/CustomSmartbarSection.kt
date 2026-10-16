@@ -48,6 +48,7 @@ import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.app.apptheme.MalangText
+import dev.malangkey.app.setup.PreviewPalette
 import dev.malangkey.ime.keyboard.computeImageVector
 import dev.malangkey.ime.smartbar.SmartbarLayout
 import dev.malangkey.ime.smartbar.quickaction.QuickAction
@@ -57,6 +58,76 @@ import dev.malangkey.ime.theme.rememberCustomSmartbarIcon
 import dev.malangkey.keyboardManager
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.launch
+
+/** 지금 스마트바에 보이는 버튼들. 말랑 칸 배치면 칸 순서대로, 아니면 고정 버튼과 나머지 버튼. */
+@Composable
+fun rememberSmartbarActions(): List<QuickAction> {
+    val prefs by FlorisPreferenceStore
+    val layout by prefs.smartbar.layout.collectAsState()
+    val slots by prefs.smartbar.malangSlots.collectAsState()
+    val slotsCount by prefs.smartbar.malangSlotsCount.collectAsState()
+    val arrangement by prefs.smartbar.actionArrangement.collectAsState()
+    return remember(layout, slots, slotsCount, arrangement) {
+        if (layout == SmartbarLayout.MALANG_SLOTS) {
+            slots.take(slotsCount)
+        } else {
+            listOfNotNull(arrangement.stickyAction) + arrangement.dynamicActions
+        }.distinct()
+    }
+}
+
+/**
+ * 꾸미기 미리보기 위에 붙는 스마트바 줄. 실제 스마트바처럼 버튼을 늘어놓고, 커스텀 스마트바 색과
+ * 사진 아이콘을 바로 보여 준다. 고르지 않은 색은 바탕 테마의 판·글자색을 따른다.
+ */
+@Composable
+fun SmartbarPreviewStrip(basePalette: PreviewPalette, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs by FlorisPreferenceStore
+    val keyboardManager by context.keyboardManager()
+    val evaluator by keyboardManager.activeSmartbarEvaluator.collectAsState()
+    val bgPicked by prefs.malang.customSmartbarBgColor.collectAsState()
+    val iconPicked by prefs.malang.customSmartbarIconColor.collectAsState()
+    val keyTextPicked by prefs.malang.customKeyTextColor.collectAsState()
+    val bgImageFile by prefs.malang.customBgImageFile.collectAsState()
+    // 사진 테마에서는 스마트바가 사진 위에 비치므로 미리보기 줄도 비워 둔다.
+    val background = when {
+        bgPicked != Color.Unspecified -> bgPicked
+        bgImageFile.isNotEmpty() -> Color.Transparent
+        else -> basePalette.background
+    }
+    val tint = when {
+        iconPicked != Color.Unspecified -> iconPicked
+        keyTextPicked != Color.Unspecified -> keyTextPicked
+        else -> basePalette.keyForeground
+    }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(34.dp)
+            .background(background)
+            .padding(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        for (action in rememberSmartbarActions()) {
+            val photo = rememberCustomSmartbarIcon(action)
+            val vector = (action as? QuickAction.InsertKey)?.let { evaluator.computeImageVector(it.data) }
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                when {
+                    photo != null -> Image(
+                        bitmap = photo,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp).clip(RoundedCornerShape(5.dp)),
+                    )
+                    vector != null -> Icon(vector, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
+                    action is QuickAction.QuickPhrase -> Icon(Icons.Default.Bolt, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
+                    action is QuickAction.InsertText -> Text(action.data.take(2), color = tint, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
 
 /**
  * 커스텀 테마의 스마트바 아이콘. 버튼마다 기본 아이콘 대신 쓸 사진을 고른다.
@@ -69,21 +140,9 @@ fun CustomSmartbarSection() {
     val scope = rememberCoroutineScope()
     val keyboardManager by context.keyboardManager()
     val evaluator by keyboardManager.activeSmartbarEvaluator.collectAsState()
-    val layout by prefs.smartbar.layout.collectAsState()
-    val slots by prefs.smartbar.malangSlots.collectAsState()
-    val slotsCount by prefs.smartbar.malangSlotsCount.collectAsState()
-    val arrangement by prefs.smartbar.actionArrangement.collectAsState()
     val iconsValue by prefs.malang.customSmartbarIcons.collectAsState()
     val icons = remember(iconsValue) { CustomSmartbarIcons.decode(iconsValue) }
-
-    // 지금 스마트바에 보이는 버튼들. 말랑 칸 배치면 칸 순서대로, 아니면 고정 버튼과 나머지 버튼.
-    val actions = remember(layout, slots, slotsCount, arrangement) {
-        if (layout == SmartbarLayout.MALANG_SLOTS) {
-            slots.take(slotsCount)
-        } else {
-            listOfNotNull(arrangement.stickyAction) + arrangement.dynamicActions
-        }.distinct()
-    }
+    val actions = rememberSmartbarActions()
 
     var importing by remember { mutableStateOf(false) }
     // 사진을 고르는 중인 버튼, 사진을 바꿀지 지울지 묻는 중인 버튼.
@@ -144,10 +203,8 @@ fun CustomSmartbarSection() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     for ((index, action) in row.withIndex()) {
-                        val number = actions.indexOf(action) + 1
                         SmartbarIconTile(
                             action = action,
-                            number = number,
                             hasImage = CustomSmartbarIcons.actionKey(action) in icons,
                             evaluatorIcon = (action as? QuickAction.InsertKey)?.let { evaluator.computeImageVector(it.data) },
                             label = action.computeDisplayName(evaluator),
@@ -201,7 +258,6 @@ fun CustomSmartbarSection() {
 @Composable
 private fun SmartbarIconTile(
     action: QuickAction,
-    number: Int,
     hasImage: Boolean,
     evaluatorIcon: androidx.compose.ui.graphics.vector.ImageVector?,
     label: String,
@@ -242,7 +298,7 @@ private fun SmartbarIconTile(
             }
         }
         Text(
-            "${number}번",
+            label,
             modifier = Modifier.padding(top = 4.dp),
             color = MalangSettingsSummary,
             fontSize = 11.sp,

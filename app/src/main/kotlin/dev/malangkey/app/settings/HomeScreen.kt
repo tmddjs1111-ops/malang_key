@@ -468,6 +468,8 @@ private fun ThemeTabContent(
                     MalangSliderRow(
                         prefs.malang.keyBorderThickness, "외곽선 두께", min = 0, max = 10,
                         valueLabel = { if (it == 0) "테마 기본" else "$it" },
+                        // 오른쪽 값에 이미 '테마 기본'이 보이므로 양 끝은 숫자로 둔다.
+                        rangeLabels = "0" to "10",
                     )
                 },
                 {

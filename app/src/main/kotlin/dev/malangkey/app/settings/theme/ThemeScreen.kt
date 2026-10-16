@@ -254,7 +254,11 @@ fun ThemeScreen() = MalangSettingsScreen(title = "꾸미기", subtitle = "Custom
                 .clip(RoundedCornerShape(24.dp))
                 .border(1.dp, MalangSettingsBorder, RoundedCornerShape(24.dp)),
         ) {
-            KeyboardPreview(subtype = activeSubtype, palette = customPalette, height = 128.dp)
+            Column {
+                // 스마트바 색과 사진 아이콘도 바로 보이게 미리보기 위에 스마트바 줄을 붙인다.
+                SmartbarPreviewStrip(basePalette = basePalette)
+                KeyboardPreview(subtype = activeSubtype, palette = customPalette, height = 128.dp)
+            }
         }
         MalangSegmentedTabs(
             labels = CustomizeTab.entries.map { it.label },
@@ -394,8 +398,11 @@ fun CurrentThemeCard(onCustomize: () -> Unit) {
                 if (summary != null) {
                     Text(summary, color = MalangSettingsSummary, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                KeyboardPreview(subtype = activeSubtype, palette = palette, height = 120.dp)
+                // 기본 테마는 바로 아래 목록에 같은 미리보기가 있으므로, 목록에 없는 꾸민 테마일 때만 보여 준다.
+                if (current?.compId == "custom") {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    KeyboardPreview(subtype = activeSubtype, palette = palette, height = 120.dp)
+                }
                 MalangButton(
                     "✏️ 꾸미기",
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),

@@ -282,9 +282,21 @@ open_route settings/keyboard/selection
 tap_text "일본어"
 shot 40_japanese_layouts
 cp /tmp/ui.xml "$OUT/40_japanese_layouts.xml"
-tap_contains "로마자"
+scroll_to 'ROMAJI'
+read x1 y1 x2 y2 <<< "$(bounds_of 'QWERTY')"
+if [ -n "${y2:-}" ]; then
+  # 카드 오른쪽 위 체크 칸을 누른다.
+  adb shell input tap 468 $(((y1 + y2) / 2))
+  sleep 2
+else
+  log "NOT FOUND: QWERTY card"
+fi
 shot 41_japanese_romaji_selected
 show_keyboard
+shot 42a_keyboard_before_switch
+# 한국어와 일본어가 함께 켜져 있으니 스페이스바를 옆으로 밀어 일본어로 바꾼다.
+adb shell input swipe 400 2214 750 2214 300
+sleep 2
 shot 42_japanese_keyboard
 # 쿼티 좌표: n(3줄 6번째) i(1줄 8번째) h(2줄 6번째) o(1줄 9번째) n
 for xy in "756 2094" "808 1856" "646 1974" "914 1856" "756 2094"; do

@@ -225,6 +225,49 @@ for pair in "말랑키 바닐라:vanilla" "파스텔 핑크:pink" "기본 화이
   shot "12_outline_${pair##*:}"
 done
 
+# 7) 전체 둘러보기: 설정 화면을 하나씩 열어 찍는다 (이상한 화면·크래시 찾기)
+i=0
+for route in settings/keyboard settings/keyboard/selection settings/keyboard/order settings/keyboard/test \
+             settings/keyboard/input-feedback settings/smartbar settings/typing settings/dictionary \
+             settings/gestures settings/clipboard settings/media settings/other/backup settings/other/restore \
+             settings/about settings/about/project-license settings/about/third-party-licenses; do
+  i=$((i + 1))
+  open_route "$route"
+  shot "20_$(printf %02d $i)_$(echo "$route" | tr '/' '_')"
+done
+open_route settings/home
+tap_text "게임"
+shot 21_game_tab
+open_route settings/home
+tap_text "빠른 설정"
+shot 22_quick_settings
+
+# 8) 키보드 직접 써 보기 (바닐라 기본 배열 기준 좌표)
+open_theme_tab
+tap_text "말랑키 바닐라"
+show_keyboard
+shot 30_keyboard_before_typing
+# ㅇ ㅏ ㄴ ㄴ ㅕ ㅇ → 안녕
+for xy in "326 1979" "864 1979" "217 1979" "217 1979" "700 1857" "326 1979"; do
+  adb shell input tap $xy
+  sleep 0.4
+done
+shot 31_typed_annyeong
+adb shell input tap 86 2214      # ?123
+shot 32_symbols
+adb shell input tap 86 2214      # 가 (되돌아가기)
+adb shell input tap 629 1750     # 스마트바 이모지
+shot 33_emoji_panel
+adb shell input keyevent KEYCODE_BACK
+show_keyboard
+adb shell input tap 89 1750      # 스마트바 붙여넣기 칸
+shot 34_smartbar_first_button
+
+# 앱이 죽은 적이 있는지 남긴다
+adb logcat -d -b crash > "$OUT/crash_log.txt" 2>&1
+adb logcat -d | grep -E "FATAL EXCEPTION|ANR in dev.malangkey" -A 25 > "$OUT/fatal_log.txt" 2>&1
+log "crash lines: $(grep -c 'FATAL EXCEPTION' "$OUT/fatal_log.txt")"
+
 # 설정 파일 위치를 남겨 둔다 (다음 확인에 쓸 수 있게)
 adb shell run-as $PKG find files shared_prefs -maxdepth 2 > "$OUT/app_files.txt" 2>&1
 adb logcat -d -t 400 '*:E' > "$OUT/logcat_errors.txt" 2>&1

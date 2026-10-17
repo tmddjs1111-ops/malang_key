@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<script src="lucide.js"></script><script src="kb.js"></script>
+<style>
+  body { width: 1360px; }
+  .row { margin-top: 44px; gap: 52px; }
+  .old { margin-top: 40px; display: flex; gap: 14px; align-items: center; font-size: 14px; color: var(--ink2); background: var(--paper); border-radius: 16px; padding: 14px 18px; width: fit-content; }
+  .old s { color: var(--ink3); }
+  .old b { color: var(--ink); }
+</style></head>
+<body><div class="canvas">
+  <div class="eyebrow">② 빠른 설정</div>
+  <div class="h1">설정은 키보드 안에서, 두 번 탭으로 끝낸다</div>
+  <div class="lead">지금의 “빠른 설정”은 온보딩 5단계를 다시 도는 화면입니다. 이름값을 하려면 앱을 열 필요가 없어야 합니다.<br>스마트 바 맨 왼쪽의 말랑키 마크 하나가 입구입니다.</div>
+
+  <div class="row">
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"></div>
+        <div class="chat">
+          <div class="bub l">내일 몇 시가 좋아?</div>
+          <div class="bub r">오후는 다 괜찮아</div>
+          <div class="bub l">그럼 카페에서 보자</div>
+          <div class="input">내일 3시에 볼까<span class="cur"></span></div>
+        </div>
+        <div class="kb" data-mode="keys"></div>
+        <div class="gesture" style="background:var(--kbd)"></div>
+      </div></div>
+      <div class="caption"><b><span class="step">1</span>평소: 마크 하나만 보인다</b><span>스마트 바는 붙여넣기 · 이모지 · 상용구 · 커서 이동. 마침표 키의 코랄 점 세 개가 “길게 누르면 상용구”를 알려준다.</span></div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"></div>
+        <div class="chat">
+          <div class="bub r">오후는 다 괜찮아</div>
+          <div class="bub l">그럼 카페에서 보자</div>
+          <div class="input">내일 3시에 볼까<span class="cur"></span></div>
+        </div>
+        <div class="kb" data-mode="panel"></div>
+        <div class="gesture" style="background:var(--kbd)"></div>
+      </div></div>
+      <div class="caption"><b><span class="step">2</span>마크 탭: 키보드 자리에 패널</b><span>소리 · 진동 · 한손 · 다크 · 키 팝업을 바로 끄고 켠다. 높이와 소리 크기는 슬라이더로, 바꾸는 즉시 반영.</span></div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"></div>
+        <div class="chat">
+          <div class="bub l">그럼 카페에서 보자</div>
+          <div class="input">내일 3시에 볼까<span class="cur"></span></div>
+        </div>
+        <div class="kb" data-mode="edit"></div>
+        <div class="gesture" style="background:var(--kbd)"></div>
+      </div></div>
+      <div class="caption"><b><span class="step">3</span>편집: 끌어서 바꾼다</b><span>탭으로 비우고 다시 채우는 방식 대신 길게 눌러 끌기. 아래 칸에서 끌어 올리면 추가되고, − 를 누르면 빠진다.</span></div>
+    </div>
+  </div>
+
+  <div class="old"><s>홈 › 빠른 설정 › 5단계 마법사</s> → <b>키보드 › 마크 탭 › 토글</b>&nbsp; · 앱 열기 0번, 탭 2번</div>
+</div></body></html>

@@ -51,28 +51,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      # 일본어 변환 엔진(libmozc.so)과 사전(mozc.data)은 Git LFS에 있다. LFS를 받지 않으면
-      # 133바이트짜리 포인터 파일이 그대로 앱에 들어가 일본어 한자 변환이 내장 단어 50개로 돌아간다.
-      # LFS 사용량을 아끼려고 받은 파일을 캐시에 둔다.
-      - name: List LFS files
-        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-
-      - uses: actions/cache@v4
         with:
-          path: .git/lfs
-          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+          lfs: true  # Mozc 엔진(libmozc.so, mozc.data)은 LFS에 있다. 없으면 포인터 파일만 들어가 일본어 변환이 죽는다.
 
-      - name: Pull LFS files
-        run: git lfs pull
-
-      - name: Check Mozc files are real
+      - name: Check Mozc files are real binaries, not LFS pointers
         run: |
           for f in app/src/main/assets/mozc/mozc.data app/src/main/jniLibs/*/libmozc.so; do
             size=$(stat -c %s "$f")
-            echo "$f $size"
             if [ "$size" -lt 1000000 ]; then
-              echo "::error::$f 가 LFS 포인터($size 바이트)입니다. 일본어 엔진이 빠진 채로 빌드되므로 멈춥니다."
+              echo "::error::$f 가 ${size}바이트입니다. LFS 파일을 받지 못했습니다."
               exit 1
             fi
           done

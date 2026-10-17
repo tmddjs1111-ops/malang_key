@@ -38,7 +38,6 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.lib.io.FlorisRef
 import dev.malangkey.lib.io.loadTextAsset
-import org.florisboard.lib.compose.florisHorizontalScroll
 import org.florisboard.lib.compose.florisVerticalScroll
 import org.florisboard.lib.compose.stringRes
 
@@ -62,8 +61,7 @@ fun ProjectLicenseScreen() = MalangSettingsScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .background(MalangSettingsCard)
                     .padding(12.dp)
-                    .florisVerticalScroll()
-                    .florisHorizontalScroll(),
+                    .florisVerticalScroll(),
             ) {
                 val licenseText = FlorisRef.assets("license/project_license.txt").loadTextAsset(
                     context
@@ -75,7 +73,6 @@ fun ProjectLicenseScreen() = MalangSettingsScreen(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
                     color = MalangSettingsTitle,
-                    softWrap = false,
                 )
             }
         }

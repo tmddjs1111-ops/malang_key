@@ -184,9 +184,10 @@ private fun ColumnScope.MainTabContent(
             onClick = { dev.malangkey.lib.util.InputMethodUtils.showImePicker(context) },
         )
     } else if (subtypes.isEmpty()) {
-        MalangErrorCard(
+        // 자판을 하나도 고르지 않아도 기본 한국어 자판으로 쓸 수 있으니 오류가 아닌 안내로 보여 준다.
+        MalangWarningCard(
             modifier = warningModifier,
-            text = "현재 말랑키 키보드 설정이 안되어있습니다\n키보드를 선택해주세요",
+            text = "아직 고른 자판이 없어서 기본 한국어 자판이 나와요. 눌러서 쓸 자판을 골라 주세요.",
             onClick = { navController.navigate(Routes.Settings.Keyboard) },
         )
     }

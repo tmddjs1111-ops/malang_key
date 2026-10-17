@@ -1,0 +1,55 @@
+# Google Play 에 올라간 버전을 읽기만 한다. 아무것도 바꾸지 않는다.
+# 트랙마다 어떤 버전(versionCode)이 어떤 상태(draft / inProgress / completed / halted)인지 보여 준다.
+# Google 검토가 끝났는지는 Play API로 알 수 없어서 Play Console 게시 개요에서 확인해야 한다.
+
+name: Play status
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - '.github/workflows/play_status.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Read tracks
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          pip install --quiet google-auth requests
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, os
+          import google.auth.transport.requests
+          from google.oauth2 import service_account
+
+          pkg = "dev.malangkey"
+          info = json.loads(os.environ["PLAY_SERVICE_ACCOUNT_JSON"])
+          creds = service_account.Credentials.from_service_account_info(
+              info, scopes=["https://www.googleapis.com/auth/androidpublisher"])
+          session = google.auth.transport.requests.AuthorizedSession(creds)
+          base = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{pkg}"
+
+          # 읽기용 임시 편집을 열고, 읽은 뒤 바로 버린다(커밋하지 않음).
+          edit = session.post(f"{base}/edits").json()
+          edit_id = edit["id"]
+          try:
+              tracks = session.get(f"{base}/edits/{edit_id}/tracks").json().get("tracks", [])
+              print("| 트랙 | 버전 | versionCode | 상태 |")
+              print("|---|---|---|---|")
+              for t in tracks:
+                  for r in t.get("releases", []):
+                      print(f"| {t['track']} | {r.get('name', '')} | {', '.join(r.get('versionCodes', []))} | {r.get('status', '')} |")
+              bundles = session.get(f"{base}/edits/{edit_id}/bundles").json().get("bundles", [])
+              codes = sorted(b["versionCode"] for b in bundles)
+              print()
+              print(f"올라간 번들 versionCode (최근 5개): {codes[-5:]}")
+          finally:
+              session.delete(f"{base}/edits/{edit_id}")
+          PY

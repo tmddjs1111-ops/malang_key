@@ -35,6 +35,7 @@ PY
 }
 
 # 화면에서 글자(또는 설명)가 [1]인 요소를 찾아 누른다. 없으면 아래로 밀어 가며 다시 찾는다.
+# 하단 탭 막대의 탭을 누를 때는 [2]에 nav 를 준다.
 tap_text() {
   for attempt in 1 2 3 4 5; do
     dump_ui
@@ -53,7 +54,7 @@ for n in root.iter('node'):
 PY
 )
     # 화면 아래쪽은 떠 있는 하단 탭 막대에 가려진다. 거기 있으면 조금 올린 뒤 다시 찾는다.
-    if [ -n "$pos" ] && [ "${pos#* }" -gt 1950 ]; then
+    if [ -n "$pos" ] && [ "${2:-}" != nav ] && [ "${pos#* }" -gt 1950 ]; then
       adb shell input swipe 540 1500 540 1000 300
       sleep 1
       continue
@@ -130,7 +131,7 @@ open_route() {
 open_theme_tab() {
   for attempt in 1 2 3 4; do
     open_route settings/home
-    tap_text "테마" >/dev/null
+    tap_text "테마" nav >/dev/null
     dump_ui
     grep -q '지금 키보드' /tmp/ui.xml && return 0
     log "theme tab not shown yet ($attempt)"
@@ -242,7 +243,7 @@ for route in settings/keyboard settings/keyboard/selection settings/keyboard/ord
   shot "20_$(printf %02d $i)_$(echo "$route" | tr '/' '_')"
 done
 open_route settings/home
-tap_text "게임"
+tap_text "게임" nav
 shot 21_game_tab
 open_route settings/home
 tap_text "빠른 설정"
@@ -300,9 +301,18 @@ fi
 shot 41_japanese_romaji_selected
 show_keyboard
 shot 42a_keyboard_before_switch
-# 한국어와 일본어가 함께 켜져 있으니 스페이스바를 옆으로 밀어 일본어로 바꾼다.
-adb shell input swipe 400 2214 750 2214 300
-sleep 2
+# 한국어 두벌식을 꺼서 일본어 로마자만 남긴다.
+open_route settings/keyboard/selection
+tap_text "한국어"
+read x1 y1 x2 y2 <<< "$(bounds_of '두벌식(쿼티)')"
+if [ -n "${y2:-}" ]; then
+  adb shell input tap 468 $(((y1 + y2) / 2))
+  sleep 2
+else
+  log "NOT FOUND: 두벌식 card"
+fi
+shot 41b_korean_off
+show_keyboard
 shot 42_japanese_keyboard
 # 쿼티 좌표: n(3줄 6번째) i(1줄 8번째) h(2줄 6번째) o(1줄 9번째) n
 for xy in "756 2094" "808 1856" "646 1974" "914 1856" "756 2094"; do

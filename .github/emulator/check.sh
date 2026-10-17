@@ -263,6 +263,55 @@ show_keyboard
 adb shell input tap 89 1750      # 스마트바 붙여넣기 칸
 shot 34_smartbar_first_button
 
+# 9) 일본어: 로마자 자판만 켜고 nihon → 日本 후보가 뜨는지 (Mozc 엔진이 들어 있는지 확인)
+tap_contains() {
+  dump_ui
+  pos=$(python3 - "$1" <<'PY'
+import re, sys, xml.etree.ElementTree as ET
+root = ET.parse('/tmp/ui.xml').getroot()
+for n in root.iter('node'):
+    if sys.argv[1] in (n.get('text') or ''):
+        x1, y1, x2, y2 = map(int, re.findall(r'\d+', n.get('bounds')))
+        print((x1 + x2) // 2, (y1 + y2) // 2)
+        break
+PY
+)
+  if [ -n "$pos" ]; then log "tap '*$1*' at $pos"; adb shell input tap $pos; sleep 2; else log "NOT FOUND: '*$1*'"; fi
+}
+open_route settings/keyboard/selection
+tap_text "일본어"
+shot 40_japanese_layouts
+cp /tmp/ui.xml "$OUT/40_japanese_layouts.xml"
+tap_contains "로마자"
+shot 41_japanese_romaji_selected
+show_keyboard
+shot 42_japanese_keyboard
+# 쿼티 좌표: n(3줄 6번째) i(1줄 8번째) h(2줄 6번째) o(1줄 9번째) n
+for xy in "756 2094" "808 1856" "646 1974" "914 1856" "756 2094"; do
+  adb shell input tap $xy
+  sleep 0.6
+done
+sleep 2
+shot 43_japanese_nihon_candidates
+adb shell input tap 160 1750     # 첫 후보
+shot 44_japanese_committed
+# きょうはいいてんき: kyouhaiitennki
+for ch in k y o u h a i i t e n n k i; do
+  case $ch in
+    q) xy="58 1856";; w) xy="164 1856";; e) xy="272 1856";; r) xy="378 1856";; t) xy="486 1856";;
+    y) xy="592 1856";; u) xy="700 1856";; i) xy="808 1856";; o) xy="914 1856";; p) xy="1022 1856";;
+    a) xy="108 1974";; s) xy="216 1974";; d) xy="324 1974";; f) xy="432 1974";; g) xy="538 1974";;
+    h) xy="646 1974";; j) xy="754 1974";; k) xy="862 1974";; l) xy="970 1974";;
+    z) xy="220 2094";; x) xy="328 2094";; c) xy="434 2094";; v) xy="542 2094";; b) xy="648 2094";;
+    n) xy="756 2094";; m) xy="862 2094";;
+  esac
+  adb shell input tap $xy
+  sleep 0.5
+done
+sleep 2
+shot 45_japanese_sentence_candidates
+adb logcat -d | grep -i "mozc" | tail -40 > "$OUT/mozc_log.txt" 2>&1
+
 # 앱이 죽은 적이 있는지 남긴다
 adb logcat -d -b crash > "$OUT/crash_log.txt" 2>&1
 adb logcat -d | grep -E "FATAL EXCEPTION|ANR in dev.malangkey" -A 25 > "$OUT/fatal_log.txt" 2>&1

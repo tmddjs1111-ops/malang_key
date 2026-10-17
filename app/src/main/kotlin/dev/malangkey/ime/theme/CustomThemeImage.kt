@@ -133,7 +133,7 @@ object CustomThemeImage {
     fun clear(context: Context) = deleteAllExcept(context, emptySet())
 
     /** 백업에 함께 넣는 폴더. 설정값이 이 폴더 안의 파일 이름을 가리킨다. */
-    private val BackupDirNames = listOf(DirName, "custom_theme_saved")
+    private val BackupDirNames = listOf(DirName, "custom_theme_saved", CustomSmartbarIcons.DirName)
 
     /** 지금 사진과 내 테마 사진을 백업 작업 폴더 [filesDir]에 복사한다. */
     fun backupTo(context: Context, filesDir: File) {
@@ -149,10 +149,11 @@ object CustomThemeImage {
             val source = File(filesDir, name)
             if (!source.isDirectory) continue
             val target = File(context.filesDir, name)
-            if (name == DirName) target.deleteRecursively()
+            if (name == DirName || name == CustomSmartbarIcons.DirName) target.deleteRecursively()
             source.copyRecursively(target, overwrite = true)
         }
         bumpRevision()
+        CustomSmartbarIcons.bumpRevision()
     }
 
     /** 배경 사진과 사진 설정을 모두 처음 상태로 되돌린다. */
@@ -206,19 +207,19 @@ object CustomThemeImage {
         return fileName
     }
 
-    private fun decodeScaled(context: Context, source: Uri): Bitmap? {
+    internal fun decodeScaled(context: Context, source: Uri, maxSidePx: Int = SourceMaxSidePx): Bitmap? {
         val resolver = context.contentResolver
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         resolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
         val options = BitmapFactory.Options().apply {
-            inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, SourceMaxSidePx)
+            inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, maxSidePx)
         }
         val decoded = resolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, options) }
             ?: return null
         val longest = maxOf(decoded.width, decoded.height)
-        if (longest <= SourceMaxSidePx) return decoded
-        val scale = SourceMaxSidePx.toFloat() / longest
+        if (longest <= maxSidePx) return decoded
+        val scale = maxSidePx.toFloat() / longest
         val scaled = Bitmap.createScaledBitmap(
             decoded,
             (decoded.width * scale).toInt().coerceAtLeast(1),
@@ -229,7 +230,7 @@ object CustomThemeImage {
         return scaled
     }
 
-    private fun rotateByExif(context: Context, source: Uri, bitmap: Bitmap): Bitmap {
+    internal fun rotateByExif(context: Context, source: Uri, bitmap: Bitmap): Bitmap {
         val orientation = runCatching {
             context.contentResolver.openInputStream(source)?.use {
                 ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)

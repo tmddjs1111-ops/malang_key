@@ -102,6 +102,7 @@ class ThemeManager(context: Context) {
             prefs.theme.mode.asFlow(),
             prefs.theme.dayThemeId.asFlow(),
             prefs.theme.nightThemeId.asFlow(),
+            prefs.malang.customBaseThemeId.asFlow(),
             previewThemeId,
             previewThemeInfo,
             configurationChangeCounter,
@@ -121,6 +122,10 @@ class ThemeManager(context: Context) {
             return@withLock
         }
         val activeName = evaluateActiveThemeName()
+        if (activeName == ThemeInfo.DEFAULT.name) {
+            _activeThemeInfo.value = ThemeInfo.DEFAULT
+            return@withLock
+        }
         val cachedInfo = cachedThemeInfos.find { it.name == activeName }
         if (cachedInfo != null) {
             _activeThemeInfo.value = cachedInfo
@@ -162,7 +167,7 @@ class ThemeManager(context: Context) {
 
     private fun evaluateActiveThemeName(): ExtensionComponentName {
         previewThemeId.value?.let { return it }
-        return when (prefs.theme.mode.get()) {
+        val name = when (prefs.theme.mode.get()) {
             ThemeMode.ALWAYS_DAY -> {
                 prefs.theme.dayThemeId.get()
             }
@@ -187,6 +192,11 @@ class ThemeManager(context: Context) {
                 }
             }
         }
+        // 커스텀 테마는 따로 된 스타일시트가 없다. 바탕 테마를 불러오고, 그 위에 고른 색만 덮는다.
+        if (name == CustomThemeId) {
+            return parseCustomBaseThemeId(prefs.malang.customBaseThemeId.get()) ?: ThemeInfo.DEFAULT.name
+        }
+        return name
     }
 
     /**
@@ -296,4 +306,14 @@ class ThemeManager(context: Context) {
             val DEFAULT = RemoteColors("undefined", null, null, null)
         }
     }
+}
+
+/** 커스텀 테마의 이름. 스타일시트 없이 [parseCustomBaseThemeId]의 바탕 테마 위에 고른 색을 덮어 만든다. */
+val CustomThemeId = ExtensionComponentName("dev.malangkey.colors", "custom")
+
+/** 커스텀 테마의 바탕 테마 이름을 읽는다. 비었거나, 말랑키 테마가 아니거나, 커스텀 자신이면 null(기본 테마). */
+fun parseCustomBaseThemeId(value: String?): ExtensionComponentName? {
+    if (value.isNullOrBlank()) return null
+    val name = runCatching { ExtensionComponentName.from(value) }.getOrNull() ?: return null
+    return name.takeIf { it.extensionId.startsWith("dev.malangkey.") && it != CustomThemeId }
 }

@@ -51,6 +51,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true  # Mozc 엔진(libmozc.so, mozc.data)은 LFS에 있다. 없으면 포인터 파일만 들어가 일본어 변환이 죽는다.
+
+      - name: Check Mozc files are real binaries, not LFS pointers
+        run: |
+          for f in app/src/main/assets/mozc/mozc.data app/src/main/jniLibs/*/libmozc.so; do
+            size=$(stat -c %s "$f")
+            if [ "$size" -lt 1000000 ]; then
+              echo "::error::$f 가 ${size}바이트입니다. LFS 파일을 받지 못했습니다."
+              exit 1
+            fi
+          done
 
       - name: Check tag matches app version
         if: github.event_name == 'push'
@@ -118,7 +130,8 @@ jobs:
       - name: Keep the bundle
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-${{ github.ref_name }}
+          # 브랜치에서 직접 실행하면 ref_name 에 / 가 들어가 이름으로 쓸 수 없어 실행 번호를 쓴다.
+          name: app-release-${{ github.run_number }}
           path: |
             app/build/outputs/bundle/release/app-release.aab
             app/build/outputs/mapping/release/mapping.txt

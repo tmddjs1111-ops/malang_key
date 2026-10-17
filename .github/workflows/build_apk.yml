@@ -1,0 +1,146 @@
+# 휴대폰에 바로 설치해 볼 수 있는 디버그 APK를 빌드한다.
+#
+# 쓰는 법
+#   - claude/** 브랜치에 푸시하면 자동으로 돈다. Actions 탭에서 직접 실행해도 된다.
+#   - 끝나면 Releases 의 debug-latest 에 APK가 올라간다. 휴대폰에서 바로 내려받아 설치하면 된다.
+#     https://github.com/<저장소>/releases/tag/debug-latest
+#   - 디버그 빌드는 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치된다.
+#   - 커밋 메시지에 [emu] 가 있거나 직접 실행하면, 빌드한 APK를 에뮬레이터에 깔아
+#     .github/emulator/check.sh 대로 화면을 찍어 Releases 의 emulator-shots 에 올린다.
+
+name: Build debug APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'claude/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 일본어 변환 엔진(libmozc.so)과 사전(mozc.data)은 Git LFS에 있다. LFS를 받지 않으면
+      # 133바이트짜리 포인터 파일이 그대로 앱에 들어가 일본어 한자 변환이 내장 단어 50개로 돌아간다.
+      # LFS 사용량을 아끼려고 받은 파일을 캐시에 둔다.
+      - name: List LFS files
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Pull LFS files
+        run: git lfs pull
+
+      - name: Check Mozc files are real
+        run: |
+          for f in app/src/main/assets/mozc/mozc.data app/src/main/jniLibs/*/libmozc.so; do
+            size=$(stat -c %s "$f")
+            echo "$f $size"
+            if [ "$size" -lt 1000000 ]; then
+              echo "::error::$f 가 LFS 포인터($size 바이트)입니다. 일본어 엔진이 빠진 채로 빌드되므로 멈춥니다."
+              exit 1
+            fi
+          done
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --no-configuration-cache
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: malang-key-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Publish APK to the debug-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          apk="$RUNNER_TEMP/malang-key-debug.apk"
+          cp app/build/outputs/apk/debug/*.apk "$apk"
+          gh release delete debug-latest --cleanup-tag --yes || true
+          gh release create debug-latest "$apk" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "디버그 APK (${GITHUB_REF_NAME}, ${GITHUB_SHA::7})" \
+            --notes "테스트용 디버그 빌드입니다. 패키지 이름이 dev.malangkey.debug 라서 Play 스토어 버전과 따로 설치됩니다."
+
+  emulator:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[emu]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: malang-key-debug-apk
+          path: apk-build
+
+      - name: Prepare APK
+        run: |
+          mkdir -p apk
+          cp apk-build/*.apk apk/malang-key-debug.apk
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash .github/emulator/check.sh
+
+      - name: Publish screenshots
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la shots || exit 0
+          # 빈 파일(오류가 없을 때의 logcat 등)은 릴리스에 올릴 수 없다.
+          find shots -type f -empty -delete
+          gh release delete emulator-shots --cleanup-tag --yes || true
+          gh release create emulator-shots shots/* \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "에뮬레이터 확인 (${GITHUB_SHA::7})" \
+            --notes "에뮬레이터에서 찍은 키보드 화면입니다."

@@ -355,6 +355,8 @@ fun MalangSliderRow(
     unit: String = "%",
     enabled: Boolean = true,
     valueLabel: (Int) -> String = { "$it$unit" },
+    /** 슬라이더 양 끝 아래 글자. 지정하지 않으면 [valueLabel]의 최솟값·최댓값을 쓴다. */
+    rangeLabels: Pair<String, String> = valueLabel(min) to valueLabel(max),
 ) {
     val stored by pref.collectAsState()
     val scope = rememberCoroutineScope()
@@ -384,8 +386,8 @@ fun MalangSliderRow(
             range = min.toFloat()..max.toFloat(),
         )
         Row {
-            Text(valueLabel(min), modifier = Modifier.weight(1f), color = MalangSettingsSummary, fontSize = 13.sp)
-            Text(valueLabel(max), color = MalangSettingsSummary, fontSize = 13.sp, textAlign = TextAlign.End)
+            Text(rangeLabels.first, modifier = Modifier.weight(1f), color = MalangSettingsSummary, fontSize = 13.sp)
+            Text(rangeLabels.second, color = MalangSettingsSummary, fontSize = 13.sp, textAlign = TextAlign.End)
         }
     }
 }

@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -172,6 +175,12 @@ fun BoxScope.ImeWindow() {
     val isPortrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
     val isFixedWindow = windowSpec is ImeWindowSpec.Fixed && isPortrait &&
         keyboardState.imeUiMode == ImeUiMode.TEXT && !isEmoticonSearchVisible
+    // 배경 사진은 소프트바(내비게이션 바) 위에서 끝낸다. 소프트바 자리는 키보드 배경색으로 남는다.
+    val bgImageBottomInset = if (windowSpec is ImeWindowSpec.Fixed) {
+        WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
+    } else {
+        0.dp
+    }
 
     SnyggBox(
         elementName = FlorisImeUi.Window.elementName,
@@ -192,8 +201,10 @@ fun BoxScope.ImeWindow() {
                 val boundsPx = coords.boundsInRoot().roundToIntRect()
                 val newInsets = with(density) { ImeInsets.Window.of(boundsPx) }
                 windowController.updateWindowInsets(newInsets)
-                if (isFixedWindow && boundsPx.width > 0 && boundsPx.height > 0) {
-                    val aspect = boundsPx.width.toFloat() / boundsPx.height
+                // 자르기 틀은 사진이 실제로 보이는 곳(소프트바 위)의 비율로 맞춘다.
+                val bgImageHeightPx = boundsPx.height - with(density) { bgImageBottomInset.roundToPx() }
+                if (isFixedWindow && boundsPx.width > 0 && bgImageHeightPx > 0) {
+                    val aspect = boundsPx.width.toFloat() / bgImageHeightPx
                     if (abs(aspect - prefs.malang.keyboardWindowAspect.get()) > 0.01f) {
                         scope.launch { prefs.malang.keyboardWindowAspect.set(aspect) }
                     }
@@ -202,6 +213,7 @@ fun BoxScope.ImeWindow() {
         supportsBackgroundImage = true,
         // 자판 위로 창이 올라와 키보드가 높아져도, 배경 사진은 자판 쪽(아래)에 붙어 그대로 있게 한다.
         backgroundImageAlignment = Alignment.BottomCenter,
+        backgroundImageBottomInset = bgImageBottomInset,
         allowClip = false,
     ) {
         OneHandedPanel()

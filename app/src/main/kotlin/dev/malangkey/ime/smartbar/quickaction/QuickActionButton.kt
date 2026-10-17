@@ -16,6 +16,11 @@
 
 package dev.malangkey.ime.smartbar.quickaction
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import dev.malangkey.ime.theme.rememberCustomSmartbarIcon
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -50,6 +55,9 @@ import org.florisboard.lib.snygg.SnyggSelector
 import org.florisboard.lib.snygg.ui.SnyggBox
 import org.florisboard.lib.snygg.ui.SnyggIcon
 import org.florisboard.lib.snygg.ui.SnyggText
+
+/** 스마트바 버튼에 넣은 사진의 크기. 기본 아이콘(24dp)보다 조금 크게 그려야 사진이 알아보기 쉽다. */
+val CustomSmartbarIconSize = 26.dp
 
 enum class QuickActionBarType {
     INTERACTIVE_BUTTON,
@@ -170,7 +178,17 @@ fun QuickActionButton(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 // Render foreground
-                when (action) {
+                // 커스텀 테마에서 이 버튼에 사진을 넣었으면 기본 아이콘 대신 그 사진을 그린다.
+                val customIcon = rememberCustomSmartbarIcon(action)
+                if (customIcon != null) {
+                    Image(
+                        bitmap = customIcon,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(CustomSmartbarIconSize)
+                            .clip(RoundedCornerShape(CustomSmartbarIconSize / 4)),
+                    )
+                } else when (action) {
                     is QuickAction.InsertKey -> {
                         val (imageVector, label) = remember(action, evaluator) {
                             evaluator.computeImageVector(action.data) to evaluator.computeLabel(action.data)

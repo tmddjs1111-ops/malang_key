@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="qs.css">
+<script src="lucide.js"></script><script src="qs.js"></script>
+<script>
+const SOUNDS = [["기본 딸깍", 0], ["말랑 뽁", 0], ["타자기", 0], ["기계식 키보드", 0], ["저소음", 0], ["물방울", 0]];
+function soundOpts(sel) {
+  return `<div class="opts">${SOUNDS.map(([t]) => `<div class="opt ${t === sel ? "on" : ""}">${t === sel ? I("volume-2") : ""}${t}</div>`).join("")}</div>`;
+}
+function toggles() {
+  return `<div class="card" style="padding:4px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:44px;font-size:14px;font-weight:700">키 진동 <span style="width:40px;height:24px;border-radius:12px;background:var(--sec);position:relative;display:block"><i style="position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:9px;background:#FFF9EA;display:block"></i></span></div>
+    <div style="height:1px;background:var(--div)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:44px;font-size:14px;font-weight:700">키 팝업 <span style="width:40px;height:24px;border-radius:12px;background:var(--border);position:relative;display:block"><i style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:9px;background:#fff;display:block"></i></span></div>
+  </div>`;
+}
+const DETAIL = [
+  ["volume-2", "키를 누를 때 나는 소리예요. 누르면 바로 들려요."],
+  ["vibrate", "진동은 소리와 따로 켜고 끌 수 있어요."],
+  ["keyboard", "아래 입력창에 직접 쳐 보면서 고르는 게 제일 정확해요."],
+];
+function phoneB() {
+  return statusBar() + wizTop(2, "소리·진동", "타자 칠 때 손맛이 바뀌어요", {
+      done: [1], detail: DETAIL,
+      alert: "휴대폰이 무음이라 소리가 안 나요. 볼륨 버튼을 올려 주세요.",
+    }) +
+    `<div class="body"><div style="font-size:13px;font-weight:700;color:var(--sec)">소리 종류</div>${soundOpts("기본 딸깍")}${toggles()}</div>` +
+    mission("아무 글자나 10번 쳐 보세요", "손맛이 맘에 드는지 확인해요", "0 / 10") +
+    testbar("여기를 눌러 쳐 보세요…", true) + `<div class="gesture" style="background:var(--cocoa)"><i style="background:#FFF1CF"></i></div>`;
+}
+function phoneC() {
+  return statusBar() + wizTop(2, "소리·진동", "타자 칠 때 손맛이 바뀌어요", { done: [1], noMore: true }) +
+    `<div class="body"><div style="font-size:13px;font-weight:700;color:var(--sec)">소리 종류</div>${soundOpts("기본 딸깍")}</div>` +
+    mission("아무 글자나 10번 쳐 보세요", null, "7 / 10") +
+    testbar("안녕하세요 말랑") +
+    strip("소리", [["기본 딸깍", 1, "volume-2"], ["말랑 뽁"], ["타자기"], ["기계식"], ["저소음"]]) +
+    keyboard() + `<div class="gesture"><i></i></div>`;
+}
+function phoneD() {
+  return statusBar() + wizTop(2, "소리·진동", "타자 칠 때 손맛이 바뀌어요", { done: [1, 2], noMore: true }) +
+    `<div class="body"><div style="font-size:13px;font-weight:700;color:var(--sec)">소리 종류</div>${soundOpts("말랑 뽁")}</div>` +
+    mission("손맛 확인 완료!", "말랑 뽁 · 진동 켬", "10 / 10", true) +
+    testbar("안녕하세요 말랑키에요") +
+    strip("소리", [["기본 딸깍"], ["말랑 뽁", 1, "volume-2"], ["타자기"], ["기계식"], ["저소음"]]) +
+    keyboard() + `<div class="gesture"><i></i></div>` +
+    `<div class="toast" style="top:96px">${I("check")}2단계 끝! 다음으로 가볼까요?</div>`;
+}
+</script>
+<style> body { width: 1600px; } </style>
+</head>
+<body><div class="canvas">
+  <div class="eyebrow">빠른 설정 개선 · 공통 구조</div>
+  <div class="h1">모든 단계: 읽고 → 고르고 → 바로 쳐 본다</div>
+  <div class="lead">디자인(색 · 주아체 · 카드)은 지금 그대로입니다. 바뀌는 건 <b style="color:var(--cocoa)">설명이 놓이는 방식</b>과 <b style="color:var(--cocoa)">고른 걸 그 자리에서 확인하는 장치</b>뿐.<br>예시는 2단계 “소리·진동”.</div>
+
+  <div class="row">
+    <div class="col">
+      <div class="phone"><div class="screen img"><img src="before_step2_kb.png"></div>
+        <div class="xmark" style="left:14px;top:300px;width:312px;height:150px"></div>
+        <div class="xlabel" style="left:24px;top:252px">선택지가 이만큼으로 줄어듦</div>
+        <div class="xmark" style="left:14px;top:585px;width:312px;height:150px;border-style:dashed"></div>
+      </div>
+      <div class="cap"><b><span class="tagbad">지금</span>들어보려고 치면, 고를 데가 없다</b><span>입력창을 누르면 키보드가 올라오면서 소리 고르는 칸이 위로 밀려 잘려요. “치면서 비교”가 안 되고, 고르려면 키보드를 내려야 해요.</span></div>
+    </div>
+
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="phoneB"></div>
+        <div class="anno" style="left:-10px;top:120px">1</div>
+        <div class="anno" style="left:-10px;top:300px">2</div>
+        <div class="anno" style="left:-10px;top:618px">3</div>
+        <div class="anno" style="left:-10px;top:676px">4</div>
+      </div>
+      <div class="cap"><b><span class="taggood">개선</span>키보드 내렸을 때</b><span>
+        <b style="display:inline;font-size:14px">①</b> 한 줄 요약은 늘 보이고, 자세한 설명은 펼쳐서 아이콘 3줄로.
+        <b style="display:inline;font-size:14px">②</b> 무음이면 그 사실을 먼저 알려줌.
+        <b style="display:inline;font-size:14px">③</b> 이 단계의 미션.
+        <b style="display:inline;font-size:14px">④</b> 테스트 입력창은 모든 단계에.</span></div>
+    </div>
+
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="phoneC"></div>
+        <div class="anno" style="left:-10px;top:450px">5</div>
+      </div>
+      <div class="cap"><b><span class="taggood">개선</span>입력창 눌렀을 때</b><span><b style="display:inline;font-size:14px">⑤</b> 선택지가 사라지는 대신 <b style="display:inline;font-size:14px">키보드 바로 위 칩 한 줄</b>로 접혀요. 치다가 옆 칩을 누르면 다음 글자부터 그 소리. 미션 숫자가 한 글자마다 올라가요.</span></div>
+    </div>
+
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="phoneD"></div></div>
+      <div class="cap"><b><span class="taggood">개선</span>미션을 끝내면</b><span>미션 칸이 초록으로 바뀌고 고른 값이 요약돼요. 위 진행 바의 2단계에 ✓가 찍혀서, 어디까지 직접 확인했는지 한눈에 보여요. 미션은 안 해도 넘어갈 수 있어요.</span></div>
+    </div>
+  </div>
+</div></body></html>

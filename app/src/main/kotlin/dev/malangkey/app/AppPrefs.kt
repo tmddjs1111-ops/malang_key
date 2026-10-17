@@ -168,10 +168,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "clipboard__history_hide_on_next_text_field",
             default = true,
         )
-        val advancedClipboardPopup = boolean(
-            key = "clipboard__advanced_clipboard_popup",
-            default = false,
-        )
         val clearPrimaryClipAffectsHistoryIfUnpinned = boolean(
             key = "clipboard__clear_primary_clip_affects_history_if_unpinned",
             default = true,
@@ -248,10 +244,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
 
     val emoji = Emoji()
     inner class Emoji {
-        val preferredHairStyle = enum(
-            key = "emoji__preferred_hair_style",
-            default = EmojiHairStyle.DEFAULT,
-        )
         val historyEnabled = boolean(
             key = "emoji__history_enabled",
             default = true,
@@ -320,22 +312,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val swipeRight = enum(
             key = "gestures__swipe_right",
             default = SwipeAction.SWITCH_TO_PREV_SUBTYPE,
-        )
-        val spaceBarSwipeUp = enum(
-            key = "gestures__space_bar_swipe_up",
-            default = SwipeAction.NO_ACTION,
-        )
-        val spaceBarSwipeLeft = enum(
-            key = "gestures__space_bar_swipe_left",
-            default = SwipeAction.MOVE_CURSOR_LEFT,
-        )
-        val spaceBarSwipeRight = enum(
-            key = "gestures__space_bar_swipe_right",
-            default = SwipeAction.MOVE_CURSOR_RIGHT,
-        )
-        val spaceBarLongPress = enum(
-            key = "gestures__space_bar_long_press",
-            default = SwipeAction.SHOW_INPUT_METHOD_PICKER,
         )
         val deleteKeySwipeLeft = enum(
             key = "gestures__delete_key_swipe_left",
@@ -582,10 +558,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__long_press_delay",
             default = 400,
         )
-        val spaceBarSwitchesToCharacters = boolean(
-            key = "keyboard__space_bar_switches_to_characters",
-            default = true,
-        )
         val incognitoDisplayMode = enum(
             key = "keyboard__incognito_indicator",
             default = IncognitoDisplayMode.DISPLAY_BEHIND_KEYBOARD,
@@ -781,6 +753,31 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
+        /**
+         * 커스텀 테마가 바탕으로 쓰는 테마("확장:테마"). 커스텀으로 바꿀 때 쓰던 테마가 들어간다.
+         * 비어 있으면 말랑키 기본 크림 테마를 바탕으로 쓴다. 고르지 않은(Unspecified) 커스텀 색은 이 테마 색을 따른다.
+         */
+        val customBaseThemeId = string(
+            key = "malang__custom_base_theme_id",
+            default = "",
+        )
+        /** 커스텀 테마의 스마트바 배경색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarBgColor = custom(
+            key = "malang__custom_smartbar_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마의 스마트바 아이콘·글자 색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarIconColor = custom(
+            key = "malang__custom_smartbar_icon_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마에서 스마트바 버튼 대신 쓰는 사진. [dev.malangkey.ime.theme.CustomSmartbarIcons] 참고. */
+        val customSmartbarIcons = string(
+            key = "malang__custom_smartbar_icons",
+            default = "",
+        )
         /** 커스텀 테마 배경 사진의 파일 이름. 비어 있으면 사진 없이 색만 쓴다. */
         val customBgImageFile = string(
             key = "malang__custom_bg_image_file",
@@ -920,14 +917,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__mode",
             default = ThemeMode.FOLLOW_SYSTEM,
         )
+        // 처음 설치하면 말랑키 바닐라로 시작한다. 밤 테마도 같게 두어 다크 모드에서도 같은 모양이 나온다.
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

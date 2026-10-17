@@ -37,6 +37,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import dev.malangkey.ime.theme.rememberIsCustomThemeActive
+import dev.malangkey.app.setup.rememberActivePreviewPalette
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.style.TextOverflow
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +49,10 @@ import dev.malangkey.app.setup.DefaultPreviewPalette
 import dev.malangkey.app.setup.KeyboardPreview
 import dev.malangkey.app.setup.loadPreviewPalette
 import dev.malangkey.app.setup.rememberCustomPreviewPalette
+import androidx.compose.foundation.isSystemInDarkTheme
+import dev.malangkey.ime.text.key.KeyCode
+import dev.malangkey.ime.theme.CustomThemeId
+import dev.malangkey.app.setup.rememberCustomBasePalette
 import dev.malangkey.subtypeManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -82,6 +91,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.R
 import dev.malangkey.app.LocalNavController
+import dev.malangkey.app.apptheme.MalangNavRow
+import dev.malangkey.app.Routes
 import dev.malangkey.ime.theme.ThemeManager
 import dev.malangkey.app.FlorisPreferenceModel
 import dev.malangkey.app.FlorisPreferenceStore
@@ -123,6 +134,7 @@ data class MalangThemeInfo(
 )
 
 val malangThemes = listOf(
+    MalangThemeInfo("dev.malangkey.colors", "vanilla", "말랑키 바닐라", Color(0xFFFCF5D6)),
     MalangThemeInfo("dev.malangkey.pastel", "pink", "파스텔 핑크", Color(0xFFFFD1DC)),
     MalangThemeInfo("dev.malangkey.pastel", "mint", "민트 그린", Color(0xFFC1F0D4)),
     MalangThemeInfo("dev.malangkey.pastel", "yellow", "바나나 옐로우", Color(0xFFFFF59D)),
@@ -133,10 +145,24 @@ val malangThemes = listOf(
     MalangThemeInfo("dev.malangkey.colors", "custom", "커스텀", Color(0xFFE0E0E0))
 )
 
-/** 테마를 키보드에 적용한다. 커스텀이 아닌 테마는 키 모양 효과를 기본값으로 되돌린다. */
-suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThemeInfo) {
+/**
+ * 테마를 키보드에 적용한다.
+ *
+ * 커스텀은 따로 정해진 모양이 없고, 지금 쓰던 테마([currentThemeId])를 바탕으로 새로 만든다.
+ * 다른 테마에서 커스텀으로 넘어오면 바탕을 그 테마로 바꾸고 고른 색을 비워, 그 테마 모양에서 시작한다.
+ * 이미 커스텀이거나 [currentThemeId]가 null이면(저장한 내 테마 불러오기 등) 바탕과 색을 그대로 둔다.
+ */
+suspend fun applyMalangTheme(
+    prefs: FlorisPreferenceModel,
+    themeInfo: MalangThemeInfo,
+    currentThemeId: ExtensionComponentName? = null,
+) {
     val themeCompName = ExtensionComponentName(themeInfo.extId, themeInfo.compId)
     if (themeInfo.compId == "custom") {
+        if (currentThemeId != null && currentThemeId != CustomThemeId) {
+            prefs.malang.customBaseThemeId.set(currentThemeId.toString())
+            prefs.malang.clearCustomColors()
+        }
         prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
         prefs.theme.dayThemeId.set(themeCompName)
         return
@@ -148,6 +174,31 @@ suspend fun applyMalangTheme(prefs: FlorisPreferenceModel, themeInfo: MalangThem
         prefs.theme.mode.set(ThemeMode.ALWAYS_DAY)
         prefs.theme.dayThemeId.set(themeCompName)
     }
+}
+
+/** 커스텀 색을 모두 비워 바탕 테마 색을 그대로 따르게 한다. */
+suspend fun FlorisPreferenceModel.Malang.clearCustomColors() {
+    customKeyboardBgColor.set(Color.Unspecified)
+    customKeyBgColor.set(Color.Unspecified)
+    customKeyTextColor.set(Color.Unspecified)
+    customEnterKeyBgColor.set(Color.Unspecified)
+    customEnterKeyTextColor.set(Color.Unspecified)
+    customRealEnterKeyBgColor.set(Color.Unspecified)
+    customRealEnterKeyTextColor.set(Color.Unspecified)
+    customSmartbarBgColor.set(Color.Unspecified)
+    customSmartbarIconColor.set(Color.Unspecified)
+}
+
+/** 지금 키보드에 보이는 테마의 이름. 밤/낮 설정을 따른다. */
+@Composable
+fun rememberCurrentThemeId(): ExtensionComponentName {
+    val prefs by FlorisPreferenceStore
+    val mode by prefs.theme.mode.collectAsState()
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val nightThemeId by prefs.theme.nightThemeId.collectAsState()
+    val isNight = mode == ThemeMode.ALWAYS_NIGHT ||
+        (mode == ThemeMode.FOLLOW_SYSTEM && isSystemInDarkTheme())
+    return if (isNight) nightThemeId else dayThemeId
 }
 
 /** 현재 적용된 테마인지 여부. */
@@ -168,47 +219,242 @@ fun isMalangThemeSelected(
 val ColorCreamBeige = Color(0xFFFFF5ED)
 val ColorDarkChocolate = Color(0xFF4E342E)
 
+/** 꾸미기 화면의 탭. */
+private enum class CustomizeTab(val label: String) { COLORS("색상"), PHOTO("배경 사진"), SMARTBAR("스마트바") }
+
+/**
+ * 꾸미기 화면. 지금 키보드에 적용된 테마를 고친다. 위에 고정된 미리보기를 보며
+ * 색상·배경 사진·스마트바를 탭으로 나눠 바꾸고, 저장하면 내 테마가 된다.
+ * 키 모양(외곽선·글꼴·글자 크기)은 어느 테마에나 공통이라 테마 탭에 있다.
+ */
 @Composable
-fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = "Keyboard Theme", scrollable = false) {
-    val florisPrefs by FlorisPreferenceStore
-    run {
-        val dayThemeId by florisPrefs.theme.dayThemeId.collectAsState()
-        val nightThemeId by florisPrefs.theme.nightThemeId.collectAsState()
-        val currentMode by florisPrefs.theme.mode.collectAsState()
-        val coroutineScope = rememberCoroutineScope()
-        // 간단 설정처럼 지금 쓰는 자판에 각 테마 색을 입혀 미리 보여 준다.
-        val context = LocalContext.current
-        val subtypeManager by context.subtypeManager()
-        val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
-        val customPalette = rememberCustomPreviewPalette()
-        val palettes = remember(context) {
-            malangThemes.filter { it.compId != "custom" }
-                .associateWith { loadPreviewPalette(context, it.extId, it.compId) ?: DefaultPreviewPalette }
+fun ThemeScreen() = MalangSettingsScreen(title = "꾸미기", subtitle = "Customize", scrollable = false) {
+    val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val currentThemeId = rememberCurrentThemeId()
+    val isCustomActive = rememberIsCustomThemeActive()
+    val basePalette = rememberCustomBasePalette()
+    val customPalette = rememberCustomPreviewPalette()
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    var tab by rememberSaveable { mutableStateOf(CustomizeTab.COLORS) }
+
+    // 어디서 들어오든 꾸미기는 커스텀 테마에서 한다. 다른 테마를 쓰는 중이면 그 테마에서 커스텀을 시작한다.
+    LaunchedEffect(Unit) {
+        if (!isCustomActive) {
+            applyMalangTheme(prefs, malangThemes.first { it.compId == "custom" }, currentThemeId)
         }
+    }
 
-        run {
-            run {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(malangThemes) { themeInfo ->
+    // 미리보기와 탭은 위에 두고, 아래 내용만 스크롤한다.
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .border(1.dp, MalangSettingsBorder, RoundedCornerShape(24.dp)),
+        ) {
+            Column {
+                // 스마트바 색과 사진 아이콘도 바로 보이게 미리보기 위에 스마트바 줄을 붙인다.
+                SmartbarPreviewStrip(basePalette = basePalette)
+                KeyboardPreview(subtype = activeSubtype, palette = customPalette, height = 128.dp)
+            }
+        }
+        MalangSegmentedTabs(
+            labels = CustomizeTab.entries.map { it.label },
+            selectedIndex = tab.ordinal,
+            onSelect = { tab = CustomizeTab.entries[it] },
+        )
+    }
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        when (tab) {
+            CustomizeTab.COLORS -> {
+                CustomColorsSection(basePalette = basePalette)
+                val scope = rememberCoroutineScope()
+                MalangButton(
+                    "바꾼 색 모두 되돌리기",
+                    modifier = Modifier.fillMaxWidth(),
+                    primary = false,
+                    // 커스텀을 시작한 테마의 색으로 돌아간다.
+                    onClick = { scope.launch { prefs.malang.clearCustomColors() } },
+                )
+            }
+            CustomizeTab.PHOTO -> CustomBgImageSection()
+            CustomizeTab.SMARTBAR -> {
+                CustomSmartbarSection()
+                val navController = LocalNavController.current
+                MalangSettingsSection(
+                    items = listOf<@Composable () -> Unit>({
+                        MalangNavRow(
+                            title = "스마트바 버튼 바꾸기",
+                            summary = "버튼 종류와 순서는 스마트바 설정에서 바꿔요.",
+                            onClick = { navController.navigate(Routes.Settings.Smartbar) },
+                        )
+                    }),
+                )
+            }
+        }
+        SaveCurrentThemeButton(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
+    }
+}
+
+/** 둥근 칸 안에 글자 탭을 나란히 둔다. 고른 칸은 흰 카드처럼 떠 보인다. */
+@Composable
+fun MalangSegmentedTabs(labels: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(MalangSettingsBorder.copy(alpha = 0.55f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        labels.forEachIndexed { index, label ->
+            val selected = index == selectedIndex
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (selected) MalangSettingsCard else Color.Transparent)
+                    .clickable { onSelect(index) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    color = if (selected) MalangSettingsSection else MalangSettingsSummary,
+                    fontSize = 16.sp,
+                    fontFamily = MalangJuaFont,
+                )
+            }
+        }
+    }
+}
+
+/** 지금 커스텀 테마를 이름을 붙여 내 테마에 저장하는 버튼. */
+@Composable
+fun SaveCurrentThemeButton(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val libraryJson by prefs.malang.customThemeLibrary.collectAsState()
+    val count = remember(libraryJson) { CustomThemeLibrary.decode(libraryJson).size }
+    var naming by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+    MalangButton(
+        if (count >= CustomThemeLibrary.MaxThemes) "내 테마가 가득 찼어요" else "내 테마로 저장",
+        modifier = modifier,
+        enabled = !busy && count < CustomThemeLibrary.MaxThemes,
+        onClick = { naming = true },
+    )
+    if (naming) {
+        ThemeNameDialog(
+            title = "테마 저장하기",
+            initialName = "내 테마 ${count + 1}",
+            onDismiss = { naming = false },
+            onConfirm = { name ->
+                naming = false
+                busy = true
+                scope.launch {
+                    CustomThemeLibrary.saveCurrent(context, prefs, name)
+                        .onSuccess { Toast.makeText(context, "'$name'을(를) 내 테마에 저장했어요.", Toast.LENGTH_SHORT).show() }
+                        .onFailure { Toast.makeText(context, "테마를 저장하지 못했어요.", Toast.LENGTH_SHORT).show() }
+                    busy = false
+                }
+            },
+        )
+    }
+}
+
+/** 테마 탭 맨 위: 지금 키보드 모양과 이름, 그 모양을 고치는 꾸미기 버튼. */
+@Composable
+fun CurrentThemeCard(onCustomize: () -> Unit) {
+    val context = LocalContext.current
+    val prefs by FlorisPreferenceStore
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    val palette = rememberActivePreviewPalette()
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val nightThemeId by prefs.theme.nightThemeId.collectAsState()
+    val mode by prefs.theme.mode.collectAsState()
+    // 꾸민 모양(커스텀)은 테마 목록에 없으므로 따로 이름을 붙인다.
+    val current = malangThemes.firstOrNull { isMalangThemeSelected(it, mode, dayThemeId, nightThemeId) }
+    val (name, summary) = when {
+        current == null -> "기본 모양" to null
+        current.compId == "custom" -> "꾸민 테마" to "내 테마로 저장해 두면 언제든 다시 쓸 수 있어요."
+        else -> current.name to null
+    }
+    MalangSettingsSection(
+        title = "지금 키보드",
+        items = listOf<@Composable () -> Unit>({
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                Text(name, color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (summary != null) {
+                    Text(summary, color = MalangSettingsSummary, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                }
+                // 기본 테마는 바로 아래 목록에 같은 미리보기가 있으므로, 목록에 없는 꾸민 테마일 때만 보여 준다.
+                if (current?.compId == "custom") {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    KeyboardPreview(subtype = activeSubtype, palette = palette, height = 120.dp)
+                }
+                MalangButton(
+                    "✏️ 꾸미기",
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+                    onClick = onCustomize,
+                )
+            }
+        }),
+    )
+}
+
+/**
+ * 기본 테마 고르기. 누르면 바로 적용된다. 꾸미기는 테마가 아니라 지금 테마를 고치는 일이라 여기에 없다.
+ * 테마 탭(스크롤 안)에 놓이므로 Lazy 목록 대신 두 개씩 줄로 놓는다.
+ */
+@Composable
+fun ThemePickerSection() {
+    val prefs by FlorisPreferenceStore
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val dayThemeId by prefs.theme.dayThemeId.collectAsState()
+    val nightThemeId by prefs.theme.nightThemeId.collectAsState()
+    val currentMode by prefs.theme.mode.collectAsState()
+    val currentThemeId = rememberCurrentThemeId()
+    val subtypeManager by context.subtypeManager()
+    val activeSubtype by subtypeManager.activeSubtypeFlow.collectAsState()
+    val palettes = remember(context) {
+        malangThemes.filter { it.compId != "custom" }
+            .associateWith { loadPreviewPalette(context, it.extId, it.compId) ?: DefaultPreviewPalette }
+    }
+
+    Column {
+        Text(
+            "기본 테마",
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
+            color = MalangSettingsSection,
+            fontSize = 23.sp,
+            fontFamily = MalangJuaFont,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            for (row in malangThemes.filter { it.compId != "custom" }.chunked(2)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    for (themeInfo in row) {
                         val isSelected = isMalangThemeSelected(themeInfo, currentMode, dayThemeId, nightThemeId)
-
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .weight(1f)
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(if (isSelected) MalangSettingsSection else MalangSettingsCard)
-                                .clickable {
-                                    coroutineScope.launch { applyMalangTheme(florisPrefs, themeInfo) }
-                                }
+                                .clickable { scope.launch { applyMalangTheme(prefs, themeInfo, currentThemeId) } }
                                 .border(1.dp, if (isSelected) MalangSettingsSection else MalangSettingsBorder, RoundedCornerShape(24.dp))
                                 .padding(vertical = 12.dp, horizontal = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
@@ -219,134 +465,26 @@ fun ThemeScreen() = MalangSettingsScreen(title = "키보드 테마", subtitle = 
                                     modifier = Modifier.weight(1f),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) MalangSettingsCard else MalangSettingsTitle
+                                    color = if (isSelected) MalangSettingsCard else MalangSettingsTitle,
                                 )
                                 if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
                                         tint = MalangSettingsCard,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp),
                                     )
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             KeyboardPreview(
                                 subtype = activeSubtype,
-                                palette = if (themeInfo.compId == "custom") customPalette else palettes.getValue(themeInfo),
+                                palette = palettes.getValue(themeInfo),
                                 height = 96.dp,
                             )
                         }
                     }
-                    
-                    val isCustomThemeSelected = dayThemeId.componentId == "custom"
-
-                    item(span = { GridItemSpan(2) }) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                            MyThemesSection(canSaveCurrent = isCustomThemeSelected)
-                        }
-                    }
-
-                    if (isCustomThemeSelected) {
-                        item(span = { GridItemSpan(2) }) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                                CustomBgImageSection()
-                            }
-                        }
-
-                        item(span = { GridItemSpan(2) }) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    "커스텀 색상",
-                                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
-                                    color = MalangSettingsSection,
-                                    fontFamily = MalangJuaFont,
-                                    fontSize = 23.sp
-                                )
-                            }
-                        }
-    
-                        item(span = { GridItemSpan(2) }) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                ColorSwatchCard(
-                                    title = "배경 색상",
-                                    pref = florisPrefs.malang.customKeyboardBgColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                ColorSwatchCard(
-                                    title = "키캡 색상",
-                                    pref = florisPrefs.malang.customKeyBgColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                ColorSwatchCard(
-                                    title = "글자 색상",
-                                    pref = florisPrefs.malang.customKeyTextColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-    
-                        item(span = { GridItemSpan(2) }) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                ColorSwatchCard(
-                                    title = "특수 키캡",
-                                    pref = florisPrefs.malang.customEnterKeyBgColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                ColorSwatchCard(
-                                    title = "특수 글자",
-                                    pref = florisPrefs.malang.customEnterKeyTextColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-
-                        item(span = { GridItemSpan(2) }) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                ColorSwatchCard(
-                                    title = "엔터 키 색상",
-                                    pref = florisPrefs.malang.customRealEnterKeyBgColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                ColorSwatchCard(
-                                    title = "엔터 글자 색상",
-                                    pref = florisPrefs.malang.customRealEnterKeyTextColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-
-                        item(span = { GridItemSpan(2) }) {
-                            MalangButton(
-                                "기본 커스텀 색으로 되돌리기",
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                                primary = false,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        florisPrefs.malang.customKeyboardBgColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customKeyBgColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customKeyTextColor.set(Color(0xFF311D18))
-                                        florisPrefs.malang.customEnterKeyBgColor.set(Color(0xFF311D18))
-                                        florisPrefs.malang.customEnterKeyTextColor.set(Color(0xFFFCF5D6))
-                                        florisPrefs.malang.customRealEnterKeyBgColor.set(Color(0xFF5D4037))
-                                        florisPrefs.malang.customRealEnterKeyTextColor.set(Color(0xFFFFFFFF))
-                                    }
-                                },
-                            )
-                        }
-                    }
+                    if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -479,17 +617,16 @@ private fun CustomBgImageSection() {
     MalangSettingsSection(title = "배경 사진", items = items)
 }
 
-/** 저장해 둔 커스텀 테마 목록. 누르면 불러오고, 길게 누르면 이름 바꾸기·지우기. */
+/** 내 테마: 꾸며서 저장했거나 받은 테마. 누르면 적용, 길게 누르면 공유·이름 바꾸기·지우기. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MyThemesSection(canSaveCurrent: Boolean) {
+fun MyThemesSection() {
     val context = LocalContext.current
     val prefs by FlorisPreferenceStore
     val scope = rememberCoroutineScope()
     val libraryJson by prefs.malang.customThemeLibrary.collectAsState()
     val themes = remember(libraryJson) { CustomThemeLibrary.decode(libraryJson) }
     var naming by remember { mutableStateOf<CustomThemeLibrary.SavedTheme?>(null) }
-    var savingNew by remember { mutableStateOf(false) }
     var managing by remember { mutableStateOf<CustomThemeLibrary.SavedTheme?>(null) }
     var busy by remember { mutableStateOf(false) }
     val customTheme = remember { malangThemes.first { it.compId == "custom" } }
@@ -511,7 +648,7 @@ private fun MyThemesSection(canSaveCurrent: Boolean) {
             Column(modifier = Modifier.padding(vertical = 14.dp)) {
                 if (themes.isEmpty()) {
                     Text(
-                        "커스텀 테마를 꾸민 뒤 저장해 두면, 언제든 눌러서 다시 쓸 수 있어요.",
+                        "꾸미기에서 '내 테마로 저장'을 누르면 여기에 모여요. 누르면 바로 적용돼요.",
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MalangText,
                         fontSize = 14.sp,
@@ -566,15 +703,6 @@ private fun MyThemesSection(canSaveCurrent: Boolean) {
                         fontSize = 12.sp,
                     )
                 }
-                if (canSaveCurrent) {
-                    MalangButton(
-                        "지금 테마 저장하기",
-                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
-                        primary = false,
-                        enabled = !busy && themes.size < CustomThemeLibrary.MaxThemes,
-                        onClick = { savingNew = true },
-                    )
-                }
                 MalangButton(
                     "받은 테마 파일 가져오기",
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
@@ -588,23 +716,6 @@ private fun MyThemesSection(canSaveCurrent: Boolean) {
     }
     MalangSettingsSection(title = "내 테마", items = items)
 
-    if (savingNew) {
-        ThemeNameDialog(
-            title = "테마 저장하기",
-            initialName = "내 테마 ${themes.size + 1}",
-            onDismiss = { savingNew = false },
-            onConfirm = { name ->
-                savingNew = false
-                busy = true
-                scope.launch {
-                    CustomThemeLibrary.saveCurrent(context, prefs, name)
-                        .onSuccess { Toast.makeText(context, "'$name'을(를) 저장했어요.", Toast.LENGTH_SHORT).show() }
-                        .onFailure { Toast.makeText(context, "테마를 저장하지 못했어요.", Toast.LENGTH_SHORT).show() }
-                    busy = false
-                }
-            },
-        )
-    }
     managing?.let { theme ->
         AlertDialog(
             onDismissRequest = { managing = null },
@@ -699,75 +810,4 @@ private fun ThemeNameDialog(
             TextButton(onClick = onDismiss) { Text("취소", color = MalangSettingsSummary) }
         },
     )
-}
-
-@OptIn(dev.patrickgold.jetpref.material.ui.ExperimentalJetPrefMaterial3Ui::class)
-@Composable
-fun ColorSwatchCard(
-    title: String,
-    pref: PreferenceData<Color>,
-    modifier: Modifier = Modifier
-) {
-    val color by pref.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(MalangSettingsCard)
-            .border(1.dp, MalangSettingsBorder, RoundedCornerShape(24.dp))
-            .clickable { showDialog = true }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .shadow(3.dp, RoundedCornerShape(24.dp))
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(if (color == Color.Unspecified) Color(0xFFEEEEEE) else color)
-                    .border(2.dp, MalangBg, RoundedCornerShape(24.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                if (color == Color.Unspecified) {
-                    Text("🎨", fontSize = 18.sp)
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = title,
-                fontFamily = MalangJuaFont,
-                fontSize = 14.sp,
-                color = MalangText,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-    
-    if (showDialog) {
-        var selectedColor by remember { mutableStateOf(if (color == Color.Unspecified) Color.White else color) }
-        val colorPickerState = rememberJetPrefColorPickerState(initColor = selectedColor)
-        JetPrefAlertDialog(
-            title = title,
-            confirmLabel = "선택",
-            onConfirm = {
-                scope.launch {
-                    pref.set(selectedColor)
-                }
-                showDialog = false
-            },
-            dismissLabel = "취소",
-            onDismiss = { showDialog = false }
-        ) {
-            JetPrefColorPicker(
-                state = colorPickerState,
-                onColorChange = { selectedColor = it }
-            )
-        }
-    }
 }

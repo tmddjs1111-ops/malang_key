@@ -52,6 +52,12 @@ for n in root.iter('node'):
         break
 PY
 )
+    # 화면 아래쪽은 떠 있는 하단 탭 막대에 가려진다. 거기 있으면 조금 올린 뒤 다시 찾는다.
+    if [ -n "$pos" ] && [ "${pos#* }" -gt 1950 ]; then
+      adb shell input swipe 540 1500 540 1000 300
+      sleep 1
+      continue
+    fi
     if [ -n "$pos" ]; then
       log "tap '$1' at $pos"
       adb shell input tap $pos

@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>말랑키 쇼츠 자막</title>
-<!-- make_video.mjs가 ?kind=caption|switch|outro&text=… 로 열어 PNG로 찍는다. -->
+<!-- make_video.mjs가 ?kind=caption|switch|outro&text=… 로 열어 PNG로 찍는다.
+     등장 모션은 CSS 애니메이션이고, seek(ms)로 원하는 시점에 멈춰 프레임을 한 장씩 찍는다. -->
 <style>
   @font-face { font-family: Jua; src: url(../../app/src/main/res/font/jua.ttf); }
+  @font-face { font-family: Jalnan; src: url(fonts/Jalnan2.otf); }
   @font-face { font-family: Gmarket; src: url(../../app/src/main/res/font/gmarket_sans.ttf); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { width: 1080px; background: #FBF1D4; color: #4A3028; font-family: Jua; }
@@ -13,17 +15,33 @@
   /* 영상 위쪽 자막 띠 (1080×420) */
   .caption { height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 0 50px; text-align: center; }
   .tag { font-family: Gmarket; font-size: 30px; padding: 10px 26px; border-radius: 999px; background: #3A211B; color: #FFF1CF; }
-  .caption h1 { font-weight: normal; font-size: 92px; line-height: 1.15; }
-  .caption b { font-weight: normal; color: #C2703D; }
+  .caption h1 { font-family: Jalnan; font-weight: normal; font-size: 92px; line-height: 1.15; }
+  .caption b { font-weight: normal; color: #E26A8D; }
 
   /* 전체 화면 카드 (1080×1920) */
   .full { height: 1920px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; text-align: center; }
   .full.dark { background: #3A211B; color: #FFF1CF; }
-  .full h1 { font-weight: normal; font-size: 120px; line-height: 1.15; }
+  .full h1 { font-family: Jalnan; font-weight: normal; font-size: 120px; line-height: 1.15; }
   .full p { font-family: Gmarket; font-size: 46px; color: #866A5F; }
   .full.dark p { color: #E9D5A8; }
   .logo { width: 380px; height: 380px; border-radius: 90px; box-shadow: 0 30px 60px rgba(0,0,0,.35); }
-  .cta { font-family: Jua; font-size: 52px; padding: 26px 56px; border-radius: 999px; background: #FFCC80; color: #3A211B; }
+  .cta { font-family: Jalnan; font-size: 52px; padding: 26px 56px; border-radius: 999px; background: #FFCC80; color: #3A211B; }
+
+  /* 등장 모션 */
+  .caption .tag, .caption h1, .full > * { animation-fill-mode: both; animation-timing-function: cubic-bezier(.34, 1.56, .64, 1); }
+  .caption .tag { animation: drop 250ms both; }
+  .caption h1 { animation: pop 380ms 80ms both cubic-bezier(.34, 1.56, .64, 1); }
+  .full:not(.dark) h1 { animation: pop 450ms both cubic-bezier(.34, 1.56, .64, 1), wiggle 700ms 450ms both ease-in-out; }
+  .full.dark .logo { animation: logo 550ms both cubic-bezier(.34, 1.56, .64, 1); }
+  .full.dark h1 { animation: rise 400ms 300ms both ease-out; }
+  .full.dark p { animation: rise 400ms 450ms both ease-out; }
+  .full.dark .cta { animation: pop 400ms 650ms both cubic-bezier(.34, 1.56, .64, 1), pulse 800ms 1100ms 2 ease-in-out; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.55); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+  @keyframes logo { from { opacity: 0; transform: scale(.2) rotate(-12deg); } to { opacity: 1; transform: none; } }
+  @keyframes pulse { 50% { transform: scale(1.07); } }
+  @keyframes wiggle { 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
 </style>
 </head>
 <body>
@@ -46,6 +64,17 @@ if (kind === 'caption') {
     <span class="cta">다운로드하러 가기 👇</span>
   </div>`;
 }
+
+// 제목이 한 줄에 들어가도록 글자 크기를 줄인다 (폰트를 읽은 뒤 make_video.mjs가 호출)
+window.fit = () => document.querySelectorAll('h1').forEach(h => {
+  h.style.whiteSpace = 'nowrap';
+  const max = document.body.clientWidth - 100;
+  let size = parseFloat(getComputedStyle(h).fontSize);
+  while (h.scrollWidth > max && size > 40) h.style.fontSize = `${(size -= 2)}px`;
+});
+
+// make_video.mjs가 호출: 모든 애니메이션을 ms 시점에 멈춘다
+window.seek = ms => document.getAnimations().forEach(a => { a.pause(); a.currentTime = ms; });
 </script>
 </body>
 </html>

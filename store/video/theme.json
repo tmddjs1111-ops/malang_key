@@ -1,0 +1,143 @@
+{
+  "name": "theme",
+  "title": "테마·글꼴 쇼츠 스토리보드",
+  "bgm": {
+    "file": "bgm/lnplusmusic-funk-funk-music-611911.mp3",
+    "source": "https://pixabay.com/music/funk-funk-funk-music-611911/",
+    "start": 0,
+    "volume": 0.4,
+    "fadeOut": 1.5
+  },
+  "cuts": [
+    {
+      "clip": "theme/01_before",
+      "from": 0.3,
+      "to": 6.3,
+      "speed": 1.5,
+      "caption": "키보드, 맨날 똑같죠? 😐",
+      "tts": "키보드, 맨날 똑같지 않으세요?",
+      "screen": "before",
+      "note": "기본 화이트 키보드로 '오늘 뭐 먹지' 입력 (1.5배속)"
+    },
+    {
+      "card": "switch",
+      "duration": 1.2,
+      "caption": "매일 보는 키보드, 귀엽게 👇",
+      "tts": "매일 보는 키보드, 귀엽게 바꿔 봐요.",
+      "screen": "switch",
+      "note": "전체 화면 자막 카드"
+    },
+    {
+      "clip": "theme/02_themes",
+      "from": 0.6,
+      "to": 6.3,
+      "speed": 1.3,
+      "crop": {
+        "y": 560,
+        "h": 1500
+      },
+      "caption": "① 테마 <b>톡</b> 고르고",
+      "tts": "테마를 톡 고르면",
+      "screen": "themes",
+      "note": "테마 탭에서 파스텔 핑크→민트→바나나→스카이→다크 초콜릿을 차례로 누름 (1.3배속)"
+    },
+    {
+      "clip": "theme/k_pink",
+      "from": 4.0,
+      "to": 5.2,
+      "speed": 1.2,
+      "caption": "파스텔 핑크 🌸",
+      "tts": "핑크, 민트, 바나나,",
+      "screen": "k_pink",
+      "note": "테마별 실제 키보드로 '말랑말랑' 입력 (각 1초)"
+    },
+    {
+      "clip": "theme/k_mint",
+      "from": 4.0,
+      "to": 5.2,
+      "speed": 1.2,
+      "caption": "민트 그린 🌿",
+      "tts": "",
+      "screen": "k_mint",
+      "note": "",
+      "enter": false
+    },
+    {
+      "clip": "theme/k_banana",
+      "from": 4.0,
+      "to": 5.2,
+      "speed": 1.2,
+      "caption": "바나나 옐로우 🍌",
+      "tts": "",
+      "screen": "k_banana",
+      "note": "",
+      "enter": false
+    },
+    {
+      "clip": "theme/k_sky",
+      "from": 4.0,
+      "to": 5.2,
+      "speed": 1.2,
+      "caption": "스카이 블루 ☁️",
+      "tts": "하늘색, 초콜릿까지!",
+      "screen": "k_sky",
+      "note": "",
+      "enter": false
+    },
+    {
+      "clip": "theme/k_choco",
+      "from": 4.0,
+      "to": 5.2,
+      "speed": 1.2,
+      "caption": "다크 초콜릿 🍫",
+      "tts": "",
+      "screen": "k_choco",
+      "note": "",
+      "enter": false
+    },
+    {
+      "clip": "theme/03_font",
+      "from": 1.0,
+      "to": 3.2,
+      "crop": {
+        "y": 400,
+        "h": 1600
+      },
+      "caption": "② 글꼴도 <b>골라요</b> ✍️",
+      "tts": "글꼴도 귀엽게 골라요.",
+      "screen": "font",
+      "note": "키보드 글꼴을 누르면 글꼴 목록이 열림"
+    },
+    {
+      "clip": "theme/03_font",
+      "from": 5.6,
+      "to": 6.87,
+      "crop": {
+        "y": 400,
+        "h": 1600
+      },
+      "caption": "② 글꼴도 <b>골라요</b> ✍️",
+      "tts": "",
+      "screen": "font",
+      "note": "감자꽃을 고름"
+    },
+    {
+      "clip": "theme/04_after",
+      "from": 1.8,
+      "to": 8.6,
+      "speed": 1.6,
+      "caption": "매일이 <b>말랑말랑</b> 💕",
+      "tts": "이제 매일이 말랑말랑!",
+      "screen": "after",
+      "note": "파스텔 핑크 + 감자꽃 글꼴로 같은 문장 입력 (1.6배속)"
+    },
+    {
+      "card": "outro",
+      "duration": 2.5,
+      "caption": "",
+      "tts": "귀엽고 편한 키보드, 말랑키!",
+      "screen": "outro",
+      "note": "로고 + 다운로드하러 가기 👇 (링크는 설명란·고정 댓글)"
+    }
+  ]
+}

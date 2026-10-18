@@ -16,6 +16,7 @@ const page = await browser.newPage({ viewport: { width: 1240, height: 800 } });
 await page.goto(pathToFileURL(path.join(dir, 'storyboard.html')).href);
 await page.evaluate(p => window.render(p), plan);
 await page.evaluate(() => document.fonts.ready);
+await page.evaluate(() => window.fit());
 const file = path.join(outDir, `${name}_storyboard.png`);
 await page.screenshot({ path: file, fullPage: true });
 await browser.close();

@@ -449,8 +449,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Deshabilitado a nivel sistema. No se mostrarán líneas rojas en campos de texto con palabras incorrectas. Toque para cambiar.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">No se ha establecido ningún servicio de corrección ortográfica inline. Toque para cambiar.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Idiomas</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Usar nombres de contactos</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Usar nombres desde su lista de contactos</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Utilizar entradas del diccionario de usuario</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Usar entradas desde los diccionarios del usuario</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Diccionarios del usuario</string>

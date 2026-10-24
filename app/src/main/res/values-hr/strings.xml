@@ -213,8 +213,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Sistemski onemogućeno. Crvene linije se neće prikazivati u slučaju pogrešno napisanih riječi. Kliknite kako biste to promijenili.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Usluga provjere pravopisa nije postavljena. Kliknite kako biste to promijenili.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Jezici</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Koristi imena iz kontakata</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Pregledajte imena iz vašeg popisa kontakata</string>
     <!-- About UI strings -->
     <!-- Setup UI strings -->
     <!-- Physical keyboard -->

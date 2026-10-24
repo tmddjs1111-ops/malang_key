@@ -387,8 +387,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Désactivé à l\'échelle du système. Aucune ligne rouge n\'apparaîtra dans les champs de texte pour les mots incorrects. Appuyez pour changer.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Aucun service de vérificateur d\'orthographe de texte en ligne activé. Appuyez pour changer.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Langues</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Utiliser les noms des contacts</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Ajoute des noms depuis votre liste de contacts</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Utiliser le dictionnaire utilisateur</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Ajoute des noms depuis les dictionnaires personnels</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Dictionnaires utilisateur</string>

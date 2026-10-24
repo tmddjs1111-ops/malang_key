@@ -246,7 +246,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Emoji {
         val historyEnabled = boolean(
             key = "emoji__history_enabled",
-            default = true,
+            default = false,
         )
         val historyData = custom(
             key = "emoji__history_data",
@@ -271,7 +271,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionEnabled = boolean(
             key = "emoji__suggestion_enabled",
-            default = true,
+            default = false,
         )
         val suggestionType = enum(
             key = "emoji__suggestion_type",
@@ -279,7 +279,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionUpdateHistory = boolean(
             key = "emoji__suggestion_update_history",
-            default = true,
+            default = false,
         )
         val suggestionCandidateShowName = boolean(
             key = "emoji__suggestion_candidate_show_name",
@@ -871,10 +871,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val languageMode = enum(
             key = "spelling__language_mode",
             default = SpellingLanguageMode.USE_KEYBOARD_SUBTYPES,
-        )
-        val useContacts = boolean(
-            key = "spelling__use_contacts",
-            default = true,
         )
         val useUdmEntries = boolean(
             key = "spelling__use_udm_entries",

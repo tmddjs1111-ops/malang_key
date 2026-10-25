@@ -453,8 +453,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Отключено для всей системы. В случае написания слов неправильно в текстовых полях не появятся красные подчёркивания. Нажмите, чтобы изменить.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Не настроена служба проверки орфографии текстовых полей. Нажмите, чтобы изменить.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Язык</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Использовать имена из контактов</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Поиск имен в списке контактов</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Использовать записи из словаря пользователя</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Поиск записей в пользовательских словарях</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Пользовательские словари</string>

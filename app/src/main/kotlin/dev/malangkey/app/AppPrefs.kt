@@ -29,7 +29,8 @@ import dev.malangkey.ime.core.DisplayLanguageNamesIn
 import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.input.CapitalizationBehavior
 
-import dev.malangkey.ime.input.HapticVibrationPrimitive
+import dev.malangkey.ime.input.HapticFeel
+import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
@@ -409,9 +410,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        val hapticVibrationPrimitive = enum(
-            key = "input_feedback__haptic_vibration_primitive",
-            default = HapticVibrationPrimitive.QUICK_CLICK,
+        val hapticMode = enum(
+            key = "input_feedback__haptic_mode",
+            default = HapticMode.SYSTEM,
+        )
+        /** 직접 조절 모드의 느낌. 예전 haptic_vibration_primitive는 숫자가 잘못 매겨져 있어서 새 키로 바꿨다. */
+        val hapticFeel = enum(
+            key = "input_feedback__haptic_feel",
+            default = HapticFeel.CLICK,
         )
         val hapticVibrationIntensity = int(
             key = "input_feedback__haptic_vibration_intensity",
@@ -423,7 +429,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticFeatKeyLongPress = boolean(
             key = "input_feedback__haptic_feat_key_long_press",
-            default = false,
+            default = true,
         )
         val hapticFeatKeyRepeatedAction = boolean(
             key = "input_feedback__haptic_feat_key_repeated_action",

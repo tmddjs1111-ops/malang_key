@@ -57,6 +57,7 @@ import dev.malangkey.ime.nlp.ClipboardSuggestionCandidate
 import dev.malangkey.ime.nlp.SuggestionCandidate
 import dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider
 import dev.malangkey.ime.theme.FlorisImeUi
+import dev.malangkey.FlorisImeService
 import dev.malangkey.keyboardManager
 import dev.malangkey.nlpManager
 import dev.malangkey.subtypeManager
@@ -106,6 +107,7 @@ fun CandidatesRow(
                     longPressDelay = prefs.keyboard.longPressDelay.get().toLong(),
                     onCandidateClick = { candidate ->
                         onExpandedChange(false)
+                        FlorisImeService.inputFeedbackController()?.keyPress()
                         keyboardManager.commitCandidate(candidate)
                     },
                     onCandidateLongPress = { candidate ->
@@ -157,7 +159,10 @@ fun CandidatesRow(
                             modifier = candidateModifier,
                             candidate = candidate,
                             displayMode = displayMode,
-                            onClick = { keyboardManager.commitCandidate(candidates[n]) },
+                            onClick = {
+                                FlorisImeService.inputFeedbackController()?.keyPress()
+                                keyboardManager.commitCandidate(candidates[n])
+                            },
                             onLongPress = {
                                 val candidateItem = candidates[n]
                                 if (candidateItem.isEligibleForUserRemoval) {

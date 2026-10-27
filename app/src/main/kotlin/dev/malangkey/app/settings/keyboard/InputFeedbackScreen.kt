@@ -25,26 +25,27 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
-import dev.malangkey.ime.input.HapticVibrationPrimitive
+import dev.malangkey.ime.input.HapticFeel
+import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrateClick
+import org.florisboard.lib.android.vibrateKeyHaptic
 
 private val ActivationModeEntries = listOf(
-    InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS to "시스템 설정 따르기",
-    InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS to "항상 사용 (시스템 설정 무시)",
+    InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS to "그래도 진동",
+    InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS to "진동 안 함",
 )
 
-private val VibrationPrimitiveEntries = listOf(
-    HapticVibrationPrimitive.CLICK to "클릭",
-    HapticVibrationPrimitive.QUICK_CLICK to "빠른 클릭",
-    HapticVibrationPrimitive.TICK to "틱",
-    HapticVibrationPrimitive.LOW_TICK to "약한 틱",
-    HapticVibrationPrimitive.THUD to "묵직하게",
-    HapticVibrationPrimitive.SPIN to "회전",
-    HapticVibrationPrimitive.QUICK_RISE to "빠르게 올라가기",
-    HapticVibrationPrimitive.SLOW_RISE to "천천히 올라가기",
+private val HapticModeEntries = listOf(
+    HapticMode.SYSTEM to "휴대폰 키보드 진동 (추천)",
+    HapticMode.CUSTOM to "직접 조절",
+)
+
+private val HapticFeelEntries = listOf(
+    HapticFeel.CLICK to "또각 (또렷하게)",
+    HapticFeel.TICK to "톡 (가볍게)",
+    HapticFeel.LOW_TICK to "톡 (부드럽게)",
 )
 
 @Composable
@@ -54,6 +55,8 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
     val vibrator = context.systemVibratorOrNull()
     val audioEnabled by prefs.inputFeedback.audioEnabled.collectAsState()
     val hapticEnabled by prefs.inputFeedback.hapticEnabled.collectAsState()
+    val hapticMode by prefs.inputFeedback.hapticMode.collectAsState()
+    val isCustomHaptic = hapticEnabled && hapticMode == HapticMode.CUSTOM
 
     MalangSettingsSection(
         title = "소리",
@@ -93,12 +96,11 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     enabled = audioEnabled,
                 )
             },
-            { MalangSwitchRow(prefs.inputFeedback.audioFeatGestureSwipe, "스와이프 제스처", enabled = audioEnabled) },
             {
                 MalangSwitchRow(
                     prefs.inputFeedback.audioFeatGestureMovingSwipe,
-                    title = "커서 이동 스와이프",
-                    summary = "스페이스바·삭제 키를 밀어서 움직일 때",
+                    title = "삭제 키 밀기",
+                    summary = "삭제 키를 밀어서 글자를 고를 때",
                     enabled = audioEnabled,
                 )
             },
@@ -117,18 +119,18 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
             },
             {
                 MalangChoiceRow(
-                    prefs.inputFeedback.hapticActivationMode,
-                    title = "진동 끔 모드에서",
-                    entries = ActivationModeEntries,
+                    prefs.inputFeedback.hapticMode,
+                    title = "진동 방식",
+                    entries = HapticModeEntries,
                     enabled = hapticEnabled,
                 )
             },
             {
                 MalangChoiceRow(
-                    prefs.inputFeedback.hapticVibrationPrimitive,
+                    prefs.inputFeedback.hapticFeel,
                     title = "진동 느낌",
-                    entries = VibrationPrimitiveEntries,
-                    enabled = hapticEnabled,
+                    entries = HapticFeelEntries,
+                    enabled = isCustomHaptic,
                 )
             },
             {
@@ -139,11 +141,19 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     max = 100,
                     step = 1,
                     unit = "%",
-                    enabled = hapticEnabled,
+                    enabled = isCustomHaptic,
                     onPreview = { intensity ->
-                        val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
-                        vibrator?.vibrateClick(primitive.androidId, intensity / 100f)
+                        val feel = prefs.inputFeedback.hapticFeel.get()
+                        vibrator?.vibrateKeyHaptic(feel.primitiveId, intensity / 100f, feel.predefinedEffectId)
                     },
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.inputFeedback.hapticActivationMode,
+                    title = "휴대폰 '터치 시 진동'이 꺼져 있으면",
+                    entries = ActivationModeEntries,
+                    enabled = hapticEnabled,
                 )
             },
         ),
@@ -158,16 +168,15 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                 MalangSwitchRow(
                     prefs.inputFeedback.hapticFeatKeyRepeatedAction,
                     title = "반복 입력",
-                    summary = "삭제 키를 누르고 있을 때처럼 반복되는 입력",
+                    summary = "삭제 키를 누르고 있을 때 지울 때마다 톡",
                     enabled = hapticEnabled,
                 )
             },
-            { MalangSwitchRow(prefs.inputFeedback.hapticFeatGestureSwipe, "스와이프 제스처", enabled = hapticEnabled) },
             {
                 MalangSwitchRow(
                     prefs.inputFeedback.hapticFeatGestureMovingSwipe,
-                    title = "커서 이동 스와이프",
-                    summary = "스페이스바·삭제 키를 밀어서 움직일 때",
+                    title = "삭제 키 밀기",
+                    summary = "삭제 키를 밀어서 글자를 고를 때 한 칸마다 톡",
                     enabled = hapticEnabled,
                 )
             },

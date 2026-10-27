@@ -18,7 +18,9 @@ package dev.malangkey.ime.input
 
 import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
+import android.os.SystemClock
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.KeyData
@@ -27,8 +29,7 @@ import dev.malangkey.ime.text.keyboard.TextKeyData
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrate
-import org.florisboard.lib.android.vibrateClick
+import org.florisboard.lib.android.vibrateKeyHaptic
 import dev.malangkey.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,10 @@ val LocalInputFeedbackController = staticCompositionLocalOf<InputFeedbackControl
  */
 class InputFeedbackController private constructor(private val ims: InputMethodService) {
     companion object {
+        private const val MIN_TICK_INTERVAL_MS = 30L
+        /** VibrationEffect.EFFECT_HEAVY_CLICK */
+        private const val EFFECT_HEAVY_CLICK = 5
+
         fun new(ims: InputMethodService) = InputFeedbackController(ims)
     }
 
@@ -84,27 +89,27 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     // 진동은 손끝에 바로 와야 해서 소리보다 먼저, 다른 스레드로 넘기지 않고 이 자리에서 낸다.
     fun keyPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(data, 1.0)
+        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS)
         if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
     }
 
     fun keyLongPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyLongPress.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.hapticFeatKeyLongPress.get()) performHapticFeedback(HapticEvent.LONG_PRESS)
         if (prefs.inputFeedback.audioFeatKeyLongPress.get()) performAudioFeedback(data, 0.7)
     }
 
     fun keyRepeatedAction(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyRepeatedAction.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.hapticFeatKeyRepeatedAction.get()) performHapticFeedback(HapticEvent.TICK)
         if (prefs.inputFeedback.audioFeatKeyRepeatedAction.get()) performAudioFeedback(data, 0.4)
     }
 
     fun gestureSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatGestureSwipe.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.hapticFeatGestureSwipe.get()) performHapticFeedback(HapticEvent.LONG_PRESS)
         if (prefs.inputFeedback.audioFeatGestureSwipe.get()) performAudioFeedback(data, 0.7)
     }
 
     fun gestureMovingSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatGestureMovingSwipe.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.hapticFeatGestureMovingSwipe.get()) performHapticFeedback(HapticEvent.TICK)
         if (prefs.inputFeedback.audioFeatGestureMovingSwipe.get()) performAudioFeedback(data, 0.4)
     }
 
@@ -144,29 +149,67 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         audioManager.playSoundEffect(effect, volume.toFloat())
     }
 
-    private fun performHapticFeedback(data: KeyData, factor: Double) {
-        if (vibrator == null) {
-            flogDebug { "Haptic skipped: vibrator is null" }
-            return
-        }
-        if (!prefs.inputFeedback.hapticEnabled.get()) {
-            flogDebug { "Haptic skipped: hapticEnabled is false" }
-            return
-        }
+    private enum class HapticEvent {
+        KEY_PRESS,
+        LONG_PRESS,
+        /** 삭제 반복·커서 이동처럼 잇달아 나는 가벼운 진동. */
+        TICK,
+    }
+
+    private var lastTickUptime = 0L
+
+    private fun performHapticFeedback(event: HapticEvent) {
+        if (vibrator == null) return
+        if (!prefs.inputFeedback.hapticEnabled.get()) return
         if (prefs.inputFeedback.hapticActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemHapticEnabled) {
-            flogDebug { "Haptic skipped: respect system settings and system haptic is disabled" }
             return
         }
+        if (event == HapticEvent.TICK) {
+            // 잇단 틱이 한데 뭉쳐 웅 하고 울리지 않도록 간격을 둔다.
+            val now = SystemClock.uptimeMillis()
+            if (now - lastTickUptime < MIN_TICK_INTERVAL_MS) return
+            lastTickUptime = now
+        }
 
-        flogDebug { "Performing haptic feedback (factor=$factor)" }
-        try {
-            val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
-            val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
-            flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
-            vibrator.vibrateClick(primitive.androidId, intensity)
-        } catch (e: Exception) {
-            flogDebug { "Haptic execution failed: ${e.message}" }
+        if (prefs.inputFeedback.hapticMode.get() == HapticMode.SYSTEM && performSystemHaptic(event)) return
+        performCustomHaptic(event)
+    }
+
+    /**
+     * 휴대폰의 키보드 진동을 쓴다. 시스템 '터치 시 진동'이 꺼져 있으면 시스템이 울려 주지 않으므로
+     * false를 돌려 직접 울리게 한다.
+     */
+    private fun performSystemHaptic(event: HapticEvent): Boolean {
+        if (!systemHapticEnabled) return false
+        val view = ims.window?.window?.decorView ?: return false
+        val constant = when (event) {
+            HapticEvent.KEY_PRESS -> HapticFeedbackConstants.KEYBOARD_TAP
+            HapticEvent.LONG_PRESS -> HapticFeedbackConstants.LONG_PRESS
+            HapticEvent.TICK -> if (AndroidVersion.ATLEAST_API27_O_MR1) {
+                HapticFeedbackConstants.TEXT_HANDLE_MOVE
+            } else {
+                HapticFeedbackConstants.CLOCK_TICK
+            }
+        }
+        return view.performHapticFeedback(constant)
+    }
+
+    private fun performCustomHaptic(event: HapticEvent) {
+        val vibrator = vibrator ?: return
+        val intensity = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f
+        when (event) {
+            HapticEvent.KEY_PRESS -> {
+                val feel = prefs.inputFeedback.hapticFeel.get()
+                vibrator.vibrateKeyHaptic(feel.primitiveId, intensity, feel.predefinedEffectId)
+            }
+            HapticEvent.LONG_PRESS -> {
+                // 길게 누르기는 일반 키보다 또렷해야 알아챈다.
+                vibrator.vibrateKeyHaptic(HapticFeel.CLICK.primitiveId, intensity, EFFECT_HEAVY_CLICK)
+            }
+            HapticEvent.TICK -> {
+                vibrator.vibrateKeyHaptic(HapticFeel.TICK.primitiveId, intensity * 0.6f, HapticFeel.TICK.predefinedEffectId)
+            }
         }
     }
 }

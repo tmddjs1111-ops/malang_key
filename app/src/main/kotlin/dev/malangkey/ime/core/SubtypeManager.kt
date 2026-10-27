@@ -85,13 +85,15 @@ class SubtypeManager(context: Context) {
     }
 
     init {
-        combine(
-            prefs.keyboard.wideScreenKoreanLayout.asFlow(),
-            prefs.keyboard.wideScreenCondition.asFlow(),
-            FoldState.isUnfolded,
-            FoldState.isLandscape,
-        ) { _, _, _, _ -> }.collectLatestIn(scope) {
-            publishActiveSubtype()
+        scope.launch {
+            combine(
+                prefs.keyboard.wideScreenKoreanLayout.asFlow(),
+                prefs.keyboard.wideScreenCondition.asFlow(),
+                FoldState.isUnfolded,
+                FoldState.isLandscape,
+            ) { _, _, _, _ -> }.collect {
+                publishActiveSubtype()
+            }
         }
 
         prefs.localization.subtypes.asFlow().collectLatestIn(scope) { listRaw ->

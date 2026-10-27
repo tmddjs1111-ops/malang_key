@@ -34,6 +34,7 @@ import dev.malangkey.app.apptheme.MalangSliderRow
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.WideScreenCondition
 import dev.malangkey.ime.text.key.KeyHintMode
 import dev.patrickgold.jetpref.datastore.model.PreferenceData
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -45,11 +46,21 @@ private val HintModeEntries = listOf(
     KeyHintMode.SMART_PRIORITY to "스마트 우선",
 )
 
+/** 천지인 등으로 치다가 폴더블을 펼치거나 가로로 돌렸을 때 바꿔 쓸 한글 자판. */
+private val WideScreenKoreanLayoutEntries = listOf(
+    "" to "바꾸지 않음",
+    "korean" to "두벌식 (쿼티)",
+    "korean_cheonjiin_16" to "천지인",
+    "korean_sky_vega" to "연타형",
+    "korean_naratgul" to "획추가형",
+)
+
 @Composable
 fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val numberRow by prefs.keyboard.numberRow.collectAsState()
+    val wideScreenKoreanLayout by prefs.keyboard.wideScreenKoreanLayout.collectAsState()
 
     MalangSettingsSection(
         title = "키보드 언어 및 레이아웃",
@@ -142,8 +153,27 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
     )
 
     MalangSettingsSection(
-        title = "폴더블·분리 자판",
+        title = "폴더블·가로 화면",
         items = listOf(
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.wideScreenKoreanLayout,
+                    title = "펼쳤을 때 한글 자판",
+                    entries = WideScreenKoreanLayoutEntries,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.wideScreenCondition,
+                    title = "바꿔 쓸 때",
+                    entries = listOf(
+                        WideScreenCondition.UNFOLDED_OR_LANDSCAPE to "펼쳤을 때·가로 화면일 때",
+                        WideScreenCondition.UNFOLDED_ONLY to "펼쳤을 때만",
+                        WideScreenCondition.LANDSCAPE_ONLY to "가로 화면일 때만",
+                    ),
+                    enabled = wideScreenKoreanLayout.isNotEmpty(),
+                )
+            },
             {
                 MalangSwitchRow(
                     prefs.keyboard.splitWhenUnfolded,

@@ -33,6 +33,7 @@ import dev.malangkey.ime.input.HapticVibrationPrimitive
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.WideScreenCondition
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
 import dev.malangkey.ime.media.emoji.EmojiHairStyle
 import dev.malangkey.ime.media.emoji.EmojiHistory
@@ -579,6 +580,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val splitWhenFolded = boolean(
             key = "keyboard__split_when_folded",
             default = false,
+        )
+        /** 펼쳤을 때·가로 화면에서 쓸 한글 자판 id (예: korean). 비어 있으면 바꾸지 않는다. */
+        val wideScreenKoreanLayout = string(
+            key = "keyboard__wide_screen_korean_layout",
+            default = "",
+        )
+        val wideScreenCondition = enum(
+            key = "keyboard__wide_screen_condition",
+            default = WideScreenCondition.UNFOLDED_OR_LANDSCAPE,
         )
         /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
         val splitGapPercent = int(

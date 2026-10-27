@@ -98,7 +98,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val quickPhraseTriggerKey = enum(
             key = "clipboard__quick_phrase_trigger_key",
-            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.PERIOD,
+            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.ENTER,
         )
         val syncToFloris = enum(
             key = "clipboard__sync_to_floris",
@@ -187,7 +187,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val doubleSpacePeriod = boolean(
             key = "correction__double_space_period",
-            default = true,
+            default = false,
         )
         val rememberCapsLockState = boolean(
             key = "correction__remember_caps_lock_state",
@@ -557,7 +557,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val longPressDelay = int(
             key = "keyboard__long_press_delay",
-            default = 400,
+            default = 200,
         )
         val incognitoDisplayMode = enum(
             key = "keyboard__incognito_indicator",
@@ -702,14 +702,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
-            default = 6,
+            default = 5,
         )
         val malangSlots = custom(
             key = "smartbar__malang_slots",
             default = listOf(
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
                 // 자판에는 이모지 키가 없어서 이모지 패널은 여기서 연다.
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),

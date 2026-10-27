@@ -548,7 +548,7 @@ private fun SmartbarStep() {
         }
     }
 
-    MalangInfoCard("처음에는 붙여넣기 · 복사 · 전체 선택 · 이모지 · ← · → 가 들어 있어요. 대부분 이대로 쓰시는 걸 추천해요!")
+    MalangInfoCard("처음에는 붙여넣기 · 복사 · 이모지 · ← · → 가 들어 있어요. 대부분 이대로 쓰시는 걸 추천해요!")
     MalangSettingsSection(
         items = listOf(
             { MalangSwitchRow(prefs.smartbar.enabled, "스마트 바 사용", "키보드 위에 기능 버튼 줄을 표시합니다.") },
@@ -565,7 +565,7 @@ private fun SmartbarStep() {
                 }
             },
             {
-                MalangNavRow(title = "추천 구성으로 되돌리기", summary = "붙여넣기 · 복사 · 전체 선택 · 이모지 · ← · →") {
+                MalangNavRow(title = "추천 구성으로 되돌리기", summary = "붙여넣기 · 복사 · 이모지 · ← · →") {
                     scope.launch {
                         prefs.smartbar.malangSlots.set(prefs.smartbar.malangSlots.default)
                         prefs.smartbar.malangSlotsCount.set(prefs.smartbar.malangSlotsCount.default)

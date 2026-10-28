@@ -35,9 +35,8 @@ toggle_card() {
 
 # 저장된 자판 목록과 활성 자판 id 를 남긴다. (자판 켜고 끄기가 제대로 저장되는지 확인용)
 dump_prefs() {
-  adb shell run-as $PKG sh -c 'for f in $(grep -rl localization__subtypes files shared_prefs 2>/dev/null); do echo "## $f"; cat "$f"; echo; done' \
-    | grep -o 'localization__\(active_subtype_id\|subtypes\).\{0,700\}' > "$OUT/prefs_$1.txt" 2>&1
-  log "prefs $1: $(tr '\n' ' ' < "$OUT/prefs_$1.txt" | head -c 400)"
+  adb shell "run-as $PKG grep -rhao 'localization__[a-z_]*.\{0,900\}' files shared_prefs" > "$OUT/prefs_$1.txt" 2>&1
+  log "prefs $1: $(tr '\n' ' ' < "$OUT/prefs_$1.txt" | head -c 600)"
 }
 
 keep_ui() { cp /tmp/ui.xml "$OUT/$1.xml" 2>/dev/null; }
@@ -77,6 +76,11 @@ dump_prefs after_off
 shot f05_cheonjiin_only
 show_keyboard
 shot f06_cheonjiin_phone
+dump_prefs at_keyboard
+# 아직 두벌식이면 스페이스바를 옆으로 천천히 밀어 다음 자판으로 바꾼다.
+adb shell input swipe 300 2212 1000 2212 900
+sleep 2
+shot f06b_after_space_swipe
 
 # 4) 폴드 안쪽 화면 크기 (약 775dp 너비) → 좁힌 천지인이 오른쪽에
 adb shell wm size 1812x2176

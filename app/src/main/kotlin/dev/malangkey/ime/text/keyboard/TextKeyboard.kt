@@ -225,18 +225,6 @@ class TextKeyboard(
         }
     }
 
-    /** 모든 키를 가로로 [dx]만큼 옮긴다. 넓은 화면에서 좁힌 격자 자판을 왼쪽·가운데·오른쪽에 둘 때 쓴다. */
-    fun applyHorizontalOffset(dx: Float) {
-        if (dx == 0f) return
-        for (key in keys()) {
-            key.touchBounds.left += dx
-            key.touchBounds.right += dx
-            key.visibleBounds.left += dx
-            key.visibleBounds.right += dx
-            if (key.splitGapWidth > 0f) key.splitGapStart += dx
-        }
-    }
-
     override fun keys(): Iterator<TextKey> {
         return TextKeyboardIterator(arrangement)
     }

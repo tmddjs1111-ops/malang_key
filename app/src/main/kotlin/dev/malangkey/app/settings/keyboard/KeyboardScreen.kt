@@ -62,6 +62,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
     val navController = LocalNavController.current
     val numberRow by prefs.keyboard.numberRow.collectAsState()
     val wideScreenKoreanLayout by prefs.keyboard.wideScreenKoreanLayout.collectAsState()
+    val gridWideCompact by prefs.keyboard.gridWideCompact.collectAsState()
 
     MalangSettingsSection(
         title = "키보드 언어 및 레이아웃",
@@ -204,23 +205,33 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             },
             { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
             {
+                MalangSwitchRow(
+                    prefs.keyboard.gridWideCompact,
+                    title = "격자 자판 좁히기 (천지인·20키)",
+                    summary = "펼치거나 가로로 돌리면 삼성 키보드의 한 손 키보드처럼 좁혀서 한쪽에 둡니다. " +
+                        "빈 쪽의 ◀ ▶ 버튼으로 옮기고, ⤢ 버튼으로 넓힐 수 있어요.",
+                )
+            },
+            {
                 MalangSliderRow(
                     prefs.keyboard.gridWideWidthPercent,
-                    "격자 자판 너비 (천지인·20키)",
+                    "좁힌 자판 너비",
                     min = 30,
-                    max = 100,
+                    max = 90,
                     step = 5,
+                    enabled = gridWideCompact,
                 )
             },
             {
                 MalangChoiceRow(
                     prefs.keyboard.gridWideAlignment,
-                    title = "격자 자판 위치",
+                    title = "좁힌 자판 위치",
                     entries = listOf(
                         GridWideAlignment.LEFT to "왼쪽",
                         GridWideAlignment.CENTER to "가운데",
                         GridWideAlignment.RIGHT to "오른쪽",
                     ),
+                    enabled = gridWideCompact,
                 )
             },
         ),

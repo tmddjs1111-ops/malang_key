@@ -597,14 +597,23 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "keyboard__wide_screen_condition",
             default = WideScreenCondition.UNFOLDED_OR_LANDSCAPE,
         )
-        /** 넓은 화면(펼침·가로)에서 격자 자판의 너비 (키보드 너비의 %). 100이면 줄이지 않는다. */
+        /**
+         * 넓은 화면(펼침·가로·태블릿)에서 격자 자판(천지인·20키 등)을 삼성 키보드의 '한 손 키보드'처럼
+         * 좁혀서 한쪽에 둔다. 빈 쪽에는 자판을 옮기거나 넓히는 버튼이 생긴다.
+         */
+        val gridWideCompact = boolean(
+            key = "keyboard__grid_wide_compact",
+            default = true,
+        )
+        /** 좁힌 격자 자판의 너비 (화면 너비의 %). */
         val gridWideWidthPercent = int(
             key = "keyboard__grid_wide_width_percent",
-            default = 60,
+            default = 50,
         )
+        /** 좁힌 격자 자판의 위치. 삼성 키보드의 한 손 키보드처럼 오른쪽이 기본이다. */
         val gridWideAlignment = enum(
             key = "keyboard__grid_wide_alignment",
-            default = GridWideAlignment.CENTER,
+            default = GridWideAlignment.RIGHT,
         )
         /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
         val splitGapPercent = int(

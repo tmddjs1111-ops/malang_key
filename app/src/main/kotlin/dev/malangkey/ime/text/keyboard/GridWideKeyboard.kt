@@ -2,6 +2,7 @@ package dev.malangkey.ime.text.keyboard
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,11 +127,16 @@ private fun SideControls(width: Dp, height: Dp, content: @Composable () -> Unit)
 @Composable
 private fun SideButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     val keyStyle = rememberSnyggThemeQuery(FlorisImeUi.Key.elementName)
+    val foreground = keyStyle.foreground(default = Color.DarkGray)
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier = Modifier
             .size(56.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(shape)
             .background(keyStyle.background(default = Color.LightGray))
+            // 테마에 따라 키 색이 자판 배경과 같아 버튼이 안 보일 수 있어서, 글자색으로 옅게 칠하고 테두리를 두른다.
+            .background(foreground.copy(alpha = 0.08f))
+            .border(1.5.dp, foreground.copy(alpha = 0.3f), shape)
             .clickable(onClickLabel = description, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -138,7 +144,7 @@ private fun SideButton(icon: ImageVector, description: String, onClick: () -> Un
             imageVector = icon,
             contentDescription = description,
             modifier = Modifier.size(30.dp),
-            tint = keyStyle.foreground(default = Color.DarkGray),
+            tint = foreground,
         )
     }
 }

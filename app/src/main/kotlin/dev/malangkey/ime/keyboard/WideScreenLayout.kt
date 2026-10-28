@@ -9,6 +9,13 @@ enum class WideScreenCondition {
     LANDSCAPE_ONLY;
 }
 
+/** 넓은 화면에서 좁힌 격자 자판(천지인·20키 등)을 둘 위치. */
+enum class GridWideAlignment {
+    LEFT,
+    CENTER,
+    RIGHT;
+}
+
 /**
  * 폴더블을 펼치거나 가로로 돌렸을 때 한글 자판을 다른 것으로 바꿔 쓴다.
  * 예: 접었을 때는 천지인, 펼쳤을 때는 두벌식.

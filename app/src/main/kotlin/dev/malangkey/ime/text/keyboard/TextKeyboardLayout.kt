@@ -19,6 +19,7 @@ package dev.malangkey.ime.text.keyboard
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.animation.AccelerateInterpolator
@@ -77,6 +78,7 @@ import dev.malangkey.ime.editor.OperationUnit
 import dev.malangkey.ime.input.InputEventDispatcher
 import dev.malangkey.ime.keyboard.ComputingEvaluator
 import dev.malangkey.ime.keyboard.FlorisImeSizing
+import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.KeyData
 import dev.malangkey.ime.keyboard.KeyboardMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
@@ -396,11 +398,27 @@ fun TextKeyboardLayout(
             0f
         }
 
+        // 넓은 화면(펼침·가로·태블릿)에서는 격자 자판이 옆으로 길게 늘어지지 않도록 너비를 줄이고
+        // 왼쪽·가운데·오른쪽 중 한곳에 둔다.
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val gridWideWidthPercent by prefs.keyboard.gridWideWidthPercent.collectAsState()
+        val gridWideAlignment by prefs.keyboard.gridWideAlignment.collectAsState()
+        val contentWidth = if (isGridLayout && (isLargeScreen || isLandscape)) {
+            keyboardWidth * gridWideWidthPercent.coerceIn(30, 100) / 100f
+        } else {
+            keyboardWidth
+        }
+        val contentOffset = (keyboardWidth - contentWidth) * when (gridWideAlignment) {
+            GridWideAlignment.LEFT -> 0f
+            GridWideAlignment.CENTER -> 0.5f
+            GridWideAlignment.RIGHT -> 1f
+        }
+
         val desiredKey = remember(
             keyboard, keyboardWidth, keyboardHeight, keyMarginH, keyMarginV,
-            keyboardRowBaseHeight, evaluator, splitGap,
+            keyboardRowBaseHeight, evaluator, splitGap, contentWidth, contentOffset,
         ) {
-            val layoutWidth = keyboardWidth - splitGap
+            val layoutWidth = contentWidth - splitGap
             TextKey(data = TextKeyData.UNSPECIFIED).also { desiredKey ->
                 desiredKey.touchBounds.apply {
                     width = when (keyboard.mode) {
@@ -412,6 +430,7 @@ fun TextKeyboardLayout(
                 desiredKey.visibleBounds.applyFrom(desiredKey.touchBounds).deflateBy(keyMarginH, keyMarginV)
                 keyboard.layout(layoutWidth, keyboardHeight, desiredKey, true)
                 keyboard.applySplit(layoutWidth, splitGap)
+                keyboard.applyHorizontalOffset(contentOffset)
             }
         }
 

@@ -32,6 +32,7 @@ import dev.malangkey.ime.input.CapitalizationBehavior
 import dev.malangkey.ime.input.HapticFeel
 import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
+import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
 import dev.malangkey.ime.keyboard.WideScreenCondition
@@ -595,6 +596,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val wideScreenCondition = enum(
             key = "keyboard__wide_screen_condition",
             default = WideScreenCondition.UNFOLDED_OR_LANDSCAPE,
+        )
+        /** 넓은 화면(펼침·가로)에서 격자 자판의 너비 (키보드 너비의 %). 100이면 줄이지 않는다. */
+        val gridWideWidthPercent = int(
+            key = "keyboard__grid_wide_width_percent",
+            default = 60,
+        )
+        val gridWideAlignment = enum(
+            key = "keyboard__grid_wide_alignment",
+            default = GridWideAlignment.CENTER,
         )
         /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
         val splitGapPercent = int(

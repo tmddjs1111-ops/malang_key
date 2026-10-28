@@ -30,9 +30,12 @@ import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangNavRow
 import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
+import dev.malangkey.app.apptheme.MalangSliderRow
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
+import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.WideScreenCondition
 import dev.malangkey.ime.text.key.KeyHintMode
 import dev.patrickgold.jetpref.datastore.model.PreferenceData
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -44,11 +47,21 @@ private val HintModeEntries = listOf(
     KeyHintMode.SMART_PRIORITY to "스마트 우선",
 )
 
+/** 천지인 등으로 치다가 폴더블을 펼치거나 가로로 돌렸을 때 바꿔 쓸 한글 자판. */
+private val WideScreenKoreanLayoutEntries = listOf(
+    "" to "바꾸지 않음",
+    "korean" to "두벌식 (쿼티)",
+    "korean_cheonjiin_16" to "천지인",
+    "korean_sky_vega" to "연타형",
+    "korean_naratgul" to "획추가형",
+)
+
 @Composable
 fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val numberRow by prefs.keyboard.numberRow.collectAsState()
+    val wideScreenKoreanLayout by prefs.keyboard.wideScreenKoreanLayout.collectAsState()
 
     MalangSettingsSection(
         title = "키보드 언어 및 레이아웃",
@@ -116,7 +129,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "레이아웃",
-                    summary = "키보드 높이, 글자 크기, 키 간격, 폴더블·가로 화면 자판을 설정합니다.",
+                    summary = "키보드 높이, 글자 크기, 키 간격을 설정합니다.",
                     onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
                 )
             },
@@ -148,6 +161,66 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                     max = 700,
                     step = 10,
                     unit = "ms",
+                )
+            },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "폴더블·가로 화면",
+        items = listOf(
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.wideScreenKoreanLayout,
+                    title = "펼쳤을 때 한글 자판",
+                    entries = WideScreenKoreanLayoutEntries,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.wideScreenCondition,
+                    title = "바꿔 쓸 때",
+                    entries = listOf(
+                        WideScreenCondition.UNFOLDED_OR_LANDSCAPE to "펼쳤을 때·가로 화면일 때",
+                        WideScreenCondition.UNFOLDED_ONLY to "펼쳤을 때만",
+                        WideScreenCondition.LANDSCAPE_ONLY to "가로 화면일 때만",
+                    ),
+                    enabled = wideScreenKoreanLayout.isNotEmpty(),
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenUnfolded,
+                    title = "펼쳤을 때 쿼티 자판 나누기",
+                    summary = "폴더블 폰을 펼치면 쿼티 자판을 가운데에서 나눠 양손으로 치기 쉽게 합니다. 태블릿에도 적용돼요.",
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.keyboard.splitWhenFolded,
+                    title = "접었을 때도 나누기",
+                    summary = "일반 폰 화면에서도 자판을 나눕니다.",
+                )
+            },
+            { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
+            {
+                MalangSliderRow(
+                    prefs.keyboard.gridWideWidthPercent,
+                    "격자 자판 너비 (천지인·20키)",
+                    min = 30,
+                    max = 100,
+                    step = 5,
+                )
+            },
+            {
+                MalangChoiceRow(
+                    prefs.keyboard.gridWideAlignment,
+                    title = "격자 자판 위치",
+                    entries = listOf(
+                        GridWideAlignment.LEFT to "왼쪽",
+                        GridWideAlignment.CENTER to "가운데",
+                        GridWideAlignment.RIGHT to "오른쪽",
+                    ),
                 )
             },
         ),

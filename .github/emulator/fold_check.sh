@@ -33,6 +33,13 @@ toggle_card() {
   fi
 }
 
+# 저장된 자판 목록과 활성 자판 id 를 남긴다. (자판 켜고 끄기가 제대로 저장되는지 확인용)
+dump_prefs() {
+  adb shell run-as $PKG sh -c 'for f in $(grep -rl localization__subtypes files shared_prefs 2>/dev/null); do echo "## $f"; cat "$f"; echo; done' \
+    | grep -o 'localization__\(active_subtype_id\|subtypes\).\{0,700\}' > "$OUT/prefs_$1.txt" 2>&1
+  log "prefs $1: $(tr '\n' ' ' < "$OUT/prefs_$1.txt" | head -c 400)"
+}
+
 keep_ui() { cp /tmp/ui.xml "$OUT/$1.xml" 2>/dev/null; }
 
 install_and_enable
@@ -63,8 +70,10 @@ sleep 3
 show_keyboard
 open_route settings/keyboard/selection
 tap_text "한국어"
+dump_prefs before_off
 toggle_card "두벌식"
 sleep 3
+dump_prefs after_off
 shot f05_cheonjiin_only
 show_keyboard
 shot f06_cheonjiin_phone

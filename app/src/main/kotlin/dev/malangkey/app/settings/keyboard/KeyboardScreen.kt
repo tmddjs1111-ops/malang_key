@@ -209,7 +209,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                     prefs.keyboard.gridWideCompact,
                     title = "격자 자판 좁히기 (천지인·20키)",
                     summary = "펼치거나 가로로 돌리면 삼성 키보드의 한 손 키보드처럼 좁혀서 한쪽에 둡니다. " +
-                        "빈 쪽의 ◀ ▶ 버튼으로 옮기고, ⤢ 버튼으로 넓힐 수 있어요.",
+                        "빈 쪽의 화살표 버튼으로 옮기고, 넓히기 버튼으로 원래 너비로 돌릴 수 있어요.",
                 )
             },
             {

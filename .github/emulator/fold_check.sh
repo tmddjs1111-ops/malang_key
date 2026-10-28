@@ -59,6 +59,20 @@ adb shell input tap 86 2214      # ?123
 shot f02_symbols_hints
 adb shell input tap 86 2214      # 가 (되돌아가기)
 
+# 1-1) 지우기 꾹 누르기: 안녕안녕안녕 을 치고 0.8초 누른다.
+#  400ms 뒤부터 110ms 간격으로 글자째 지우므로 4글자가 지워지고 '안녕'이 남아야 한다.
+#  (예전처럼 자모 단위로 지우면 '안녕안녕ㅇ' 근처에서 멈춘다.)
+for i in 1 2 3; do
+  for xy in "326 1979" "864 1979" "217 1979" "217 1979" "700 1857" "326 1979"; do
+    adb shell input tap $xy
+    sleep 0.3
+  done
+done
+shot f02b_typed_annyeong_x3
+adb shell input swipe 991 2094 991 2094 800    # 지우기 0.8초 누르기
+shot f02c_after_delete_hold
+adb shell input swipe 991 2094 991 2094 2500   # 남은 글자 모두 지우기
+
 # 2) 키보드 설정 맨 아래 폴더블·가로 화면 섹션
 open_route settings/keyboard
 scroll_to '좁힌 자판 위치'

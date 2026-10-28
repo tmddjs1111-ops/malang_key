@@ -168,11 +168,13 @@ class SubtypeManager(context: Context) {
             return false
         }
         val newSubtypeList = subtypeList + subtypeToAdd
-        persistNewSubtypeList(newSubtypeList)
+        selectedSubtype = subtypeToAdd
+        // 활성 id를 먼저 저장한 뒤 목록을 저장한다. 목록이 먼저 바뀌면 evaluateActiveSubtype이
+        // 아직 예전 id를 읽어 방금 켠 자판 대신 이전 자판으로 되돌린다.
         scope.launch {
             prefs.localization.activeSubtypeId.set(subtypeToAdd.id)
+            prefs.localization.subtypes.set(SubtypeJsonConfig.encodeToString(newSubtypeList))
         }
-        selectedSubtype = subtypeToAdd
         return true
     }
 

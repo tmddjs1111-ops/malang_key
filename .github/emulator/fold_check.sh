@@ -35,8 +35,14 @@ toggle_card() {
 
 # 저장된 자판 목록과 활성 자판 id 를 남긴다. (자판 켜고 끄기가 제대로 저장되는지 확인용)
 dump_prefs() {
-  adb shell "run-as $PKG grep -rhao 'localization__[a-z_]*.\{0,900\}' files shared_prefs" > "$OUT/prefs_$1.txt" 2>&1
-  log "prefs $1: $(tr '\n' ' ' < "$OUT/prefs_$1.txt" | head -c 600)"
+  adb shell "run-as $PKG sh -c 'cat files/*.* files/*/* shared_prefs/* 2>/dev/null'" > "/tmp/prefs_raw" 2>&1
+  python3 - "$OUT/prefs_$1.txt" <<'PY'
+import re, sys
+raw = open('/tmp/prefs_raw', 'rb').read().decode('utf-8', 'replace')
+out = [m.group(0) for m in re.finditer(r'localization__(active_subtype_id|subtypes).{0,900}', raw)]
+open(sys.argv[1], 'w').write('\n'.join(out) or 'no localization prefs found')
+PY
+  log "prefs $1: $(head -c 600 "$OUT/prefs_$1.txt" | tr '\n' ' ')"
 }
 
 keep_ui() { cp /tmp/ui.xml "$OUT/$1.xml" 2>/dev/null; }
@@ -82,29 +88,37 @@ adb shell input swipe 300 2212 1000 2212 900
 sleep 2
 shot f06b_after_space_swipe
 
-# 4) 폴드 안쪽 화면 크기 (약 775dp 너비) → 좁힌 천지인이 오른쪽에
+# 4) 폴드 안쪽 화면 크기 (1812x2176, 약 775dp 너비) → 좁힌 천지인이 오른쪽에
+# 키보드 위 버튼은 uiautomator 에 잡히지 않아 좌표로 누른다. (자판 너비 50% 기준)
 adb shell wm size 1812x2176
 adb shell wm density 374
 sleep 4
 show_keyboard
 shot f07_cheonjiin_unfolded_right
-keep_ui f07_cheonjiin_unfolded_right
-tap_desc "가운데로"
+adb shell input tap 453 1897     # ◀ 가운데로
 shot f08_cheonjiin_unfolded_center
-tap_desc "왼쪽으로"
+adb shell input tap 226 1966     # ◀ 왼쪽으로
 shot f09_cheonjiin_unfolded_left
 
-# 5) 폰 화면을 가로로 돌렸을 때
+# 5) 폰 화면을 가로로 돌렸을 때 (왼쪽에 둔 상태 그대로)
 adb shell wm size reset
 adb shell wm density reset
-adb shell settings put system accelerometer_rotation 0
-adb shell settings put system user_rotation 1
+adb shell cmd window user-rotation lock 1
 sleep 4
 show_keyboard
 shot f10_cheonjiin_landscape
-tap_desc "넓게"
-shot f11_cheonjiin_landscape_expanded
-adb shell settings put system user_rotation 0
+adb shell cmd window user-rotation lock 0
+sleep 2
+
+# 6) 다시 폴드 크기에서 ⤢ 넓게 → 원래 너비
+adb shell wm size 1812x2176
+adb shell wm density 374
+sleep 4
+show_keyboard
+adb shell input tap 1359 2036    # 왼쪽 자판일 때 오른쪽 빈칸의 ⤢
+shot f11_cheonjiin_unfolded_expanded
+adb shell wm size reset
+adb shell wm density reset
 
 adb logcat -d | grep -E "FATAL EXCEPTION|ANR in dev.malangkey" -A 25 > "$OUT/fatal_log.txt" 2>&1
 log "crash lines: $(grep -c 'FATAL EXCEPTION' "$OUT/fatal_log.txt")"

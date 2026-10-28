@@ -36,6 +36,8 @@ toggle_card() {
 keep_ui() { cp /tmp/ui.xml "$OUT/$1.xml" 2>/dev/null; }
 
 install_and_enable
+# 화면 크기를 바꾸면 에뮬레이터의 런처가 죽으며 '계속 중지됨' 창을 띄워 화면을 가린다. 그 창을 끈다.
+adb shell settings put global hide_error_dialogs 1
 open_route settings/home
 
 # 1) 폰 화면 쿼티 → 기호 자판 힌트
@@ -56,7 +58,10 @@ tap_text "한국어"
 shot f04_korean_layouts
 keep_ui f04_korean_layouts
 toggle_card "천지인"
+# 바로 이어 누르면 두벌식이 '마지막 하나'로 남아 꺼지지 않는다. 천지인이 저장될 때까지 기다린다.
+sleep 4
 toggle_card "두벌식"
+sleep 3
 shot f05_cheonjiin_only
 show_keyboard
 shot f06_cheonjiin_phone

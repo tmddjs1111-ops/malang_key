@@ -350,7 +350,10 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
      *
      * @return True on success, false if an error occurred or the input connection is invalid.
      */
-    fun deleteBackwards(unit: OperationUnit): Boolean {
+    /**
+     * @param wholeCharacter 한글을 자모 단위로 풀지 않고 글자째 지운다. 삭제 키를 꾹 누르고 있을 때 쓴다.
+     */
+    fun deleteBackwards(unit: OperationUnit, wholeCharacter: Boolean = false): Boolean {
         val content = activeContent
         if (unit == OperationUnit.CHARACTERS) {
             if (phantomSpace.isActive && content.currentWord.isValid && prefs.glide.immediateBackspaceDeletesWord.get()) {
@@ -366,7 +369,9 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
                 val composer = determineComposer(subtypeManager.activeSubtype.composer)
                 val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
                 val actions = composer.getActionsForBackspace(content.textBeforeSelection, layoutId)
-                if (actions != null) {
+                // 한글 조합기는 지우기를 받으면 연타 상태를 비운다. 글자째 지울 때도 그 처리는 거치고 결과만 버린다.
+                val skipComposer = wholeCharacter && composer.id == "hangul-unicode"
+                if (actions != null && !skipComposer) {
                     val (rm, insertText) = actions
                     if (rm > 0) {
                         deleteAroundCursor(OperationUnit.CHARACTERS, OperationScope.BEFORE_CURSOR, n = rm)

@@ -58,8 +58,11 @@ tap_text "한국어"
 shot f04_korean_layouts
 keep_ui f04_korean_layouts
 toggle_card "천지인"
-# 바로 이어 누르면 두벌식이 '마지막 하나'로 남아 꺼지지 않는다. 천지인이 저장될 때까지 기다린다.
-sleep 4
+sleep 3
+# 일본어 확인(check.sh)처럼 화면을 새로 연 뒤 두벌식을 끈다. 같은 화면에서 이어 누르면 꺼지지 않았다.
+show_keyboard
+open_route settings/keyboard/selection
+tap_text "한국어"
 toggle_card "두벌식"
 sleep 3
 shot f05_cheonjiin_only

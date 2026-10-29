@@ -25,12 +25,13 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
-import dev.malangkey.ime.input.HapticFeel
+import dev.malangkey.ime.input.HapticKind
 import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
+import dev.malangkey.ime.input.KeyHaptics
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrateKeyHaptic
+import org.florisboard.lib.android.vibrateWaveform
 
 private val ActivationModeEntries = listOf(
     InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS to "그래도 진동",
@@ -38,14 +39,8 @@ private val ActivationModeEntries = listOf(
 )
 
 private val HapticModeEntries = listOf(
-    HapticMode.SYSTEM to "휴대폰 키보드 진동 (추천)",
-    HapticMode.CUSTOM to "직접 조절",
-)
-
-private val HapticFeelEntries = listOf(
-    HapticFeel.CLICK to "또각 (또렷하게)",
-    HapticFeel.TICK to "톡 (가볍게)",
-    HapticFeel.LOW_TICK to "톡 (부드럽게)",
+    HapticMode.CUSTOM to "말랑 진동 (추천) — 느낌·세기를 고를 수 있어요",
+    HapticMode.SYSTEM to "휴대폰 기본 진동 — 세기는 휴대폰 설정을 따라요",
 )
 
 @Composable
@@ -125,14 +120,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     enabled = hapticEnabled,
                 )
             },
-            {
-                MalangChoiceRow(
-                    prefs.inputFeedback.hapticFeel,
-                    title = "진동 느낌",
-                    entries = HapticFeelEntries,
-                    enabled = isCustomHaptic,
-                )
-            },
+            { HapticFeelPicker(enabled = isCustomHaptic, vibrator = vibrator) },
             {
                 MalangValueDialogRow(
                     prefs.inputFeedback.hapticVibrationIntensity,
@@ -143,9 +131,21 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     unit = "%",
                     enabled = isCustomHaptic,
                     onPreview = { intensity ->
-                        val feel = prefs.inputFeedback.hapticFeel.get()
-                        vibrator?.vibrateKeyHaptic(feel.primitiveId, intensity / 100f, feel.predefinedEffectId)
+                        val pattern = KeyHaptics.pattern(
+                            prefs.inputFeedback.hapticFeel.get(),
+                            intensity / 100f,
+                            HapticKind.KEY,
+                        )
+                        vibrator?.vibrateWaveform(pattern.timings, pattern.amplitudes)
                     },
+                )
+            },
+            {
+                MalangSwitchRow(
+                    prefs.inputFeedback.hapticBigKeyAccent,
+                    title = "큰 키는 묵직하게",
+                    summary = "스페이스·엔터·지우기는 실제 키보드처럼 조금 더 깊게 울려요.",
+                    enabled = isCustomHaptic,
                 )
             },
             {

@@ -413,12 +413,17 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticMode = enum(
             key = "input_feedback__haptic_mode",
-            default = HapticMode.SYSTEM,
+            default = HapticMode.CUSTOM,
         )
-        /** 직접 조절 모드의 느낌. 예전 haptic_vibration_primitive는 숫자가 잘못 매겨져 있어서 새 키로 바꿨다. */
+        /** 말랑 진동의 느낌. 1.59의 haptic_feel(클릭·틱)은 약해서 새 모양으로 바꾸며 새 키를 쓴다. */
         val hapticFeel = enum(
-            key = "input_feedback__haptic_feel",
-            default = HapticFeel.CLICK,
+            key = "input_feedback__haptic_feel_v2",
+            default = HapticFeel.MECHANICAL,
+        )
+        /** 스페이스·엔터·지우기 같은 큰 키는 조금 더 묵직하게 울린다. */
+        val hapticBigKeyAccent = boolean(
+            key = "input_feedback__haptic_big_key_accent",
+            default = true,
         )
         val hapticVibrationIntensity = int(
             key = "input_feedback__haptic_vibration_intensity",

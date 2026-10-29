@@ -29,7 +29,7 @@ import dev.malangkey.ime.text.keyboard.TextKeyData
 import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrateKeyHaptic
+import org.florisboard.lib.android.vibrateWaveform
 import dev.malangkey.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +45,11 @@ val LocalInputFeedbackController = staticCompositionLocalOf<InputFeedbackControl
 class InputFeedbackController private constructor(private val ims: InputMethodService) {
     companion object {
         private const val MIN_TICK_INTERVAL_MS = 30L
-        /** VibrationEffect.EFFECT_HEAVY_CLICK */
-        private const val EFFECT_HEAVY_CLICK = 5
+        /** 큰 키: 스페이스·엔터·지우기. */
+        private val BigKeyCodes = setOf(
+            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE,
+            KeyCode.ENTER, KeyCode.JAPANESE_ENTER, KeyCode.DELETE,
+        )
 
         fun new(ims: InputMethodService) = InputFeedbackController(ims)
     }
@@ -89,7 +92,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     // 진동은 손끝에 바로 와야 해서 소리보다 먼저, 다른 스레드로 넘기지 않고 이 자리에서 낸다.
     fun keyPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS)
+        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS, data)
         if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
     }
 
@@ -158,7 +161,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     private var lastTickUptime = 0L
 
-    private fun performHapticFeedback(event: HapticEvent) {
+    private fun performHapticFeedback(event: HapticEvent, data: KeyData = TextKeyData.UNSPECIFIED) {
         if (vibrator == null) return
         if (!prefs.inputFeedback.hapticEnabled.get()) return
         if (prefs.inputFeedback.hapticActivationMode.get() ==
@@ -173,7 +176,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         }
 
         if (prefs.inputFeedback.hapticMode.get() == HapticMode.SYSTEM && performSystemHaptic(event)) return
-        performCustomHaptic(event)
+        performCustomHaptic(event, data)
     }
 
     /**
@@ -195,21 +198,22 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         return view.performHapticFeedback(constant)
     }
 
-    private fun performCustomHaptic(event: HapticEvent) {
+    private fun performCustomHaptic(event: HapticEvent, data: KeyData) {
         val vibrator = vibrator ?: return
-        val intensity = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f
-        when (event) {
-            HapticEvent.KEY_PRESS -> {
-                val feel = prefs.inputFeedback.hapticFeel.get()
-                vibrator.vibrateKeyHaptic(feel.primitiveId, intensity, feel.predefinedEffectId)
+        val kind = when (event) {
+            HapticEvent.KEY_PRESS -> if (prefs.inputFeedback.hapticBigKeyAccent.get() && data.code in BigKeyCodes) {
+                HapticKind.BIG_KEY
+            } else {
+                HapticKind.KEY
             }
-            HapticEvent.LONG_PRESS -> {
-                // 길게 누르기는 일반 키보다 또렷해야 알아챈다.
-                vibrator.vibrateKeyHaptic(HapticFeel.CLICK.primitiveId, intensity, EFFECT_HEAVY_CLICK)
-            }
-            HapticEvent.TICK -> {
-                vibrator.vibrateKeyHaptic(HapticFeel.TICK.primitiveId, intensity * 0.6f, HapticFeel.TICK.predefinedEffectId)
-            }
+            HapticEvent.LONG_PRESS -> HapticKind.LONG_PRESS
+            HapticEvent.TICK -> HapticKind.TICK
         }
+        val pattern = KeyHaptics.pattern(
+            feel = prefs.inputFeedback.hapticFeel.get(),
+            strength = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f,
+            kind = kind,
+        )
+        vibrator.vibrateWaveform(pattern.timings, pattern.amplitudes)
     }
 }

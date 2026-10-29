@@ -26,22 +26,16 @@ import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.malangkey.ime.input.HapticKind
-import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
-import dev.malangkey.ime.input.KeyHaptics
+import dev.malangkey.ime.input.playKeyHaptic
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrateWaveform
 
 private val ActivationModeEntries = listOf(
     InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS to "그래도 진동",
     InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS to "진동 안 함",
 )
 
-private val HapticModeEntries = listOf(
-    HapticMode.CUSTOM to "말랑 진동 (추천) — 느낌·세기를 고를 수 있어요",
-    HapticMode.SYSTEM to "휴대폰 기본 진동 — 세기는 휴대폰 설정을 따라요",
-)
 
 @Composable
 fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subtitle = "Sound & Haptic") {
@@ -50,8 +44,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
     val vibrator = context.systemVibratorOrNull()
     val audioEnabled by prefs.inputFeedback.audioEnabled.collectAsState()
     val hapticEnabled by prefs.inputFeedback.hapticEnabled.collectAsState()
-    val hapticMode by prefs.inputFeedback.hapticMode.collectAsState()
-    val isCustomHaptic = hapticEnabled && hapticMode == HapticMode.CUSTOM
+    val isCustomHaptic = hapticEnabled
 
     MalangSettingsSection(
         title = "소리",
@@ -112,14 +105,6 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     summary = "키를 누를 때 진동을 줍니다.",
                 )
             },
-            {
-                MalangChoiceRow(
-                    prefs.inputFeedback.hapticMode,
-                    title = "진동 방식",
-                    entries = HapticModeEntries,
-                    enabled = hapticEnabled,
-                )
-            },
             { HapticFeelPicker(enabled = isCustomHaptic, vibrator = vibrator) },
             {
                 MalangValueDialogRow(
@@ -131,12 +116,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     unit = "%",
                     enabled = isCustomHaptic,
                     onPreview = { intensity ->
-                        val pattern = KeyHaptics.pattern(
-                            prefs.inputFeedback.hapticFeel.get(),
-                            intensity / 100f,
-                            HapticKind.KEY,
-                        )
-                        vibrator?.vibrateWaveform(pattern.timings, pattern.amplitudes)
+                        vibrator?.playKeyHaptic(prefs.inputFeedback.hapticFeel.get(), intensity / 100f, HapticKind.KEY)
                     },
                 )
             },

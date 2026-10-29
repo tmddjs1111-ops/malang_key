@@ -20,16 +20,13 @@ import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
 import android.os.SystemClock
 import android.provider.Settings
-import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.KeyData
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.keyboard.TextKeyData
-import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrateWaveform
 import dev.malangkey.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -175,27 +172,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
             lastTickUptime = now
         }
 
-        if (prefs.inputFeedback.hapticMode.get() == HapticMode.SYSTEM && performSystemHaptic(event)) return
         performCustomHaptic(event, data)
-    }
-
-    /**
-     * 휴대폰의 키보드 진동을 쓴다. 시스템 '터치 시 진동'이 꺼져 있으면 시스템이 울려 주지 않으므로
-     * false를 돌려 직접 울리게 한다.
-     */
-    private fun performSystemHaptic(event: HapticEvent): Boolean {
-        if (!systemHapticEnabled) return false
-        val view = ims.window?.window?.decorView ?: return false
-        val constant = when (event) {
-            HapticEvent.KEY_PRESS -> HapticFeedbackConstants.KEYBOARD_TAP
-            HapticEvent.LONG_PRESS -> HapticFeedbackConstants.LONG_PRESS
-            HapticEvent.TICK -> if (AndroidVersion.ATLEAST_API27_O_MR1) {
-                HapticFeedbackConstants.TEXT_HANDLE_MOVE
-            } else {
-                HapticFeedbackConstants.CLOCK_TICK
-            }
-        }
-        return view.performHapticFeedback(constant)
     }
 
     private fun performCustomHaptic(event: HapticEvent, data: KeyData) {
@@ -209,11 +186,10 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
             HapticEvent.LONG_PRESS -> HapticKind.LONG_PRESS
             HapticEvent.TICK -> HapticKind.TICK
         }
-        val pattern = KeyHaptics.pattern(
+        vibrator.playKeyHaptic(
             feel = prefs.inputFeedback.hapticFeel.get(),
             strength = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f,
             kind = kind,
         )
-        vibrator.vibrateWaveform(pattern.timings, pattern.amplitudes)
     }
 }

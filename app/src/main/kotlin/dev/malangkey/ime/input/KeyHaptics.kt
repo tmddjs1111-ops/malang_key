@@ -1,18 +1,15 @@
 package dev.malangkey.ime.input
 
+import android.os.Vibrator
+import org.florisboard.lib.android.vibratePrimitives
+import org.florisboard.lib.android.vibrateWaveform
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-/** 진동 방식. */
-enum class HapticMode {
-    /** 휴대폰의 키보드 진동(HapticFeedbackConstants)을 쓴다. 세기는 휴대폰 설정을 따른다. */
-    SYSTEM,
-    /** 말랑 진동: 진동 모양을 직접 그리고 세기(%)를 그대로 진동 크기와 길이에 반영한다. */
-    CUSTOM;
-}
-
 /** 말랑 진동의 느낌. */
 enum class HapticFeel(val label: String, val description: String) {
+    /** 1.58까지의 기본 진동. 안드로이드의 THUD 진동이라 낮고 둥글게 울린다. */
+    THUD("쿵", "낮고 둥글게 쿵 — 예전 기본 진동"),
     CRISP("또각", "짧고 단단하게 한 번"),
     SOFT("톡", "살짝 차오르며 부드럽게"),
     MECHANICAL("기계식", "눌릴 때 딸깍, 올라올 때 톡 — 기계식 키보드처럼"),
@@ -55,6 +52,11 @@ object KeyHaptics {
             HapticKind.KEY, HapticKind.BIG_KEY -> {
                 val big = kind == HapticKind.BIG_KEY
                 when (feel) {
+                    // 쿵 진동(THUD)을 못 내는 기기에서 대신 쓰는 모양: 세게 치고 길게 줄어든다.
+                    HapticFeel.THUD -> HapticPattern(
+                        longArrayOf(0, ms(if (big) 16 else 12), ms(if (big) 26 else 18)),
+                        intArrayOf(0, amp(1f), amp(0.4f)),
+                    )
                     HapticFeel.CRISP -> HapticPattern(
                         longArrayOf(0, ms(if (big) 18 else 12)),
                         intArrayOf(0, amp(1f)),
@@ -76,4 +78,27 @@ object KeyHaptics {
             }
         }
     }
+}
+
+/** VibrationEffect.Composition 의 진동 번호. SDK 버전과 무관하게 컴파일되도록 숫자로 둔다. */
+private const val PRIMITIVE_THUD = 2
+private const val PRIMITIVE_LOW_TICK = 8
+
+/**
+ * [feel] 진동을 울린다. 쿵은 기기가 지원하면 안드로이드의 THUD 진동을 그대로 쓰고,
+ * 나머지는 [KeyHaptics.pattern]으로 그린 모양을 울린다.
+ */
+fun Vibrator.playKeyHaptic(feel: HapticFeel, strength: Float, kind: HapticKind) {
+    if (feel == HapticFeel.THUD && (kind == HapticKind.KEY || kind == HapticKind.BIG_KEY)) {
+        val s = strength.coerceIn(0.05f, 1f)
+        val played = if (kind == HapticKind.BIG_KEY) {
+            // 큰 키는 쿵 뒤에 낮은 틱을 하나 더해 더 깊게 들어간 느낌을 준다.
+            vibratePrimitives(PRIMITIVE_THUD to s, PRIMITIVE_LOW_TICK to s * 0.7f)
+        } else {
+            vibratePrimitives(PRIMITIVE_THUD to s)
+        }
+        if (played) return
+    }
+    val pattern = KeyHaptics.pattern(feel, strength, kind)
+    vibrateWaveform(pattern.timings, pattern.amplitudes)
 }

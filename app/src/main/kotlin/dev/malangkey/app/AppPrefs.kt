@@ -30,7 +30,6 @@ import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.input.CapitalizationBehavior
 
 import dev.malangkey.ime.input.HapticFeel
-import dev.malangkey.ime.input.HapticMode
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.IncognitoMode
@@ -411,14 +410,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        val hapticMode = enum(
-            key = "input_feedback__haptic_mode",
-            default = HapticMode.CUSTOM,
-        )
         /** 말랑 진동의 느낌. 1.59의 haptic_feel(클릭·틱)은 약해서 새 모양으로 바꾸며 새 키를 쓴다. */
         val hapticFeel = enum(
             key = "input_feedback__haptic_feel_v2",
-            default = HapticFeel.MECHANICAL,
+            default = HapticFeel.THUD,
         )
         /** 스페이스·엔터·지우기 같은 큰 키는 조금 더 묵직하게 울린다. */
         val hapticBigKeyAccent = boolean(

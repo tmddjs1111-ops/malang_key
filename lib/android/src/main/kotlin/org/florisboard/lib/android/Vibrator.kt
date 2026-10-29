@@ -89,3 +89,21 @@ fun Vibrator.vibrateWaveform(timings: LongArray, amplitudes: IntArray) {
         Log.e(TAG, "Error performing waveform haptic", e)
     }
 }
+
+/**
+ * 진동 번호와 세기 쌍([steps])을 차례로 이어 울린다. (VibrationEffect.Composition)
+ * 기기가 그 진동을 모두 지원하지 않으면 울리지 않고 false 를 돌려준다.
+ */
+fun Vibrator.vibratePrimitives(vararg steps: Pair<Int, Float>): Boolean {
+    if (!AndroidVersion.ATLEAST_API30_R) return false
+    return try {
+        if (!this.areAllPrimitivesSupported(*steps.map { it.first }.toIntArray())) return false
+        val composition = VibrationEffect.startComposition()
+        for ((id, scale) in steps) composition.addPrimitive(id, scale.coerceIn(0f, 1f))
+        this.vibrate(composition.compose())
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Error performing primitive haptic", e)
+        false
+    }
+}

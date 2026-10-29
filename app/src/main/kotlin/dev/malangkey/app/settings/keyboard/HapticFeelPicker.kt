@@ -47,20 +47,18 @@ import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.ime.input.HapticFeel
 import dev.malangkey.ime.input.HapticKind
 import dev.malangkey.ime.input.KeyHaptics
+import dev.malangkey.ime.input.playKeyHaptic
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.florisboard.lib.android.vibrateWaveform
 
 /** 설정 화면에서 [feel] 진동을 일반 키 → 큰 키 순서로 울려 바로 느껴 보게 한다. */
 internal suspend fun previewHaptic(vibrator: Vibrator?, feel: HapticFeel, strength: Float, bigKeyAccent: Boolean) {
     vibrator ?: return
-    val key = KeyHaptics.pattern(feel, strength, HapticKind.KEY)
-    vibrator.vibrateWaveform(key.timings, key.amplitudes)
+    vibrator.playKeyHaptic(feel, strength, HapticKind.KEY)
     if (!bigKeyAccent) return
-    delay(key.totalMillis + 220)
-    val big = KeyHaptics.pattern(feel, strength, HapticKind.BIG_KEY)
-    vibrator.vibrateWaveform(big.timings, big.amplitudes)
+    delay(KeyHaptics.pattern(feel, strength, HapticKind.KEY).totalMillis + 250)
+    vibrator.playKeyHaptic(feel, strength, HapticKind.BIG_KEY)
 }
 
 /** 진동 느낌 카드. 누르면 고르면서 바로 그 느낌으로 울린다. (소리 종류 고르기와 같은 방식) */

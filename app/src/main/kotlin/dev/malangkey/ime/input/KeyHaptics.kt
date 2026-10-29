@@ -38,14 +38,27 @@ class HapticPattern(val timings: LongArray, val amplitudes: IntArray) {
  * 말랑 진동의 모양을 만든다.
  *
  * 안드로이드의 미리 정의된 클릭 효과는 길이가 정해져 있고 약해서 세기를 올려도 손끝 차이가 거의 없었다.
- * 그래서 진동 크기(0~255)와 길이를 직접 정한다. 세기를 올리면 크기와 함께 길이도 조금 늘어나서
- * 100%에서는 확실히 세게 느껴진다.
+ * 그래서 진동 크기(0~255)와 길이를 직접 정한다.
+ *
+ * 세기 50%가 '보통'이다. 0~50%는 진동 크기가 커지고, 50%에서 이미 최대 크기에 닿는다.
+ * 50~100%는 크기 대신 길이가 늘어나 더 묵직해진다. (크기만으로는 50%보다 세게 할 수 없어서)
  */
 object KeyHaptics {
+    /** 진동 크기 배율 (0~1). 50%에서 1이 된다. */
+    fun amplitudeScale(strength: Float): Float = (0.12f + strength.coerceIn(0f, 1f) * 1.76f).coerceAtMost(1f)
+
+    /** 진동 길이 배율. 0%에서 0.8, 50%에서 1.3, 100%에서 2.0. */
+    fun durationScale(strength: Float): Float {
+        val s = strength.coerceIn(0f, 1f)
+        return if (s <= 0.5f) 0.8f + s else 1.3f + (s - 0.5f) * 1.4f
+    }
+
     fun pattern(feel: HapticFeel, strength: Float, kind: HapticKind): HapticPattern {
         val s = strength.coerceIn(0.05f, 1f)
-        fun ms(base: Int) = (base * (0.7f + 0.6f * s)).roundToLong().coerceAtLeast(4L)
-        fun amp(x: Float) = (255 * s * x).roundToInt().coerceIn(1, 255)
+        val a = amplitudeScale(s)
+        val d = durationScale(s)
+        fun ms(base: Int) = (base * d).roundToLong().coerceAtLeast(4L)
+        fun amp(x: Float) = (255 * a * x).roundToInt().coerceIn(1, 255)
         return when (kind) {
             HapticKind.TICK -> HapticPattern(longArrayOf(0, ms(7)), intArrayOf(0, amp(0.6f)))
             HapticKind.LONG_PRESS -> HapticPattern(longArrayOf(0, ms(28)), intArrayOf(0, amp(1f)))
@@ -91,13 +104,14 @@ private const val PRIMITIVE_LOW_TICK = 8
 fun Vibrator.playKeyHaptic(feel: HapticFeel, strength: Float, kind: HapticKind) {
     if (feel == HapticFeel.THUD && (kind == HapticKind.KEY || kind == HapticKind.BIG_KEY)) {
         val s = strength.coerceIn(0.05f, 1f)
-        val played = if (kind == HapticKind.BIG_KEY) {
-            // 큰 키는 쿵 뒤에 낮은 틱을 하나 더해 더 깊게 들어간 느낌을 준다.
-            vibratePrimitives(PRIMITIVE_THUD to s, PRIMITIVE_LOW_TICK to s * 0.7f)
-        } else {
-            vibratePrimitives(PRIMITIVE_THUD to s)
+        val steps = buildList {
+            add(PRIMITIVE_THUD to KeyHaptics.amplitudeScale(s))
+            // 50%를 넘기면 쿵 뒤에 낮은 틱을 붙여 더 묵직하게 한다. (쿵 자체는 50%에서 이미 최대)
+            if (s > 0.5f) add(PRIMITIVE_LOW_TICK to (s - 0.5f) * 2f)
+            // 큰 키는 낮은 틱을 하나 더해 더 깊게 들어간 느낌을 준다.
+            if (kind == HapticKind.BIG_KEY) add(PRIMITIVE_LOW_TICK to KeyHaptics.amplitudeScale(s) * 0.7f)
         }
-        if (played) return
+        if (vibratePrimitives(*steps.toTypedArray())) return
     }
     val pattern = KeyHaptics.pattern(feel, strength, kind)
     vibrateWaveform(pattern.timings, pattern.amplitudes)

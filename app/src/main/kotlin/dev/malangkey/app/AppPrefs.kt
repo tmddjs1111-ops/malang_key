@@ -420,9 +420,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_big_key_accent",
             default = true,
         )
+        /**
+         * 진동 세기(%). 50이 보통이고 100까지 올리면 더 길고 묵직해진다.
+         * 세기 계산 방식이 바뀌어서 예전 값(haptic_vibration_intensity)은 버리고 모두 50에서 시작한다.
+         */
         val hapticVibrationIntensity = int(
-            key = "input_feedback__haptic_vibration_intensity",
-            default = 70,
+            key = "input_feedback__haptic_strength",
+            default = 50,
         )
         val hapticFeatKeyPress = boolean(
             key = "input_feedback__haptic_feat_key_press",

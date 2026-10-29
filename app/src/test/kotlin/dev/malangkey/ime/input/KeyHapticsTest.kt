@@ -26,6 +26,15 @@ class KeyHapticsTest : FunSpec({
         }
     }
 
+    test("50%(보통)에서 이미 최대 크기로 울리고, 그 위로는 길이가 늘어난다") {
+        for (feel in HapticFeel.entries) {
+            val normal = KeyHaptics.pattern(feel, 0.5f, HapticKind.KEY)
+            val max = KeyHaptics.pattern(feel, 1f, HapticKind.KEY)
+            normal.amplitudes.max() shouldBe 255
+            max.totalMillis shouldBeGreaterThan normal.totalMillis
+        }
+    }
+
     test("세기를 올리면 크기와 길이가 함께 커진다") {
         for (feel in HapticFeel.entries) {
             val weak = KeyHaptics.pattern(feel, 0.3f, HapticKind.KEY)

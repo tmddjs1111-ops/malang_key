@@ -109,7 +109,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
             {
                 MalangValueDialogRow(
                     prefs.inputFeedback.hapticVibrationIntensity,
-                    title = "진동 세기",
+                    title = "진동 세기 (보통 50%)",
                     min = 1,
                     max = 100,
                     step = 1,

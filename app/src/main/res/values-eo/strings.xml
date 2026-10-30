@@ -287,7 +287,6 @@
     <string name="pref__spelling__title" comment="Preference group title">Literumado</string>
     <string name="pref__spelling__active_spellchecker__summary_disabled">Malŝaltita en la tuta sistemo. Neniu ruĝa linio aperos sub malĝustaj vortoj en tekstaj kampoj. Tuŝu ĉi tie por ŝanĝi tion.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Lingvoj</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Uzi nomojn el kontaktoj</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Uzi enigaĵojn de la uzula vortaro</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Vortaroj uzanton</string>
     <string name="pref__dictionary__enable_system_user_dictionary__label" comment="Preference title">Ŝalti sisteman uzulan vortaron</string>

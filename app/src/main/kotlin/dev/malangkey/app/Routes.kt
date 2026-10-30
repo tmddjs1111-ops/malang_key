@@ -52,6 +52,7 @@ import dev.malangkey.app.settings.gestures.GesturesScreen
 import dev.malangkey.app.settings.keyboard.InputFeedbackScreen
 import dev.malangkey.app.settings.keyboard.KeyboardScreen
 import dev.malangkey.app.settings.keyboard.KeyboardOrderScreen
+import dev.malangkey.app.settings.keyboard.KeyboardLayoutScreen
 import dev.malangkey.app.settings.keyboard.KeyboardSelectionScreen
 import dev.malangkey.app.settings.keyboard.KeyboardTestScreen
 import dev.malangkey.app.settings.media.MediaScreen
@@ -117,6 +118,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/keyboard/order")
         object KeyboardOrder
+
+        @Serializable
+        @Deeplink("settings/keyboard/layout")
+        object KeyboardLayout
 
         @Serializable
         @Deeplink("settings/keyboard/test")
@@ -218,6 +223,7 @@ object Routes {
             composableWithDeepLink(Settings.Keyboard::class) { KeyboardScreen() }
             composableWithDeepLink(Settings.KeyboardSelection::class) { KeyboardSelectionScreen() }
             composableWithDeepLink(Settings.KeyboardOrder::class) { KeyboardOrderScreen() }
+            composableWithDeepLink(Settings.KeyboardLayout::class) { KeyboardLayoutScreen() }
             composableWithDeepLink(Settings.KeyboardTest::class) { KeyboardTestScreen() }
             composableWithDeepLink(Settings.InputFeedback::class) { InputFeedbackScreen() }
 

@@ -89,7 +89,7 @@ jobs:
 
   emulator:
     needs: build
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[emu]')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[emu]') || contains(github.event.head_commit.message, '[emu-fold]')
     runs-on: ubuntu-24.04
     timeout-minutes: 40
 
@@ -128,7 +128,8 @@ jobs:
           ram-size: 4096M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: bash .github/emulator/check.sh
+          # [emu-fold] 는 폴더블·가로 화면만 짧게 확인한다.
+          script: bash .github/emulator/${{ contains(github.event.head_commit.message, '[emu-fold]') && 'fold_check.sh' || 'check.sh' }}
 
       - name: Publish screenshots
         if: always()

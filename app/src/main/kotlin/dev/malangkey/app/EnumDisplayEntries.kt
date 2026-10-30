@@ -23,7 +23,6 @@ import dev.malangkey.app.settings.theme.SnyggLevel
 import dev.malangkey.ime.clipboard.ClipboardSyncBehavior
 import dev.malangkey.ime.core.DisplayLanguageNamesIn
 import dev.malangkey.ime.input.CapitalizationBehavior
-import dev.malangkey.ime.input.HapticVibrationPrimitive
 import dev.malangkey.ime.input.InputFeedbackActivationMode
 import dev.malangkey.ime.input.InputShiftState
 import dev.malangkey.ime.keyboard.IncognitoMode
@@ -245,42 +244,6 @@ private val ENUM_DISPLAY_ENTRIES = mapOf<Pair<KClass<*>, String>, @Composable ()
                 label = stringRes(R.string.enum__extended_actions_placement__overlay_app_ui),
                 description = stringRes(R.string.enum__extended_actions_placement__overlay_app_ui__description),
                 showDescriptionOnlyIfSelected = true,
-            )
-        }
-    },
-    HapticVibrationPrimitive::class to DEFAULT to {
-        listPrefEntries {
-            entry(
-                key = HapticVibrationPrimitive.CLICK,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__click),
-            )
-            entry(
-                key = HapticVibrationPrimitive.THUD,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__thud),
-            )
-            entry(
-                key = HapticVibrationPrimitive.SPIN,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__spin),
-            )
-            entry(
-                key = HapticVibrationPrimitive.QUICK_CLICK,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__quick_click),
-            )
-            entry(
-                key = HapticVibrationPrimitive.SLOW_RISE,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__slow_rise),
-            )
-            entry(
-                key = HapticVibrationPrimitive.QUICK_RISE,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__quick_rise),
-            )
-            entry(
-                key = HapticVibrationPrimitive.TICK,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__tick),
-            )
-            entry(
-                key = HapticVibrationPrimitive.LOW_TICK,
-                label = stringRes(R.string.enum__haptic_vibration_primitive__low_tick),
             )
         }
     },

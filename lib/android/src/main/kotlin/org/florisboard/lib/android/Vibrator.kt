@@ -74,29 +74,36 @@ fun Vibrator.vibrate(duration: Int, strength: Int, factor: Double = 1.0) {
 }
 
 /**
- * Performs a sharp click haptic feedback using VibrationEffect.Composition if supported.
- * Falls back to a standard vibration if not supported.
- *
- * @param primitiveId The ID of the primitive to use (from [VibrationEffect.Composition]).
- * @param factor The intensity factor (0.0 to 1.0).
+ * [timings]와 [amplitudes]로 그린 진동을 한 번 울린다. (VibrationEffect.createWaveform 형식)
+ * 세기 조절이 안 되는 진동기에서는 0이 아닌 세기가 모두 최대로 울린다.
  */
-fun Vibrator.vibrateClick(primitiveId: Int = -1, factor: Float = 1.0f) {
-    val id = if (primitiveId != -1) primitiveId else 1 // 1 is PRIMITIVE_CLICK
-    
-    Log.d(TAG, "Perform vibrateClick: primitiveId=$id, factor=$factor")
-    
-    if (AndroidVersion.ATLEAST_API30_R && this.areAllPrimitivesSupported(id)) {
-        try {
-            val composition = VibrationEffect.startComposition()
-            composition.addPrimitive(id, factor.coerceIn(0.0f, 1.0f))
-            this.vibrate(composition.compose())
-            Log.d(TAG, "VibrationEffect.Composition used successfully")
-            return
-        } catch (e: Exception) {
-            Log.e(TAG, "Composition failed, falling back to legacy", e)
+fun Vibrator.vibrateWaveform(timings: LongArray, amplitudes: IntArray) {
+    try {
+        if (AndroidVersion.ATLEAST_API26_O) {
+            this.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            this.vibrate(timings.sum())
         }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error performing waveform haptic", e)
     }
-    
-    // Fallback to legacy vibration
-    vibrate(duration = 30, strength = 80, factor = factor.toDouble())
+}
+
+/**
+ * 진동 번호와 세기 쌍([steps])을 차례로 이어 울린다. (VibrationEffect.Composition)
+ * 기기가 그 진동을 모두 지원하지 않으면 울리지 않고 false 를 돌려준다.
+ */
+fun Vibrator.vibratePrimitives(vararg steps: Pair<Int, Float>): Boolean {
+    if (!AndroidVersion.ATLEAST_API30_R) return false
+    return try {
+        if (!this.areAllPrimitivesSupported(*steps.map { it.first }.toIntArray())) return false
+        val composition = VibrationEffect.startComposition()
+        for ((id, scale) in steps) composition.addPrimitive(id, scale.coerceIn(0f, 1f))
+        this.vibrate(composition.compose())
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Error performing primitive haptic", e)
+        false
+    }
 }

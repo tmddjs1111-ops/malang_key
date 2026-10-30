@@ -19,6 +19,8 @@ package dev.malangkey.ime.core
 import android.content.Context
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.CurrencySet
+import dev.malangkey.ime.keyboard.WideScreenLayout
+import dev.malangkey.ime.window.FoldState
 import dev.malangkey.keyboardManager
 import dev.malangkey.lib.FlorisLocale
 import dev.malangkey.lib.devtools.flogDebug
@@ -26,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.florisboard.lib.kotlin.collectLatestIn
@@ -51,13 +54,48 @@ class SubtypeManager(context: Context) {
         get() = subtypesFlow.value
         private set(v) { subtypesFlow.value = v }
 
+    /**
+     * 실제로 쓰는 서브타입. 펼친 화면·가로 화면 자판 설정이 켜져 있으면 [selectedSubtype]의
+     * 글자 자판만 바꾼 것이 들어간다 (id는 같다).
+     */
     val activeSubtypeFlow: StateFlow<Subtype>
         field = MutableStateFlow(Subtype.DEFAULT)
-    inline var activeSubtype
+    inline val activeSubtype
         get() = activeSubtypeFlow.value
-        private set(v) { activeSubtypeFlow.value = v }
+
+    /** 사용자가 고른 서브타입 (넓은 화면 자판 적용 전). */
+    @Volatile
+    private var selectedSubtype: Subtype = Subtype.DEFAULT
+        set(v) {
+            field = v
+            publishActiveSubtype()
+        }
+
+    private fun publishActiveSubtype() {
+        val isWide = WideScreenLayout.isWide(
+            condition = prefs.keyboard.wideScreenCondition.get(),
+            isUnfolded = FoldState.isUnfolded.value,
+            isLandscape = FoldState.isLandscape.value,
+        )
+        activeSubtypeFlow.value = WideScreenLayout.apply(
+            subtype = selectedSubtype,
+            wideLayoutId = prefs.keyboard.wideScreenKoreanLayout.get(),
+            isWide = isWide,
+        )
+    }
 
     init {
+        scope.launch {
+            combine(
+                prefs.keyboard.wideScreenKoreanLayout.asFlow(),
+                prefs.keyboard.wideScreenCondition.asFlow(),
+                FoldState.isUnfolded,
+                FoldState.isLandscape,
+            ) { _, _, _, _ -> }.collect {
+                publishActiveSubtype()
+            }
+        }
+
         prefs.localization.subtypes.asFlow().collectLatestIn(scope) { listRaw ->
             flogDebug { listRaw }
             val list = if (listRaw.isNotBlank()) {
@@ -88,7 +126,7 @@ class SubtypeManager(context: Context) {
         if (subtype.id != activeSubtypeId) {
             prefs.localization.activeSubtypeId.set(subtype.id)
         }
-        activeSubtype = subtype
+        selectedSubtype = subtype
     }
 
     /**
@@ -130,11 +168,13 @@ class SubtypeManager(context: Context) {
             return false
         }
         val newSubtypeList = subtypeList + subtypeToAdd
-        persistNewSubtypeList(newSubtypeList)
+        selectedSubtype = subtypeToAdd
+        // 활성 id를 먼저 저장한 뒤 목록을 저장한다. 목록이 먼저 바뀌면 evaluateActiveSubtype이
+        // 아직 예전 id를 읽어 방금 켠 자판 대신 이전 자판으로 되돌린다.
         scope.launch {
             prefs.localization.activeSubtypeId.set(subtypeToAdd.id)
+            prefs.localization.subtypes.set(SubtypeJsonConfig.encodeToString(newSubtypeList))
         }
-        activeSubtype = subtypeToAdd
         return true
     }
 
@@ -219,7 +259,7 @@ class SubtypeManager(context: Context) {
      */
     fun switchToPrevSubtype() = scope.launch {
         val subtypeList = subtypes
-        val cachedActiveSubtype = activeSubtype
+        val cachedActiveSubtype = selectedSubtype
         var triggerNextSubtype = false
         var newActiveSubtype: Subtype = Subtype.DEFAULT
         for (subtype in subtypeList.asReversed()) {
@@ -234,7 +274,7 @@ class SubtypeManager(context: Context) {
             newActiveSubtype = subtypeList.last()
         }
         prefs.localization.activeSubtypeId.set(newActiveSubtype.id)
-        activeSubtype = newActiveSubtype
+        selectedSubtype = newActiveSubtype
     }
 
     /**
@@ -242,7 +282,7 @@ class SubtypeManager(context: Context) {
      */
     fun switchToNextSubtype() = scope.launch {
         val subtypeList = subtypes
-        val cachedActiveSubtype = activeSubtype
+        val cachedActiveSubtype = selectedSubtype
         var triggerNextSubtype = false
         var newActiveSubtype: Subtype = Subtype.DEFAULT
         for (subtype in subtypeList) {
@@ -257,12 +297,12 @@ class SubtypeManager(context: Context) {
             newActiveSubtype = subtypeList.first()
         }
         prefs.localization.activeSubtypeId.set(newActiveSubtype.id)
-        activeSubtype = newActiveSubtype
+        selectedSubtype = newActiveSubtype
     }
 
     fun switchToSubtypeById(id: Long) = scope.launch {
         if (subtypes.any { it.id == id }) {
-            activeSubtype = getSubtypeById(id)!!
+            selectedSubtype = getSubtypeById(id)!!
             prefs.localization.activeSubtypeId.set(id)
         }
     }

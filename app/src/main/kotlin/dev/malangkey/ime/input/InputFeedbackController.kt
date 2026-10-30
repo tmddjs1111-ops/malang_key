@@ -18,17 +18,15 @@ package dev.malangkey.ime.input
 
 import android.inputmethodservice.InputMethodService
 import android.media.AudioManager
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.compose.runtime.staticCompositionLocalOf
 import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.ime.keyboard.KeyData
 import dev.malangkey.ime.text.key.KeyCode
 import dev.malangkey.ime.text.keyboard.TextKeyData
-import org.florisboard.lib.android.AndroidVersion
 import org.florisboard.lib.android.systemServiceOrNull
 import org.florisboard.lib.android.systemVibratorOrNull
-import org.florisboard.lib.android.vibrate
-import org.florisboard.lib.android.vibrateClick
 import dev.malangkey.lib.devtools.flogDebug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +41,13 @@ val LocalInputFeedbackController = staticCompositionLocalOf<InputFeedbackControl
  */
 class InputFeedbackController private constructor(private val ims: InputMethodService) {
     companion object {
+        private const val MIN_TICK_INTERVAL_MS = 30L
+        /** 큰 키: 스페이스·엔터·지우기. */
+        private val BigKeyCodes = setOf(
+            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE,
+            KeyCode.ENTER, KeyCode.JAPANESE_ENTER, KeyCode.DELETE,
+        )
+
         fun new(ims: InputMethodService) = InputFeedbackController(ims)
     }
 
@@ -84,27 +89,27 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     // 진동은 손끝에 바로 와야 해서 소리보다 먼저, 다른 스레드로 넘기지 않고 이 자리에서 낸다.
     fun keyPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(data, 1.0)
+        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS, data)
         if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
     }
 
     fun keyLongPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyLongPress.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.hapticFeatKeyLongPress.get()) performHapticFeedback(HapticEvent.LONG_PRESS)
         if (prefs.inputFeedback.audioFeatKeyLongPress.get()) performAudioFeedback(data, 0.7)
     }
 
     fun keyRepeatedAction(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyRepeatedAction.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.hapticFeatKeyRepeatedAction.get()) performHapticFeedback(HapticEvent.TICK)
         if (prefs.inputFeedback.audioFeatKeyRepeatedAction.get()) performAudioFeedback(data, 0.4)
     }
 
     fun gestureSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatGestureSwipe.get()) performHapticFeedback(data, 0.4)
+        if (prefs.inputFeedback.hapticFeatGestureSwipe.get()) performHapticFeedback(HapticEvent.LONG_PRESS)
         if (prefs.inputFeedback.audioFeatGestureSwipe.get()) performAudioFeedback(data, 0.7)
     }
 
     fun gestureMovingSwipe(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatGestureMovingSwipe.get()) performHapticFeedback(data, 0.05)
+        if (prefs.inputFeedback.hapticFeatGestureMovingSwipe.get()) performHapticFeedback(HapticEvent.TICK)
         if (prefs.inputFeedback.audioFeatGestureMovingSwipe.get()) performAudioFeedback(data, 0.4)
     }
 
@@ -144,29 +149,47 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
         audioManager.playSoundEffect(effect, volume.toFloat())
     }
 
-    private fun performHapticFeedback(data: KeyData, factor: Double) {
-        if (vibrator == null) {
-            flogDebug { "Haptic skipped: vibrator is null" }
-            return
-        }
-        if (!prefs.inputFeedback.hapticEnabled.get()) {
-            flogDebug { "Haptic skipped: hapticEnabled is false" }
-            return
-        }
+    private enum class HapticEvent {
+        KEY_PRESS,
+        LONG_PRESS,
+        /** 삭제 반복·커서 이동처럼 잇달아 나는 가벼운 진동. */
+        TICK,
+    }
+
+    private var lastTickUptime = 0L
+
+    private fun performHapticFeedback(event: HapticEvent, data: KeyData = TextKeyData.UNSPECIFIED) {
+        if (vibrator == null) return
+        if (!prefs.inputFeedback.hapticEnabled.get()) return
         if (prefs.inputFeedback.hapticActivationMode.get() ==
             InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS && !systemHapticEnabled) {
-            flogDebug { "Haptic skipped: respect system settings and system haptic is disabled" }
             return
         }
-
-        flogDebug { "Performing haptic feedback (factor=$factor)" }
-        try {
-            val primitive = prefs.inputFeedback.hapticVibrationPrimitive.get()
-            val intensity = (prefs.inputFeedback.hapticVibrationIntensity.get() / 100f) * factor.toFloat()
-            flogDebug { "Using haptic interface: primitive=${primitive.name}, intensity=$intensity" }
-            vibrator.vibrateClick(primitive.androidId, intensity)
-        } catch (e: Exception) {
-            flogDebug { "Haptic execution failed: ${e.message}" }
+        if (event == HapticEvent.TICK) {
+            // 잇단 틱이 한데 뭉쳐 웅 하고 울리지 않도록 간격을 둔다.
+            val now = SystemClock.uptimeMillis()
+            if (now - lastTickUptime < MIN_TICK_INTERVAL_MS) return
+            lastTickUptime = now
         }
+
+        performCustomHaptic(event, data)
+    }
+
+    private fun performCustomHaptic(event: HapticEvent, data: KeyData) {
+        val vibrator = vibrator ?: return
+        val kind = when (event) {
+            HapticEvent.KEY_PRESS -> if (prefs.inputFeedback.hapticBigKeyAccent.get() && data.code in BigKeyCodes) {
+                HapticKind.BIG_KEY
+            } else {
+                HapticKind.KEY
+            }
+            HapticEvent.LONG_PRESS -> HapticKind.LONG_PRESS
+            HapticEvent.TICK -> HapticKind.TICK
+        }
+        vibrator.playKeyHaptic(
+            feel = prefs.inputFeedback.hapticFeel.get(),
+            strength = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f,
+            kind = kind,
+        )
     }
 }

@@ -29,10 +29,12 @@ import dev.malangkey.ime.core.DisplayLanguageNamesIn
 import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.input.CapitalizationBehavior
 
-import dev.malangkey.ime.input.HapticVibrationPrimitive
+import dev.malangkey.ime.input.HapticFeel
 import dev.malangkey.ime.input.InputFeedbackActivationMode
+import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.WideScreenCondition
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
 import dev.malangkey.ime.media.emoji.EmojiHairStyle
 import dev.malangkey.ime.media.emoji.EmojiHistory
@@ -97,7 +99,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val quickPhraseTriggerKey = enum(
             key = "clipboard__quick_phrase_trigger_key",
-            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.PERIOD,
+            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.ENTER,
         )
         val syncToFloris = enum(
             key = "clipboard__sync_to_floris",
@@ -186,7 +188,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val doubleSpacePeriod = boolean(
             key = "correction__double_space_period",
-            default = true,
+            default = false,
         )
         val rememberCapsLockState = boolean(
             key = "correction__remember_caps_lock_state",
@@ -246,7 +248,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Emoji {
         val historyEnabled = boolean(
             key = "emoji__history_enabled",
-            default = true,
+            default = false,
         )
         val historyData = custom(
             key = "emoji__history_data",
@@ -271,7 +273,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionEnabled = boolean(
             key = "emoji__suggestion_enabled",
-            default = true,
+            default = false,
         )
         val suggestionType = enum(
             key = "emoji__suggestion_type",
@@ -279,7 +281,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionUpdateHistory = boolean(
             key = "emoji__suggestion_update_history",
-            default = true,
+            default = false,
         )
         val suggestionCandidateShowName = boolean(
             key = "emoji__suggestion_candidate_show_name",
@@ -408,13 +410,23 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        val hapticVibrationPrimitive = enum(
-            key = "input_feedback__haptic_vibration_primitive",
-            default = HapticVibrationPrimitive.QUICK_CLICK,
+        /** 말랑 진동의 느낌. 1.59의 haptic_feel(클릭·틱)은 약해서 새 모양으로 바꾸며 새 키를 쓴다. */
+        val hapticFeel = enum(
+            key = "input_feedback__haptic_feel_v2",
+            default = HapticFeel.THUD,
         )
+        /** 스페이스·엔터·지우기 같은 큰 키는 조금 더 묵직하게 울린다. */
+        val hapticBigKeyAccent = boolean(
+            key = "input_feedback__haptic_big_key_accent",
+            default = true,
+        )
+        /**
+         * 진동 세기(%). 50이 보통이고 100까지 올리면 더 길고 묵직해진다.
+         * 세기 계산 방식이 바뀌어서 예전 값(haptic_vibration_intensity)은 버리고 모두 50에서 시작한다.
+         */
         val hapticVibrationIntensity = int(
-            key = "input_feedback__haptic_vibration_intensity",
-            default = 70,
+            key = "input_feedback__haptic_strength",
+            default = 50,
         )
         val hapticFeatKeyPress = boolean(
             key = "input_feedback__haptic_feat_key_press",
@@ -422,7 +434,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticFeatKeyLongPress = boolean(
             key = "input_feedback__haptic_feat_key_long_press",
-            default = false,
+            default = true,
         )
         val hapticFeatKeyRepeatedAction = boolean(
             key = "input_feedback__haptic_feat_key_repeated_action",
@@ -556,7 +568,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val longPressDelay = int(
             key = "keyboard__long_press_delay",
-            default = 400,
+            default = 200,
         )
         val incognitoDisplayMode = enum(
             key = "keyboard__incognito_indicator",
@@ -579,6 +591,33 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val splitWhenFolded = boolean(
             key = "keyboard__split_when_folded",
             default = false,
+        )
+        /** 펼쳤을 때·가로 화면에서 쓸 한글 자판 id (예: korean). 비어 있으면 바꾸지 않는다. */
+        val wideScreenKoreanLayout = string(
+            key = "keyboard__wide_screen_korean_layout",
+            default = "",
+        )
+        val wideScreenCondition = enum(
+            key = "keyboard__wide_screen_condition",
+            default = WideScreenCondition.UNFOLDED_OR_LANDSCAPE,
+        )
+        /**
+         * 넓은 화면(펼침·가로·태블릿)에서 격자 자판(천지인·20키 등)을 삼성 키보드의 '한 손 키보드'처럼
+         * 좁혀서 한쪽에 둔다. 빈 쪽에는 자판을 옮기거나 넓히는 버튼이 생긴다.
+         */
+        val gridWideCompact = boolean(
+            key = "keyboard__grid_wide_compact",
+            default = true,
+        )
+        /** 좁힌 격자 자판의 너비 (화면 너비의 %). */
+        val gridWideWidthPercent = int(
+            key = "keyboard__grid_wide_width_percent",
+            default = 50,
+        )
+        /** 좁힌 격자 자판의 위치. 삼성 키보드의 한 손 키보드처럼 오른쪽이 기본이다. */
+        val gridWideAlignment = enum(
+            key = "keyboard__grid_wide_alignment",
+            default = GridWideAlignment.RIGHT,
         )
         /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
         val splitGapPercent = int(
@@ -692,14 +731,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
-            default = 6,
+            default = 5,
         )
         val malangSlots = custom(
             key = "smartbar__malang_slots",
             default = listOf(
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
                 // 자판에는 이모지 키가 없어서 이모지 패널은 여기서 연다.
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
@@ -871,10 +909,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val languageMode = enum(
             key = "spelling__language_mode",
             default = SpellingLanguageMode.USE_KEYBOARD_SUBTYPES,
-        )
-        val useContacts = boolean(
-            key = "spelling__use_contacts",
-            default = true,
         )
         val useUdmEntries = boolean(
             key = "spelling__use_udm_entries",

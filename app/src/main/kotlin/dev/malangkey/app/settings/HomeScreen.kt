@@ -384,6 +384,9 @@ private fun MainNavItem(
 private fun GameTabContent(navController: androidx.navigation.NavController) {
     val prefs by FlorisPreferenceStore
     val best by prefs.malang.anthemBestScore.collectAsState()
+    val bestFull by prefs.malang.anthemBestScoreFull.collectAsState()
+    fun bestLabel(score: Int) =
+        if (score > 0) "최고 ${score}점 · ${dev.malangkey.app.game.TypingScore.gradeOf(score)}등급" else "아직 기록 없음"
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -402,29 +405,25 @@ private fun GameTabContent(navController: androidx.navigation.NavController) {
             Text("가사를 빠르고 정확하게 따라 쳐 보세요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
             Text("Typing Game", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                if (best > 0) "내 최고 점수  ${best}점 · ${dev.malangkey.app.game.TypingScore.gradeOf(best)}등급" else "아직 기록이 없어요",
-                color = MalangCardText,
-                fontSize = 17.sp,
-                fontFamily = MalangJuaFont,
-            )
+            Text("1절  ·  ${bestLabel(best)}", color = MalangCardText, fontSize = 17.sp, fontFamily = MalangJuaFont)
+            Text("전체  ·  ${bestLabel(bestFull)}", color = MalangCardText, fontSize = 17.sp, fontFamily = MalangJuaFont)
         }
         MalangSettingsSection(
             title = "도전하기",
             items = listOf(
                 {
-                    MalangNavRow(title = "1절 도전", summary = "1절과 후렴 · 4줄") {
+                    MalangNavRow(title = "1절 도전", summary = "1절과 후렴 · 4줄 · ${bestLabel(best)}") {
                         navController.navigate(Routes.Game.Anthem(full = false))
                     }
                 },
                 {
-                    MalangNavRow(title = "전체 도전", summary = "1~4절과 후렴 · 16줄") {
+                    MalangNavRow(title = "전체 도전", summary = "1~4절과 후렴 · 16줄 · ${bestLabel(bestFull)}") {
                         navController.navigate(Routes.Game.Anthem(full = true))
                     }
                 },
             ),
         )
-        MalangInfoCard("점수 = 타수 × 정확도². 빨리 칠수록 올라가고, 오타가 나면 크게 깎여요. 결과 화면에서 점수 카드를 사진으로 저장할 수 있어요.")
+        MalangInfoCard("점수 = 타수 × 정확도². 빨리 칠수록 올라가고, 오타가 나면 크게 깎여요. 최고 기록은 '고스트'가 되어 다음 판에서 함께 달려요. 결과 화면에서 점수 카드를 사진으로 저장할 수 있어요.")
     }
 }
 

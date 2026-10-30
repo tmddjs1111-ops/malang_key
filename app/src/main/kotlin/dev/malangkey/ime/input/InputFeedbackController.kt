@@ -42,11 +42,6 @@ val LocalInputFeedbackController = staticCompositionLocalOf<InputFeedbackControl
 class InputFeedbackController private constructor(private val ims: InputMethodService) {
     companion object {
         private const val MIN_TICK_INTERVAL_MS = 30L
-        /** 큰 키: 스페이스·엔터·지우기. */
-        private val BigKeyCodes = setOf(
-            KeyCode.SPACE, KeyCode.CJK_SPACE, KeyCode.JAPANESE_SPACE,
-            KeyCode.ENTER, KeyCode.JAPANESE_ENTER, KeyCode.DELETE,
-        )
 
         fun new(ims: InputMethodService) = InputFeedbackController(ims)
     }
@@ -89,7 +84,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     // 진동은 손끝에 바로 와야 해서 소리보다 먼저, 다른 스레드로 넘기지 않고 이 자리에서 낸다.
     fun keyPress(data: KeyData = TextKeyData.UNSPECIFIED) {
-        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS, data)
+        if (prefs.inputFeedback.hapticFeatKeyPress.get()) performHapticFeedback(HapticEvent.KEY_PRESS)
         if (prefs.inputFeedback.audioFeatKeyPress.get()) performAudioFeedback(data, 1.0)
     }
 
@@ -158,7 +153,7 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
 
     private var lastTickUptime = 0L
 
-    private fun performHapticFeedback(event: HapticEvent, data: KeyData = TextKeyData.UNSPECIFIED) {
+    private fun performHapticFeedback(event: HapticEvent) {
         if (vibrator == null) return
         if (!prefs.inputFeedback.hapticEnabled.get()) return
         if (prefs.inputFeedback.hapticActivationMode.get() ==
@@ -172,17 +167,13 @@ class InputFeedbackController private constructor(private val ims: InputMethodSe
             lastTickUptime = now
         }
 
-        performCustomHaptic(event, data)
+        performCustomHaptic(event)
     }
 
-    private fun performCustomHaptic(event: HapticEvent, data: KeyData) {
+    private fun performCustomHaptic(event: HapticEvent) {
         val vibrator = vibrator ?: return
         val kind = when (event) {
-            HapticEvent.KEY_PRESS -> if (prefs.inputFeedback.hapticBigKeyAccent.get() && data.code in BigKeyCodes) {
-                HapticKind.BIG_KEY
-            } else {
-                HapticKind.KEY
-            }
+            HapticEvent.KEY_PRESS -> HapticKind.KEY
             HapticEvent.LONG_PRESS -> HapticKind.LONG_PRESS
             HapticEvent.TICK -> HapticKind.TICK
         }

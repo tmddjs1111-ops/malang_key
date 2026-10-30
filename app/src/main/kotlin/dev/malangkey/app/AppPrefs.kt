@@ -410,20 +410,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        /** 말랑 진동의 느낌. 1.59의 haptic_feel(클릭·틱)은 약해서 새 모양으로 바꾸며 새 키를 쓴다. */
+        /** 말랑 진동의 느낌. 1.60의 쿵·기계식은 길어서 없애고, 모두 새 기본(시스템)에서 시작하도록 새 키를 쓴다. */
         val hapticFeel = enum(
-            key = "input_feedback__haptic_feel_v2",
-            default = HapticFeel.THUD,
+            key = "input_feedback__haptic_feel_v4",
+            default = HapticFeel.SYSTEM,
         )
-        /** 스페이스·엔터·지우기 같은 큰 키는 조금 더 묵직하게 울린다. */
-        val hapticBigKeyAccent = boolean(
-            key = "input_feedback__haptic_big_key_accent",
-            default = true,
-        )
-        /**
-         * 진동 세기(%). 50이 보통이고 100까지 올리면 더 길고 묵직해진다.
-         * 세기 계산 방식이 바뀌어서 예전 값(haptic_vibration_intensity)은 버리고 모두 50에서 시작한다.
-         */
+        /** 진동 세기(%). 진동 길이는 그대로 두고 크기만 바꾼다. */
         val hapticVibrationIntensity = int(
             key = "input_feedback__haptic_strength",
             default = 50,
@@ -897,10 +889,24 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__sound_enabled",
             default = false,
         )
-        /** 애국가 빨리치기 최고 점수. */
+        /** 애국가 빨리치기 1절 최고 점수. (예전에는 두 모드가 함께 썼다) */
         val anthemBestScore = int(
             key = "malang__anthem_best_score",
             default = 0,
+        )
+        /** 애국가 빨리치기 전체(1~4절) 최고 점수. */
+        val anthemBestScoreFull = int(
+            key = "malang__anthem_best_score_full",
+            default = 0,
+        )
+        /** 최고 기록 판의 줄별 끝낸 시각(ms, 쉼표로 구분). 다음 판의 고스트가 된다. */
+        val anthemGhost = string(
+            key = "malang__anthem_ghost",
+            default = "",
+        )
+        val anthemGhostFull = string(
+            key = "malang__anthem_ghost_full",
+            default = "",
         )
     }
 

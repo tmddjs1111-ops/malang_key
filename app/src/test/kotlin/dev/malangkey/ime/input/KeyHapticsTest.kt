@@ -3,7 +3,8 @@ package dev.malangkey.ime.input
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeInRange
-import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeLessThan
+import io.kotest.matchers.longs.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 
 class KeyHapticsTest : FunSpec({
@@ -20,34 +21,29 @@ class KeyHapticsTest : FunSpec({
         }
     }
 
-    test("100%는 최대 세기로 울린다") {
+    test("타건이 겹치지 않도록 진동은 15ms 이하이고, 세기를 바꿔도 길이는 그대로다") {
         for (feel in HapticFeel.entries) {
-            KeyHaptics.pattern(feel, 1f, HapticKind.KEY).amplitudes.max() shouldBe 255
+            for (kind in HapticKind.entries) {
+                val weak = KeyHaptics.pattern(feel, 0f, kind)
+                val strong = KeyHaptics.pattern(feel, 1f, kind)
+                strong.totalMillis shouldBeLessThanOrEqual 15L
+                strong.totalMillis shouldBe weak.totalMillis
+            }
         }
     }
 
-    test("50%(보통)에서 이미 최대 크기로 울리고, 그 위로는 길이가 늘어난다") {
+    test("세기를 올리면 크기가 커지고, 100%는 최대 크기다") {
+        KeyHaptics.pattern(HapticFeel.CRISP, 1f, HapticKind.KEY).amplitudes.max() shouldBe 255
         for (feel in HapticFeel.entries) {
-            val normal = KeyHaptics.pattern(feel, 0.5f, HapticKind.KEY)
-            val max = KeyHaptics.pattern(feel, 1f, HapticKind.KEY)
-            normal.amplitudes.max() shouldBe 255
-            max.totalMillis shouldBeGreaterThan normal.totalMillis
+            KeyHaptics.pattern(feel, 1f, HapticKind.KEY).amplitudes.max() shouldBeGreaterThan
+                KeyHaptics.pattern(feel, 0.3f, HapticKind.KEY).amplitudes.max()
         }
     }
 
-    test("세기를 올리면 크기와 길이가 함께 커진다") {
+    test("길게 누르기는 일반 키보다 약하다") {
         for (feel in HapticFeel.entries) {
-            val weak = KeyHaptics.pattern(feel, 0.3f, HapticKind.KEY)
-            val strong = KeyHaptics.pattern(feel, 1f, HapticKind.KEY)
-            strong.amplitudes.max() shouldBeGreaterThan weak.amplitudes.max()
-            strong.totalMillis shouldBeGreaterThan weak.totalMillis
-        }
-    }
-
-    test("큰 키는 일반 키보다 길게 울린다") {
-        for (feel in HapticFeel.entries) {
-            KeyHaptics.pattern(feel, 0.7f, HapticKind.BIG_KEY).totalMillis shouldBeGreaterThan
-                KeyHaptics.pattern(feel, 0.7f, HapticKind.KEY).totalMillis
+            KeyHaptics.pattern(feel, 1f, HapticKind.LONG_PRESS).amplitudes.max() shouldBeLessThan
+                KeyHaptics.pattern(feel, 1f, HapticKind.KEY).amplitudes.max()
         }
     }
 })

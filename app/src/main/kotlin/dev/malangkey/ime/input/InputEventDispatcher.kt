@@ -46,14 +46,13 @@ class InputEventDispatcher private constructor(private val repeatableKeyCodes: I
         private val KeyRepeatDelay = ViewConfiguration.getKeyRepeatDelay().toLong()
 
         /** 지우기 키를 누르고 이만큼(ms) 지나야 연속 삭제를 시작한다. */
-        private const val DeleteRepeatStartDelay = 400L
-        private const val DeleteRepeatSlowInterval = 110L
-        private const val DeleteRepeatFastInterval = 60L
-        private const val DeleteRepeatRampMillis = 1500L
+        private const val DeleteRepeatStartDelay = 300L
+        private const val DeleteRepeatSlowInterval = 65L
+        private const val DeleteRepeatFastInterval = 30L
+        private const val DeleteRepeatRampMillis = 1000L
 
         /**
-         * 연속 삭제 간격: 처음엔 1초에 9글자쯤으로 천천히 지우다가 1.5초에 걸쳐 1초에 16글자쯤까지 빨라진다.
-         * 시스템 기본값(50ms, 1초에 20번)은 한글을 글자째 지우기엔 너무 빨라 멈추기 어렵다.
+         * 연속 삭제 간격: 처음엔 1초에 15글자쯤으로 지우다가 1초에 걸쳐 1초에 33글자쯤까지 빨라진다.
          */
         private fun deleteRepeatInterval(elapsed: Long): Long {
             val t = (elapsed.toFloat() / DeleteRepeatRampMillis).coerceIn(0f, 1f)

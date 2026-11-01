@@ -50,4 +50,16 @@ class TypingScoreTest : FunSpec({
         AnthemLyrics.lines(full = false).size.shouldBe(4)
         AnthemLyrics.lines(full = true).size.shouldBe(16)
     }
+
+    test("ghost round-trips and reports where it was at a given time") {
+        val ends = listOf(4_000L, 10_000L)
+        AnthemGhost.decode(AnthemGhost.encode(ends)).shouldBe(ends)
+        AnthemGhost.decode("").shouldBe(emptyList())
+        AnthemGhost.progressAt(ends, 2, 2_000L).shouldBe(0.5f)
+        AnthemGhost.progressAt(ends, 2, 7_000L).shouldBe(1.5f)
+        AnthemGhost.progressAt(ends, 2, 99_000L).shouldBe(2f)
+        // 모드가 달라 줄 수가 맞지 않으면 고스트를 쓰지 않는다.
+        AnthemGhost.progressAt(ends, 4, 1_000L).shouldBe(null)
+        AnthemGhost.deltaAt(ends, 1, 9_000L).shouldBe(-1_000L)
+    }
 })

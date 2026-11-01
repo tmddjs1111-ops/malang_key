@@ -97,3 +97,37 @@ object TypingScore {
     private val CompoundVowels = setOf(9, 10, 11, 14, 15, 16, 19) // ㅘ ㅙ ㅚ ㅝ ㅞ ㅟ ㅢ
     private val CompoundFinals = setOf(3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18) // ㄳ ㄵ ㄶ ㄺ ㄻ ㄼ ㄽ ㄾ ㄿ ㅀ ㅄ
 }
+
+/** 한 줄을 친 기록: 줄을 끝낸 시각(시작부터 ms)과 그 줄의 오타 수. */
+data class LineRecord(val endMillis: Long, val errors: Int)
+
+/**
+ * 최고 기록을 '고스트'로 남겨 다음 판과 겨루게 한다. 줄마다 끝낸 시각만 저장한다.
+ */
+object AnthemGhost {
+    fun encode(lineEnds: List<Long>): String = lineEnds.joinToString(",")
+
+    fun decode(raw: String): List<Long> =
+        raw.split(',').mapNotNull { it.trim().toLongOrNull() }.takeIf { it.isNotEmpty() } ?: emptyList()
+
+    /**
+     * [elapsedMillis] 시점에 고스트가 몇 줄째를 치고 있는지(0~[totalLines]). 한 줄 안에서는 시간에 비례해 나눈다.
+     * 고스트가 없으면 null.
+     */
+    fun progressAt(lineEnds: List<Long>, totalLines: Int, elapsedMillis: Long): Float? {
+        if (lineEnds.size != totalLines || totalLines == 0) return null
+        var start = 0L
+        for ((i, end) in lineEnds.withIndex()) {
+            if (elapsedMillis < end) {
+                val span = (end - start).coerceAtLeast(1L)
+                return i + ((elapsedMillis - start).coerceAtLeast(0L).toFloat() / span)
+            }
+            start = end
+        }
+        return totalLines.toFloat()
+    }
+
+    /** [lineIndex]번째 줄을 끝냈을 때 고스트와의 차이(ms). 음수면 고스트보다 빠르다. */
+    fun deltaAt(lineEnds: List<Long>, lineIndex: Int, endMillis: Long): Long? =
+        lineEnds.getOrNull(lineIndex)?.let { endMillis - it }
+}

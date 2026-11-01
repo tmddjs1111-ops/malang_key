@@ -177,13 +177,15 @@ abstract class AbstractEditorInstance(context: Context) {
 
         _lastCommitPosition.handleUpdateSelection(newSelection)
         if (ownComposing.isNotEmpty()) {
-            if (composing.isValid) {
-                // 자체 조합 중이고 입력칸도 조합 중인 글자를 그대로 들고 있다: 우리가 쓴 결과다.
-                // 글을 다시 읽어 조합 범위를 고치면 조합 중인 글자가 풀려 다음 글자가 덧붙는다.
+            val canRead = newSelection.start == 0 || !ic.getTextBeforeCursor(1, 0).isNullOrEmpty()
+            if (composing.isValid && !canRead) {
+                // 자체 조합 중이고, 입력칸은 조합 중인 글자를 그대로 들고 있지만 글은 읽을 수 없다(보안 입력칸).
+                // 글을 다시 읽어 조합 범위를 고치면 조합 중인 글자가 풀려 다음 글자가 덧붙으므로 그대로 둔다.
                 activeContent = EditorContent.selectionOnly(newSelection)
                 return
             }
-            // 입력칸이 조합을 풀었다(커서를 옮겼거나 앱이 확정했다): 자체 조합도 끝낸다.
+            // 글을 읽을 수 있는 보통 칸이거나 입력칸이 조합을 풀었다(커서를 옮겼거나 앱이 확정했다):
+            // 자체 조합을 그만두고, 아래에서 입력칸의 글과 조합 범위를 다시 읽어 보통 방식으로 이어 간다.
             ownComposing = ""
         }
         val expected = runBlocking {
@@ -477,6 +479,12 @@ abstract class AbstractEditorInstance(context: Context) {
             return commitCharWithOwnComposing(char, composer, layoutId)
         }
         ownComposing = ""
+        if (composer.toRead > 0 && content.textBeforeSelection.isEmpty() && !deletePreviousSpace) {
+            // 앞 글을 하나도 모른다(칸 맨 앞이거나, 앱이 글 읽기를 막았다). 첫 글자를 그냥 확정하면 글 읽기를
+            // 막은 칸에서는 다음 글자와 조합할 수 없다(ㄱ+ㄱ이 ㅋ 대신 ㄱㄱ). 그래서 첫 글자부터 조합 중으로
+            // 들고 있다가, 다음 선택 변경 알림에서 글을 읽을 수 있는 칸으로 확인되면 보통 방식으로 돌아간다.
+            return commitCharWithOwnComposing(char, composer, layoutId)
+        }
         val previous = content.textBeforeSelection.takeLast(composer.toRead.coerceAtLeast(if (deletePreviousSpace) 1 else 0))
         val (tempRm, tempText) = composer.getActions(previous, char, layoutId)
         val rm = if (deletePreviousSpace && previous.isNotEmpty() && previous.last() == ' ') tempRm + 1 else tempRm

@@ -176,6 +176,16 @@ abstract class AbstractEditorInstance(context: Context) {
         }
 
         _lastCommitPosition.handleUpdateSelection(newSelection)
+        if (ownComposing.isNotEmpty()) {
+            if (composing.isValid) {
+                // 자체 조합 중이고 입력칸도 조합 중인 글자를 그대로 들고 있다: 우리가 쓴 결과다.
+                // 글을 다시 읽어 조합 범위를 고치면 조합 중인 글자가 풀려 다음 글자가 덧붙는다.
+                activeContent = EditorContent.selectionOnly(newSelection)
+                return
+            }
+            // 입력칸이 조합을 풀었다(커서를 옮겼거나 앱이 확정했다): 자체 조합도 끝낸다.
+            ownComposing = ""
+        }
         val expected = runBlocking {
             expectedContentQueue.popUntilOrNull {
                 it.selection == newSelection && it.composing == composing &&
@@ -222,6 +232,7 @@ abstract class AbstractEditorInstance(context: Context) {
     }
 
     protected open fun reset() {
+        ownComposing = ""
         activeInfo = FlorisEditorInfo.Unspecified
         activeCursorCapsMode = InputAttributes.CapsMode.NONE
         activeContent = EditorContent.Unspecified
@@ -375,6 +386,69 @@ abstract class AbstractEditorInstance(context: Context) {
         return true
     }
 
+    /**
+     * 자체 조합: 입력칸의 글을 읽을 수 없을 때(글 읽기를 막은 보안 입력칸, 커서 위치를 알려 주지 않는 칸)
+     * 키보드가 직접 들고 있는 '조합 중인 글자'. 입력칸에는 같은 글자가 조합 중(밑줄)으로 들어가 있다.
+     *
+     * 한글 조합은 앞 글자를 읽어서 고쳐 쓰는데(ㄱ+ㄱ→ㅋ, 가+ㄴ→간), 앞 글자를 못 읽으면 ㄱㄱ처럼 그냥
+     * 붙어 버린다. 그래서 그런 칸에서는 앞 글자 대신 이 값을 보고 조합한 뒤, 조합 중인 글자만 바꿔 끼운다.
+     */
+    protected var ownComposing: String = ""
+
+    /**
+     * 입력칸의 글을 읽을 수 없어 [ownComposing]으로 조합해야 하는지.
+     *
+     * TYPE_NULL 입력칸은 뺀다. 그런 칸은 보통 조합 중인 글자를 바로 키 입력으로 보내 버려서,
+     * 조합 글자를 바꿔 끼우면 ㄱ을 ㅋ으로 고치는 대신 ㄱㅋ이 된다.
+     */
+    protected fun needsOwnComposing(content: EditorContent = activeContent): Boolean {
+        if (activeInfo.isRawInputEditor) return false
+        val selection = content.selection
+        return selection.isNotValid ||
+            // 커서는 글 뒤에 있다는데 앞 글을 하나도 못 읽었으면, 앱이 글 읽기를 막은 것이다.
+            (selection.start > 0 && content.textBeforeSelection.isEmpty())
+    }
+
+    /** 자체 조합 중인 글자를 확정한다. 다른 키를 누르거나 커서가 움직일 때 부른다. */
+    fun finishOwnComposing() {
+        if (ownComposing.isEmpty()) return
+        ownComposing = ""
+        currentInputConnection()?.finishComposingText()
+    }
+
+    /** [updated]를 자체 조합 결과로 반영한다. 아직 바뀔 수 있는 마지막 [keepCount] 글자만 조합 중으로 남긴다. */
+    protected fun applyOwnComposing(updated: String, keepCount: Int): Boolean {
+        val ic = currentInputConnection() ?: return false
+        val keep = updated.takeLast(keepCount.coerceAtLeast(0))
+        val done = updated.dropLast(keep.length)
+        ic.beginBatchEdit()
+        if (done.isNotEmpty()) {
+            // 지금 조합 중인 글자를 확정할 앞부분으로 바꿔 끼우고 확정한 뒤, 남은 부분으로 새로 조합을 시작한다.
+            ic.setComposingText(done, 1)
+            ic.finishComposingText()
+        }
+        if (keep.isNotEmpty()) {
+            ic.setComposingText(keep, 1)
+        } else if (done.isEmpty()) {
+            // 다 지워졌으면 조합 중인 글자를 빈 글로 바꾼다.
+            ic.setComposingText("", 1)
+            ic.finishComposingText()
+        }
+        ic.endBatchEdit()
+        ownComposing = keep
+        return true
+    }
+
+    private fun commitCharWithOwnComposing(char: String, composer: Composer, layoutId: String): Boolean {
+        val (rm, text) = composer.getActions(ownComposing.takeLast(composer.toRead), char, layoutId)
+        if (rm > ownComposing.length) {
+            // 들고 있는 것보다 앞 글자를 고치려 하면 손댈 수 없으니 확정하고 그냥 붙인다.
+            finishOwnComposing()
+            return applyOwnComposing(text, composer.toRead)
+        }
+        return applyOwnComposing(ownComposing.dropLast(rm) + text, composer.toRead)
+    }
+
     open fun commitChar(char: String): Boolean {
         return commitChar(
             char = char,
@@ -393,12 +467,16 @@ abstract class AbstractEditorInstance(context: Context) {
         syncContentIfStale()
         val content = activeContent
         val selection = content.selection
-        if (selection.isNotValid || selection.isSelectionMode || activeInfo.isRawInputEditor) {
+        if (selection.isSelectionMode || activeInfo.isRawInputEditor) {
             return commitTextInternal(char)
         }
         val ic = currentInputConnection() ?: return false
         val composer = determineComposer(subtypeManager.activeSubtype.composer)
         val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
+        if (needsOwnComposing(content)) {
+            return commitCharWithOwnComposing(char, composer, layoutId)
+        }
+        ownComposing = ""
         val previous = content.textBeforeSelection.takeLast(composer.toRead.coerceAtLeast(if (deletePreviousSpace) 1 else 0))
         val (tempRm, tempText) = composer.getActions(previous, char, layoutId)
         val rm = if (deletePreviousSpace && previous.isNotEmpty() && previous.last() == ' ') tempRm + 1 else tempRm
@@ -439,9 +517,10 @@ abstract class AbstractEditorInstance(context: Context) {
         val ic = currentInputConnection() ?: return false
         val content = activeContent
         val selection = content.selection
+        ownComposing = ""
         ic.beginBatchEdit()
         ic.finishComposingText()
-        if (activeInfo.isRawInputEditor) {
+        if (activeInfo.isRawInputEditor || selection.isNotValid) {
             ic.commitText(text, 1)
         } else runBlocking {
             val newSelection = EditorRange.cursor(selection.start + text.length)
@@ -685,6 +764,8 @@ abstract class AbstractEditorInstance(context: Context) {
      * @return True on success, false if an error occurred or the input connection is invalid.
      */
     fun sendDownUpKeyEvent(keyEventCode: Int, metaState: Int = meta(), count: Int = 1): Boolean {
+        // 엔터·화살표·지우기 같은 키 이벤트 앞에서 자체 조합 중인 글자를 먼저 확정한다.
+        finishOwnComposing()
         if (count < 1) return false
         val ic = currentInputConnection() ?: return false
         ic.beginBatchEdit()

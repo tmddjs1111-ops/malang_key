@@ -683,6 +683,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             editorInstance.syncContentIfStale()
             val composer = resources.composers.value[subtypeManager.activeSubtype.composer] ?: dev.malangkey.ime.text.composing.Appender
             val consumed = composer.onSpacePressed(editorInstance.activeContent.textBeforeSelection, layoutId)
+            // 글을 읽을 수 없는 입력칸에서 자체 조합 중이면, 스페이스로 글자를 확정할 때 그 조합도 끝낸다.
+            if (consumed) editorInstance.finishOwnComposing()
             val content = editorInstance.activeContent
             if (consumed || content.composing.isValid) {
                 val composingText = content.text.safeSubstring(content.localComposing.start, content.localComposing.end)

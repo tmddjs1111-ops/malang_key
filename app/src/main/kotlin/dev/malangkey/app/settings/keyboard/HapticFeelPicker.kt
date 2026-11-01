@@ -46,19 +46,18 @@ import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
 import dev.malangkey.ime.input.HapticFeel
 import dev.malangkey.ime.input.HapticKind
-import dev.malangkey.ime.input.KeyHaptics
 import dev.malangkey.ime.input.playKeyHaptic
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** 설정 화면에서 [feel] 진동을 일반 키 → 큰 키 순서로 울려 바로 느껴 보게 한다. */
-internal suspend fun previewHaptic(vibrator: Vibrator?, feel: HapticFeel, strength: Float, bigKeyAccent: Boolean) {
+/** 설정 화면에서 [feel] 진동을 타닥타닥 세 번 울려 타건하는 느낌을 바로 느껴 보게 한다. */
+internal suspend fun previewHaptic(vibrator: Vibrator?, feel: HapticFeel, strength: Float) {
     vibrator ?: return
-    vibrator.playKeyHaptic(feel, strength, HapticKind.KEY)
-    if (!bigKeyAccent) return
-    delay(KeyHaptics.pattern(feel, strength, HapticKind.KEY).totalMillis + 250)
-    vibrator.playKeyHaptic(feel, strength, HapticKind.BIG_KEY)
+    repeat(3) { i ->
+        if (i > 0) delay(110)
+        vibrator.playKeyHaptic(feel, strength, HapticKind.KEY)
+    }
 }
 
 /** 진동 느낌 카드. 누르면 고르면서 바로 그 느낌으로 울린다. (소리 종류 고르기와 같은 방식) */
@@ -75,7 +74,6 @@ fun HapticFeelPicker(enabled: Boolean, vibrator: Vibrator?) {
                 vibrator = vibrator,
                 feel = feel,
                 strength = prefs.inputFeedback.hapticVibrationIntensity.get() / 100f,
-                bigKeyAccent = prefs.inputFeedback.hapticBigKeyAccent.get(),
             )
         }
     }
@@ -87,7 +85,7 @@ fun HapticFeelPicker(enabled: Boolean, vibrator: Vibrator?) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text("진동 느낌", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text("눌러서 느껴 보고 고를 수 있어요. 일반 키 다음에 큰 키 느낌이 이어서 와요.", color = MalangSettingsSummary, fontSize = 13.sp)
+        Text("눌러서 느껴 보고 고를 수 있어요.", color = MalangSettingsSummary, fontSize = 13.sp)
         for (pair in HapticFeel.entries.chunked(2)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (feel in pair) {

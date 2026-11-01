@@ -109,7 +109,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
             {
                 MalangValueDialogRow(
                     prefs.inputFeedback.hapticVibrationIntensity,
-                    title = "진동 세기 (보통 50%)",
+                    title = "진동 세기",
                     min = 1,
                     max = 100,
                     step = 1,
@@ -118,14 +118,6 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                     onPreview = { intensity ->
                         vibrator?.playKeyHaptic(prefs.inputFeedback.hapticFeel.get(), intensity / 100f, HapticKind.KEY)
                     },
-                )
-            },
-            {
-                MalangSwitchRow(
-                    prefs.inputFeedback.hapticBigKeyAccent,
-                    title = "큰 키는 묵직하게",
-                    summary = "스페이스·엔터·지우기는 실제 키보드처럼 조금 더 깊게 울려요.",
-                    enabled = isCustomHaptic,
                 )
             },
             {

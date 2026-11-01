@@ -107,3 +107,18 @@ fun Vibrator.vibratePrimitives(vararg steps: Pair<Int, Float>): Boolean {
         false
     }
 }
+
+/**
+ * 기기 제조사가 다듬어 둔 미리 정의된 진동([effectId], VibrationEffect.EFFECT_*)을 울린다.
+ * 지원하지 않는 버전이면 울리지 않고 false 를 돌려준다.
+ */
+fun Vibrator.vibratePredefined(effectId: Int): Boolean {
+    if (!AndroidVersion.ATLEAST_API29_Q) return false
+    return try {
+        this.vibrate(VibrationEffect.createPredefined(effectId))
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Error performing predefined haptic", e)
+        false
+    }
+}

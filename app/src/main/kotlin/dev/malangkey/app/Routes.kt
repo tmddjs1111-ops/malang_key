@@ -40,6 +40,7 @@ import dev.malangkey.app.ext.ExtensionImportScreen
 import dev.malangkey.app.ext.ExtensionImportScreenType
 import dev.malangkey.app.settings.HomeScreen
 import dev.malangkey.app.settings.about.AboutScreen
+import dev.malangkey.app.settings.about.InputLabScreen
 import dev.malangkey.app.settings.about.ProjectLicenseScreen
 import dev.malangkey.app.settings.about.ThirdPartyLicensesScreen
 import dev.malangkey.app.settings.advanced.BackupScreen
@@ -172,6 +173,10 @@ object Routes {
         object About
 
         @Serializable
+        @Deeplink("settings/about/input-lab")
+        object InputLab
+
+        @Serializable
         @Deeplink("settings/about/project-license")
         object ProjectLicense
 
@@ -247,6 +252,7 @@ object Routes {
             composableWithDeepLink(Settings.Restore::class) { RestoreScreen() }
 
             composableWithDeepLink(Settings.About::class) { AboutScreen() }
+            composableWithDeepLink(Settings.InputLab::class) { InputLabScreen() }
             composableWithDeepLink(Settings.ProjectLicense::class) { ProjectLicenseScreen() }
             composableWithDeepLink(Settings.ThirdPartyLicenses::class) { ThirdPartyLicensesScreen() }
 

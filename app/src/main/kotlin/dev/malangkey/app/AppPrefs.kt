@@ -202,6 +202,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "devtools__enabled",
             default = false,
         )
+        /** 입력칸 진단 기록 (앱 정보 > 입력칸 실험실). 친 글자가 기록에 남으므로 기본은 끈다. */
+        val inputDiagnostics = boolean(
+            key = "devtools__input_diagnostics",
+            default = false,
+        )
         val showPrimaryClip = boolean(
             key = "devtools__show_primary_clip",
             default = false,

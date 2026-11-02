@@ -286,6 +286,9 @@ class FlorisImeService : LifecycleInputMethodService() {
         windowController.onConfigurationChanged(resources.configuration)
         FoldState.onConfigurationChanged(resources.configuration)
         FoldState.observe(this, lifecycleScope)
+        prefs.devtools.inputDiagnostics.asFlow().collectLatestIn(lifecycleScope) {
+            dev.malangkey.ime.editor.InputDiagnostics.enabled = it
+        }
         windowController.activeWindowConfig.collectLatestIn(lifecycleScope) {
             keyboardManager.updateActiveEvaluators() // TODO: wacky solution, but works for now
         }

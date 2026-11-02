@@ -86,6 +86,14 @@ fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", subtitle = "About
                 }
             },
             {
+                MalangNavRow(
+                    title = "입력칸 실험실",
+                    summary = "보안 입력칸에서 한글이 안 붙을 때 원인을 기록해요.",
+                ) {
+                    navController.navigate(Routes.Settings.InputLab)
+                }
+            },
+            {
                 MalangNavRow(title = "개인정보처리방침") {
                     context.launchUrl(R.string.florisboard__privacy_policy_url)
                 }

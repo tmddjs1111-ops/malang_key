@@ -120,6 +120,15 @@ abstract class AbstractEditorInstance(context: Context) {
         val ic = currentInputConnection()
         activeInfo = editorInfo
         var selection = editorInfo.initialSelection
+        InputDiagnostics.log {
+            val type = editorInfo.base.inputType
+            "START app=${editorInfo.packageName} inputType=0x${Integer.toHexString(type)}" +
+                " class=${type and android.text.InputType.TYPE_MASK_CLASS}" +
+                " variation=0x${Integer.toHexString(type and android.text.InputType.TYPE_MASK_VARIATION)}" +
+                " imeOptions=0x${Integer.toHexString(editorInfo.base.imeOptions)}" +
+                " raw=${editorInfo.isRawInputEditor} sel=$selection ic=${ic != null}" +
+                " readBefore=${ic?.getTextBeforeCursor(8, 0)?.length ?: "null"}"
+        }
         if (ic == null || selection.isNotValid || editorInfo.isRawInputEditor) {
             activeCursorCapsMode = InputAttributes.CapsMode.NONE
             activeContent = EditorContent.Unspecified
@@ -168,6 +177,10 @@ abstract class AbstractEditorInstance(context: Context) {
     open fun handleSelectionUpdate(oldSelection: EditorRange, newSelection: EditorRange, composing: EditorRange) {
         val ic = currentInputConnection()
         val editorInfo = activeInfo
+        InputDiagnostics.log {
+            "SEL $oldSelection -> $newSelection composing=$composing own='$ownComposing'" +
+                " readBefore=${ic?.getTextBeforeCursor(8, 0)?.let { "'$it'" } ?: "null"}"
+        }
         if (ic == null || newSelection.isNotValid || editorInfo.isRawInputEditor) {
             activeCursorCapsMode = InputAttributes.CapsMode.NONE
             activeContent = EditorContent.Unspecified
@@ -443,6 +456,7 @@ abstract class AbstractEditorInstance(context: Context) {
 
     private fun commitCharWithOwnComposing(char: String, composer: Composer, layoutId: String): Boolean {
         val (rm, text) = composer.getActions(ownComposing.takeLast(composer.toRead), char, layoutId)
+        InputDiagnostics.log { "  OWN '$ownComposing' + '$char' -> rm=$rm text='$text'" }
         if (rm > ownComposing.length) {
             // 들고 있는 것보다 앞 글자를 고치려 하면 손댈 수 없으니 확정하고 그냥 붙인다.
             finishOwnComposing()
@@ -469,6 +483,10 @@ abstract class AbstractEditorInstance(context: Context) {
         syncContentIfStale()
         val content = activeContent
         val selection = content.selection
+        InputDiagnostics.log {
+            "CHAR '$char' sel=$selection cachedBefore='${content.textBeforeSelection.takeLast(4)}'" +
+                " own='$ownComposing' needsOwn=${needsOwnComposing(content)} raw=${activeInfo.isRawInputEditor}"
+        }
         if (selection.isSelectionMode || activeInfo.isRawInputEditor) {
             return commitTextInternal(char)
         }

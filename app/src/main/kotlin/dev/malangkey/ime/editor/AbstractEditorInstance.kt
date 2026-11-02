@@ -436,6 +436,10 @@ abstract class AbstractEditorInstance(context: Context) {
         val ic = currentInputConnection() ?: return false
         val keep = updated.takeLast(keepCount.coerceAtLeast(0))
         val done = updated.dropLast(keep.length)
+        // 입력칸에 쓰기 전에 먼저 기록한다. 입력칸이 보내는 선택 변경 알림이 이 값을 보고 '자체 조합 중'인지
+        // 판단하는데, 쓰고 나서 기록하면 알림이 먼저 와서 빈 값을 보고 조합 범위를 지워 버린다
+        // (그러면 다음 글자와 조합하지 못해 손이 ㅅㅗㄴ으로 나온다).
+        ownComposing = keep
         ic.beginBatchEdit()
         if (done.isNotEmpty()) {
             // 지금 조합 중인 글자를 확정할 앞부분으로 바꿔 끼우고 확정한 뒤, 남은 부분으로 새로 조합을 시작한다.
@@ -450,7 +454,6 @@ abstract class AbstractEditorInstance(context: Context) {
             ic.finishComposingText()
         }
         ic.endBatchEdit()
-        ownComposing = keep
         return true
     }
 

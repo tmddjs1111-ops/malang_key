@@ -24,7 +24,8 @@ PY
       sleep 2
       return 0
     fi
-    adb shell input swipe 540 1100 540 600 300
+    # 기록 글(선택 가능한 글)이 아닌 아래쪽을 밀어야 화면이 스크롤된다.
+    adb shell input swipe 540 1900 540 1000 400
     sleep 1
   done
   log "NOT FOUND desc: '$1'"

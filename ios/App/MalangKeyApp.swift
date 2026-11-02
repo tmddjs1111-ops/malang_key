@@ -5,8 +5,41 @@ import SwiftUI
 struct MalangKeyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if let shot = LaunchPreview.fromArguments() {
+                NavigationStack {
+                    KeyboardPreviewScreen(layout: shot.layout, language: shot.language, mode: shot.mode, text: shot.text)
+                }
+            } else {
+                ContentView()
+            }
         }
+    }
+}
+
+/// `-preview` 로 켜면 바로 미리보기 화면을 연다. CI 가 시뮬레이터 화면을 찍을 때 쓴다.
+/// 예: `-preview -layout cheonjiin -language english -mode symbols -text 안녕`
+struct LaunchPreview {
+    var layout: KoreanLayout = .dubeolsik
+    var language: KeyboardLanguage = .korean
+    var mode: KeyboardMode = .letters
+    var text = ""
+
+    static func fromArguments(_ args: [String] = ProcessInfo.processInfo.arguments) -> LaunchPreview? {
+        guard args.contains("-preview") else { return nil }
+        func value(_ name: String) -> String? {
+            guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
+            return args[i + 1]
+        }
+        var shot = LaunchPreview()
+        if let layout = value("-layout").flatMap(KoreanLayout.init(rawValue:)) { shot.layout = layout }
+        if let language = value("-language").flatMap(KeyboardLanguage.init(rawValue:)) { shot.language = language }
+        switch value("-mode") {
+        case "symbols": shot.mode = .symbols
+        case "moreSymbols": shot.mode = .moreSymbols
+        default: break
+        }
+        shot.text = value("-text") ?? ""
+        return shot
     }
 }
 
@@ -50,6 +83,16 @@ struct ContentView: View {
                     Text("한글 자판")
                 } footer: {
                     Text("키보드를 다시 열면 바뀐 자판이 나와요.")
+                }
+
+                Section {
+                    NavigationLink("\(koreanLayout.title) 자판 쳐 보기") {
+                        KeyboardPreviewScreen(layout: koreanLayout)
+                    }
+                } header: {
+                    Text("미리보기")
+                } footer: {
+                    Text("키보드를 켜지 않아도 앱 안에서 말랑키를 써 볼 수 있어요.")
                 }
 
                 Section("시험해 보기") {

@@ -22,7 +22,7 @@ targets:
   MalangKey:
     type: application
     platform: iOS
-    sources: [App]
+    sources: [App, Shared]
     dependencies:
       - target: MalangKeyboard
       - package: MalangCore
@@ -51,7 +51,7 @@ targets:
   MalangKeyboard:
     type: app-extension
     platform: iOS
-    sources: [Keyboard]
+    sources: [Keyboard, Shared]
     dependencies:
       - package: MalangCore
     info:

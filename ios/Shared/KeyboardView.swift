@@ -85,6 +85,12 @@ enum MalangPalette {
     static let accent = Color(hex: 0x8D6E63)
     static let brown = Color(hex: 0x311D18)
     static let cream = Color(hex: 0xFCF5D6)
+    /// 밝은 화면에서는 갈색, 어두운 화면에서는 크림색 (앱 제목)
+    static let title = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0xFC / 255, green: 0xF5 / 255, blue: 0xD6 / 255, alpha: 1)
+            : UIColor(red: 0x31 / 255, green: 0x1D / 255, blue: 0x18 / 255, alpha: 1)
+    })
 }
 
 struct KeyboardView: View {

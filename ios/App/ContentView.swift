@@ -112,7 +112,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("말랑키")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(MalangPalette.brown)
+                        .foregroundStyle(MalangPalette.title)
                     Text("귀엽고 말랑한 오프라인 키보드")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

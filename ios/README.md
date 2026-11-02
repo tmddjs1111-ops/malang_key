@@ -11,7 +11,15 @@
 | `App/` | 키보드 켜는 방법 안내, 한글 자판 고르기, 시험 입력창 |
 | `project.yml` | XcodeGen 설정. `.xcodeproj` 는 이걸로 만들어 쓰고 커밋하지 않음 |
 
-지금 되는 것: 두벌식·천지인, 영어 쿼티, 숫자·기호 2쪽, 길게 눌러 숫자·기호(키 오른쪽 위에 표시), 쉬프트(두 번 누르면 고정), 지우기 길게 누르기, 한/영 전환, 지구본 키, 다크 모드, 앱 안 미리보기(키보드를 켜지 않고 쳐 보기).
+## 지금 되는 것
+
+- **자판**: 두벌식, 천지인, 스카이, 단모음, 획추가형(나랏글), 영어 쿼티, 숫자·기호 2쪽
+- **입력**: 쉬프트(두 번 누르면 고정), 지우기 길게 누르기, 길게 눌러 숫자·기호(키 오른쪽 위 표시), 한/영 전환, 지구본 키, 키 소리
+- **위쪽 툴바**: 이모지(한국어 CLDR 목록, 최근 쓴 이모지), 상용구, 테마, 설정(자판·높이·숫자 힌트), 키보드 내리기
+- **이모지 추천**: "사랑", "행복"처럼 친 단어에 맞는 이모지를 툴바에 띄움
+- **테마**: 안드로이드와 같은 색 10종 + 말랑 핑크, "자동"은 밝을 때 바닐라·어두울 때 블랙
+- **앱**: 키보드 켜기 안내, 앱 안에서 쳐 보기, 테마·자판·높이·소리 설정, 상용구 고치기
+- 전체 접근 허용을 요구하지 않음
 
 CI 가 시뮬레이터에서 찍은 화면: Releases 의 `ios-shots`.
 
@@ -26,11 +34,12 @@ brew install xcodegen
 cd ios && xcodegen generate && open MalangKey.xcodeproj
 ```
 
-## 아이폰에 설치하려면
+## 아이폰에 설치하려면 (TestFlight)
 
 1. Apple Developer Program 가입 (연 99달러)
-2. App Store Connect 에 앱 등록, 번들 ID `dev.malangkey.ios` / `dev.malangkey.ios.keyboard`, App Group `group.dev.malangkey`
-3. 서명 인증서·프로비저닝을 GitHub Secrets 에 넣고 TestFlight 업로드 워크플로 추가
+2. `.github/workflows/release_ios.yml` 맨 위 "준비"대로 App Store Connect 에 앱을 만들고 API 키 4개를 GitHub Secrets 에 넣기
+3. Actions → **Release iOS to TestFlight** → Run workflow
+4. 아이폰에 TestFlight 앱을 깔고 초대 메일로 설치
 
 ## iOS 키보드의 제약
 
@@ -38,3 +47,4 @@ cd ios && xcodegen generate && open MalangKey.xcodeproj
 - 전화번호·숫자 전용 칸도 시스템 키보드가 뜰 수 있습니다.
 - 키보드 확장은 메모리를 수십 MB 밖에 못 써서 일본어 Mozc 사전 같은 큰 엔진은 그대로 넣기 어렵습니다.
 - 진동(햅틱)·클립보드 기록은 "전체 접근 허용"이 있어야 합니다. 지금은 요구하지 않습니다.
+- 전체 접근이 꺼져 있으면 키보드가 앱의 설정(App Group)을 못 읽을 수 있습니다. 그래서 키보드 툴바의 ⚙︎ 와 🎨 에서도 자판·테마·높이를 바꿀 수 있게 했습니다.

@@ -35,6 +35,8 @@ targets:
       properties:
         CFBundleDisplayName: 말랑키
         CFBundleDevelopmentRegion: ko
+        # 표준 암호화도 쓰지 않아 수출 규정 질문을 건너뛴다
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

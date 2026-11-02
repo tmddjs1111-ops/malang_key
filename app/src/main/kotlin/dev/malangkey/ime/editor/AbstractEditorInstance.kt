@@ -120,6 +120,15 @@ abstract class AbstractEditorInstance(context: Context) {
         val ic = currentInputConnection()
         activeInfo = editorInfo
         var selection = editorInfo.initialSelection
+        InputDiagnostics.log {
+            val type = editorInfo.base.inputType
+            "START app=${editorInfo.packageName} inputType=0x${Integer.toHexString(type)}" +
+                " class=${type and android.text.InputType.TYPE_MASK_CLASS}" +
+                " variation=0x${Integer.toHexString(type and android.text.InputType.TYPE_MASK_VARIATION)}" +
+                " imeOptions=0x${Integer.toHexString(editorInfo.base.imeOptions)}" +
+                " raw=${editorInfo.isRawInputEditor} sel=$selection ic=${ic != null}" +
+                " readBefore=${ic?.getTextBeforeCursor(8, 0)?.length ?: "null"}"
+        }
         if (ic == null || selection.isNotValid || editorInfo.isRawInputEditor) {
             activeCursorCapsMode = InputAttributes.CapsMode.NONE
             activeContent = EditorContent.Unspecified
@@ -168,6 +177,10 @@ abstract class AbstractEditorInstance(context: Context) {
     open fun handleSelectionUpdate(oldSelection: EditorRange, newSelection: EditorRange, composing: EditorRange) {
         val ic = currentInputConnection()
         val editorInfo = activeInfo
+        InputDiagnostics.log {
+            "SEL $oldSelection -> $newSelection composing=$composing own='$ownComposing'" +
+                " readBefore=${ic?.getTextBeforeCursor(8, 0)?.let { "'$it'" } ?: "null"}"
+        }
         if (ic == null || newSelection.isNotValid || editorInfo.isRawInputEditor) {
             activeCursorCapsMode = InputAttributes.CapsMode.NONE
             activeContent = EditorContent.Unspecified
@@ -423,6 +436,10 @@ abstract class AbstractEditorInstance(context: Context) {
         val ic = currentInputConnection() ?: return false
         val keep = updated.takeLast(keepCount.coerceAtLeast(0))
         val done = updated.dropLast(keep.length)
+        // 입력칸에 쓰기 전에 먼저 기록한다. 입력칸이 보내는 선택 변경 알림이 이 값을 보고 '자체 조합 중'인지
+        // 판단하는데, 쓰고 나서 기록하면 알림이 먼저 와서 빈 값을 보고 조합 범위를 지워 버린다
+        // (그러면 다음 글자와 조합하지 못해 손이 ㅅㅗㄴ으로 나온다).
+        ownComposing = keep
         ic.beginBatchEdit()
         if (done.isNotEmpty()) {
             // 지금 조합 중인 글자를 확정할 앞부분으로 바꿔 끼우고 확정한 뒤, 남은 부분으로 새로 조합을 시작한다.
@@ -437,12 +454,12 @@ abstract class AbstractEditorInstance(context: Context) {
             ic.finishComposingText()
         }
         ic.endBatchEdit()
-        ownComposing = keep
         return true
     }
 
     private fun commitCharWithOwnComposing(char: String, composer: Composer, layoutId: String): Boolean {
         val (rm, text) = composer.getActions(ownComposing.takeLast(composer.toRead), char, layoutId)
+        InputDiagnostics.log { "  OWN '$ownComposing' + '$char' -> rm=$rm text='$text'" }
         if (rm > ownComposing.length) {
             // 들고 있는 것보다 앞 글자를 고치려 하면 손댈 수 없으니 확정하고 그냥 붙인다.
             finishOwnComposing()
@@ -469,6 +486,10 @@ abstract class AbstractEditorInstance(context: Context) {
         syncContentIfStale()
         val content = activeContent
         val selection = content.selection
+        InputDiagnostics.log {
+            "CHAR '$char' sel=$selection cachedBefore='${content.textBeforeSelection.takeLast(4)}'" +
+                " own='$ownComposing' needsOwn=${needsOwnComposing(content)} raw=${activeInfo.isRawInputEditor}"
+        }
         if (selection.isSelectionMode || activeInfo.isRawInputEditor) {
             return commitTextInternal(char)
         }

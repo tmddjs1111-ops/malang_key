@@ -1,0 +1,44 @@
+# 아이폰 버전(ios/)을 Mac 에서 빌드하고 한글 조합 시험을 돌린다.
+#
+# 쓰는 법
+#   - ios/ 아래 파일을 바꿔 푸시하면 자동으로 돈다. Actions 탭에서 직접 실행해도 된다.
+#   - 서명 없이 시뮬레이터용으로만 빌드한다. 실제 아이폰에 깔려면 Apple Developer 계정과
+#     서명 설정(TestFlight)이 필요하다. ios/README.md 참고.
+
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/build_ios.yml'
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hangul composer tests
+        run: swift test --package-path ios/MalangCore
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build for simulator
+        run: |
+          cd ios
+          xcodebuild build \
+            -project MalangKey.xcodeproj \
+            -scheme MalangKey \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

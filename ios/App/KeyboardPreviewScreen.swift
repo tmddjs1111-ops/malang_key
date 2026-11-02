@@ -16,24 +16,29 @@ struct KeyboardPreviewScreen: View {
     @StateObject private var model: KeyboardModel
     @StateObject private var preview: PreviewText
     @State private var input: KeyboardInput?
+    @Environment(\.colorScheme) private var colorScheme
 
-    init(layout: KoreanLayout, language: KeyboardLanguage = .korean, mode: KeyboardMode = .letters, text: String = "") {
+    init(options: LaunchPreview) {
         let model = KeyboardModel()
-        model.koreanLayout = layout
-        model.language = language
-        model.mode = mode
+        model.reloadSettings()
+        model.koreanLayout = options.layout
+        model.language = options.language
+        model.mode = options.mode
+        model.panel = options.panel
+        if let theme = options.themeID { model.themeID = theme }
         _model = StateObject(wrappedValue: model)
-        _preview = StateObject(wrappedValue: PreviewText(text: text))
+        _preview = StateObject(wrappedValue: PreviewText(text: options.text))
     }
 
     var body: some View {
+        let colors = ThemeColors(model.theme(dark: colorScheme == .dark))
         VStack(spacing: 0) {
             ScrollView {
                 HStack(alignment: .top, spacing: 0) {
                     Text(preview.text)
                         .font(.title3)
                     Rectangle()
-                        .fill(MalangPalette.accent)
+                        .fill(colors.action)
                         .frame(width: 2, height: 24)
                     Spacer(minLength: 0)
                 }
@@ -43,7 +48,7 @@ struct KeyboardPreviewScreen: View {
             .background(Color(uiColor: .systemBackground))
 
             KeyboardView(model: model)
-                .background(MalangPalette.background.ignoresSafeArea(edges: .bottom))
+                .background(colors.background.ignoresSafeArea(edges: .bottom))
         }
         .navigationTitle("\(model.koreanLayout.title) 미리보기")
         .navigationBarTitleDisplayMode(.inline)
@@ -51,7 +56,9 @@ struct KeyboardPreviewScreen: View {
             guard input == nil else { return }
             let input = KeyboardInput(model: model)
             input.target = preview
+            input.emojiSuggestions = MalangSettings.emojiSuggestions
             self.input = input
+            input.perform(.noop)  // 미리 넣어 둔 글자에 맞는 이모지 추천을 띄운다
         }
     }
 }

@@ -15,6 +15,10 @@ final class KeyboardInput {
     weak var target: TextTarget?
     /// 지구본 키. 키보드 확장에서만 의미가 있다.
     var onNextKeyboard: (() -> Void)?
+    /// 키보드 내리기
+    var onDismiss: (() -> Void)?
+    /// 이모지 추천을 켤지
+    var emojiSuggestions = true
     private var lastShiftTap: TimeInterval = 0
 
     init(model: KeyboardModel) {
@@ -24,7 +28,15 @@ final class KeyboardInput {
 
     func perform(_ action: KeyAction) {
         guard let target else { return }
+        defer { updateSuggestions() }
         switch action {
+        case .commit(let text):
+            composer.resetCycle()
+            target.insertText(text)
+            model.suggestions = []
+            return
+        case .dismiss:
+            onDismiss?()
         case .text(let text):
             insert(text, into: target)
         case .backspace:
@@ -75,6 +87,17 @@ final class KeyboardInput {
             composer.resetCycle()
             target.deleteBackward()
         }
+    }
+
+    /// 마지막 단어가 이모지 키워드와 같으면 툴바에 추천을 띄운다. ("사랑" → ❤️ 😍 …)
+    private func updateSuggestions() {
+        guard emojiSuggestions, model.panel == .none, let target else {
+            if !model.suggestions.isEmpty { model.suggestions = [] }
+            return
+        }
+        let word = EmojiData.lastWord(in: target.textBeforeCursor)
+        let found = word.count >= 2 ? EmojiStore.shared.suggestions(for: word) : []
+        if found != model.suggestions { model.suggestions = found }
     }
 
     /// 한 번 누르면 한 글자만, 빨리 두 번 누르면 고정.

@@ -9,7 +9,17 @@ public enum KoreanLayout: String, CaseIterable, Sendable {
     case naratgul
 
     /// 지금 iOS 키보드에 배치가 있는 자판.
-    public static let available: [KoreanLayout] = [.dubeolsik, .cheonjiin]
+    public static let available: [KoreanLayout] = [.dubeolsik, .cheonjiin, .sky, .danmoeum, .naratgul]
+
+    public var subtitle: String {
+        switch self {
+        case .dubeolsik: return "컴퓨터와 같은 표준 자판"
+        case .cheonjiin: return "ㅣ·ㅡ 로 모음을 만드는 12키"
+        case .sky: return "같은 키를 연타해 바꾸는 12키"
+        case .danmoeum: return "쌍자음·겹모음은 두 번 누르기"
+        case .naratgul: return "획추가·쌍자음 키로 만드는 12키"
+        }
+    }
 
     public var title: String {
         switch self {
@@ -648,8 +658,25 @@ public final class HangulComposer {
     // MARK: - 단모음
 
     private func handleDanmoeum(_ key: String, _ s: EngineState, _ now: Int64) {
-        if isCycle(key, now), let doubled = Self.danmoeumDouble[key] {
-            handleQwerty(doubled, s)
+        // 같은 키를 빨리 두 번: 방금 넣은 자모를 쌍자음·이중모음으로 바꾼다. (ㄱㄱ → ㄲ, ㅏㅏ → ㅑ)
+        // 안드로이드는 쌍자음을 새 글자로 붙여 "ㄱㄲ"가 되던 것을 여기서 바로잡았다.
+        guard isCycle(key, now), let doubled = Self.danmoeumDouble[key] else {
+            handleQwerty(key, s)
+            return
+        }
+        if let j = s.jong, Self.jongseong[j] == key {
+            if let doubledJong = Self.jongMap[doubled] {
+                s.jong = doubledJong
+            } else {
+                // ㄸ·ㅃ·ㅉ 은 받침이 될 수 없어 다음 글자의 초성으로 넘긴다.
+                s.jong = nil
+                s.commitPreedit()
+                s.cho = Self.choMap[doubled]
+            }
+        } else if s.jong == nil, let j = s.jung, Self.jungString(j) == key, let doubledJung = Self.jungMap[doubled] {
+            s.jung = doubledJung
+        } else if s.jung == nil, let c = s.cho, Self.choseong[c] == key, let doubledCho = Self.choMap[doubled] {
+            s.cho = doubledCho
         } else {
             handleQwerty(key, s)
         }

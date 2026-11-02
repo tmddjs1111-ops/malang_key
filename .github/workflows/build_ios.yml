@@ -69,15 +69,24 @@ jobs:
             xcrun simctl io "$udid" screenshot "shots/$name.png"
           }
           xcrun simctl ui "$udid" appearance light
-          shot 1_home
-          shot 2_dubeolsik -preview -layout dubeolsik -text "말랑키 안녕"
-          shot 3_cheonjiin -preview -layout cheonjiin -text "천지인 자판"
-          shot 4_english -preview -language english -text "Hello"
-          shot 5_symbols -preview -mode symbols
-          shot 6_more_symbols -preview -mode moreSymbols
+          shot 01_home
+          shot 02_dubeolsik -preview -layout dubeolsik -text "말랑키 안녕"
+          shot 03_cheonjiin -preview -layout cheonjiin -text "천지인 자판"
+          shot 04_sky -preview -layout sky -text "스카이 자판"
+          shot 05_danmoeum -preview -layout danmoeum -text "단모음 자판"
+          shot 06_naratgul -preview -layout naratgul -text "획추가형 자판"
+          shot 07_english -preview -language english -text "Hello"
+          shot 08_symbols -preview -mode symbols
+          shot 09_emoji_suggest -preview -text "오늘 너무 행복"
+          shot 10_emoji_panel -preview -panel emoji
+          shot 11_themes -preview -panel themes
+          shot 12_settings -preview -panel settings
+          shot 13_phrases -preview -panel phrases
+          shot 14_theme_blue -preview -theme blue -text "블루 테마"
+          shot 15_theme_pink -preview -layout cheonjiin -theme pink -text "말랑 핑크"
           xcrun simctl ui "$udid" appearance dark
-          shot 7_dubeolsik_dark -preview -layout dubeolsik -text "어두운 화면"
-          shot 8_cheonjiin_dark -preview -layout cheonjiin
+          shot 16_dark_auto -preview -layout dubeolsik -text "어두운 화면"
+          shot 17_dark_home
           ls -la shots
 
       - name: Upload screenshots

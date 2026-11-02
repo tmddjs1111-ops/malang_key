@@ -9,7 +9,7 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.1"
+    MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -22,7 +22,11 @@ targets:
   MalangKey:
     type: application
     platform: iOS
-    sources: [App, Shared]
+    sources:
+      - App
+      - Shared
+      - path: ../app/src/main/assets/ime/media/emoji/ko.txt
+        buildPhase: resources
     dependencies:
       - target: MalangKeyboard
       - package: MalangCore
@@ -47,11 +51,17 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.malangkey.ios
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
   MalangKeyboard:
     type: app-extension
     platform: iOS
-    sources: [Keyboard, Shared]
+    sources:
+      - Keyboard
+      - Shared
+      # 안드로이드와 같은 한국어 이모지 목록 (분류, 이름, 키워드)
+      - path: ../app/src/main/assets/ime/media/emoji/ko.txt
+        buildPhase: resources
     dependencies:
       - package: MalangCore
     info:

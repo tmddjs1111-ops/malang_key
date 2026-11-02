@@ -159,14 +159,15 @@ final class CheonjiinTests: XCTestCase {
 }
 
 final class LayoutTests: XCTestCase {
-    func testEveryLayoutHasFourRowsAndBackspace() {
+    func testEveryLayoutHasFourRowsBackspaceAndGlobe() {
         for language in [KeyboardLanguage.korean, .english] {
             for korean in KoreanLayout.available {
                 for mode in [KeyboardMode.letters, .symbols, .moreSymbols] {
                     let rows = KeyboardLayouts.rows(language: language, korean: korean, mode: mode, showsGlobe: true)
-                    XCTAssertEqual(rows.count, 4)
-                    XCTAssertTrue(rows.joined().contains { $0.action == .backspace })
-                    XCTAssertTrue(rows.joined().contains { $0.action == .nextKeyboard })
+                    XCTAssertEqual(rows.count, 4, "\(korean) \(mode)")
+                    XCTAssertTrue(rows.joined().contains { $0.action == .backspace }, "\(korean) \(mode)")
+                    XCTAssertTrue(rows.joined().contains { $0.action == .nextKeyboard }, "\(korean) \(mode)")
+                    XCTAssertTrue(rows.joined().contains { $0.action == .enter }, "\(korean) \(mode)")
                 }
             }
         }
@@ -175,15 +176,76 @@ final class LayoutTests: XCTestCase {
     func testLongPressDigits() {
         let dubeolsik = KeyboardLayouts.dubeolsik(showsGlobe: false)[0].compactMap(\.longPress)
         XCTAssertEqual(dubeolsik.joined(), "1234567890")
-        let cheonjiin = KeyboardLayouts.cheonjiin(showsGlobe: false).joined()
-            .filter { $0.style == .letter && $0.label.count > 0 && $0.label != "." && $0.label != "," }
-            .compactMap(\.longPress)
-        XCTAssertEqual(cheonjiin.sorted().joined(), "0123456789")
+        for korean in [KoreanLayout.cheonjiin, .sky, .naratgul] {
+            let digits = KeyboardLayouts.grid(korean).joined().compactMap { $0.longPress }.filter { $0.first!.isNumber }
+            XCTAssertEqual(digits.sorted().joined(), "0123456789", "\(korean)")
+        }
+    }
+
+    func testTwelveKeyOutputsAreKnownToComposer() {
+        // 연타형 자판의 키가 넣는 글자는 모두 조합기가 아는 글자여야 한다.
+        let e = Editor(.sky)
+        e.type("ㄱ", "ㅏ", "ㅇ")
+        XCTAssertEqual(e.text, "강")
+        let n = Editor(.naratgul)
+        n.type("ㄱ", "ㅏ/ㅓ", "ㄴ", "획")
+        XCTAssertEqual(n.text, "갇")
     }
 
     func testShiftedLabel() {
         let first = KeyboardLayouts.dubeolsik(showsGlobe: false)[0][0]
         XCTAssertEqual(first.action(shifted: true), .text("ㅃ"))
         XCTAssertEqual(first.action(shifted: false), .text("ㅂ"))
+    }
+}
+
+final class DanmoeumTests: XCTestCase {
+    func testDoublePressMakesDoubleLetters() {
+        let e = Editor(.danmoeum)
+        e.type("ㄱ")
+        e.type("ㄱ", gap: 100)
+        e.type("ㅏ")
+        e.type("ㅏ", gap: 100)
+        XCTAssertEqual(e.text, "꺄")
+    }
+}
+
+final class ThemeTests: XCTestCase {
+    func testResolve() {
+        XCTAssertEqual(KeyboardTheme.resolve("blue", systemIsDark: true).id, "blue")
+        XCTAssertEqual(KeyboardTheme.resolve("auto", systemIsDark: false).id, "vanilla")
+        XCTAssertEqual(KeyboardTheme.resolve("auto", systemIsDark: true).id, "black")
+        XCTAssertEqual(Set(KeyboardTheme.all.map(\.id)).count, KeyboardTheme.all.count)
+    }
+}
+
+final class EmojiTests: XCTestCase {
+    /// 안드로이드 앱의 ko.txt 를 그대로 읽는다.
+    private func loadKorean() throws -> EmojiData {
+        var url = URL(fileURLWithPath: #filePath)
+        for _ in 0..<5 { url.deleteLastPathComponent() }   // ios/MalangCore/Tests/MalangCoreTests/파일 → 저장소 뿌리
+        url.appendPathComponent("app/src/main/assets/ime/media/emoji/ko.txt")
+        return EmojiData(text: try String(contentsOf: url, encoding: .utf8))
+    }
+
+    func testCategories() throws {
+        let data = try loadKorean()
+        XCTAssertEqual(data.categories.first?.id, "smileys_emotion")
+        XCTAssertEqual(data.categories.count, 9)
+        XCTAssertEqual(data.categories.first?.emojis.first?.value, "😀")
+        // 피부색 변형은 빠진다
+        XCTAssertFalse(data.categories.flatMap { $0.emojis }.contains { $0.value == "👋🏻" })
+    }
+
+    func testSuggestions() throws {
+        let data = try loadKorean()
+        XCTAssertFalse(data.suggestions(for: "행복").isEmpty)
+        XCTAssertTrue(data.suggestions(for: "없는단어").isEmpty)
+    }
+
+    func testLastWord() {
+        XCTAssertEqual(EmojiData.lastWord(in: "오늘 정말 행복"), "행복")
+        XCTAssertEqual(EmojiData.lastWord(in: "사랑해."), "")
+        XCTAssertEqual(EmojiData.lastWord(in: ""), "")
     }
 }

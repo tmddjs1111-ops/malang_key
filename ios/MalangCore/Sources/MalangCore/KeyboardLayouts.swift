@@ -14,6 +14,10 @@ public enum KeyAction: Hashable, Sendable {
     case symbols
     case moreSymbols
     case letters
+    /// 조합하지 않고 그대로 넣는다 (이모지, 상용구, 추천)
+    case commit(String)
+    /// 키보드 내리기
+    case dismiss
     /// 줄 맞춤용 빈 칸
     case noop
 }
@@ -71,8 +75,9 @@ public enum KeyboardLayouts {
         }
         if language == .english { return qwerty(showsGlobe: showsGlobe) }
         switch korean {
-        case .cheonjiin: return cheonjiin(showsGlobe: showsGlobe)
-        default: return dubeolsik(showsGlobe: showsGlobe)
+        case .cheonjiin, .sky, .naratgul: return twelveKey(korean, showsGlobe: showsGlobe)
+        case .danmoeum: return danmoeum(showsGlobe: showsGlobe)
+        case .dubeolsik: return dubeolsik(showsGlobe: showsGlobe)
         }
     }
 
@@ -114,25 +119,67 @@ public enum KeyboardLayouts {
         ]
     }
 
-    /// 천지인. 안드로이드 korean_cheonjiin_16 과 같은 3×4 배치.
-    public static func cheonjiin(showsGlobe: Bool) -> [[Key]] {
-        // 길게 누르면 숫자: 안드로이드 천지인과 같은 자리
-        func jamo(_ label: String, _ output: String, _ digit: String) -> Key {
-            Key(label, action: .text(output), longPress: digit)
+    /// 연타형 자판(천지인·스카이·획추가형)의 가운데 3×4 칸. (보이는 글자, 넣는 글자, 길게 눌러 넣는 글자)
+    typealias GridKey = (label: String, output: String, longPress: String?)
+
+    static func grid(_ korean: KoreanLayout) -> [[GridKey]] {
+        switch korean {
+        case .sky:
+            return [
+                [("ㄱㅋ", "ㄱ", "1"), ("ㅣㅡ", "ㅣ", "2"), ("ㅏㅑ", "ㅏ", "3")],
+                [("ㄷㅌ", "ㄷ", "4"), ("ㄴㄹ", "ㄴ", "5"), ("ㅓㅕ", "ㅓ", "6")],
+                [("ㅁㅅ", "ㅁ", "7"), ("ㅂㅍ", "ㅂ", "8"), ("ㅗㅛ", "ㅗ", "9")],
+                [("ㅈㅊ", "ㅈ", "*"), ("ㅇㅎ", "ㅇ", "0"), ("ㅜㅠ", "ㅜ", "#")],
+            ]
+        case .naratgul:
+            return [
+                [("ㄱ", "ㄱ", "1"), ("ㄴ", "ㄴ", "2"), ("ㅏㅓ", "ㅏ/ㅓ", "3")],
+                [("ㄹ", "ㄹ", "4"), ("ㅁ", "ㅁ", "5"), ("ㅗㅜ", "ㅗ/ㅜ", "6")],
+                [("ㅅ", "ㅅ", "7"), ("ㅇ", "ㅇ", "8"), ("ㅣㅡ", "ㅣ/ㅡ", "9")],
+                [("획", "획", "*"), ("ㅈ", "ㅈ", "0"), ("쌍", "쌍", "#")],
+            ]
+        default:
+            // 천지인. 안드로이드 korean_cheonjiin_16 과 같은 자리, 같은 숫자
+            return [
+                [("ㅣ", "ㅣ", "1"), ("·", "·", "2"), ("ㅡ", "ㅡ", "3")],
+                [("ㄱㅋ", "ㄱ", "4"), ("ㄴㄹ", "ㄴ", "5"), ("ㄷㅌ", "ㄷ", "6")],
+                [("ㅂㅍ", "ㅂ", "7"), ("ㅅㅎ", "ㅅ", "8"), ("ㅈㅊ", "ㅈ", "9")],
+                [("?", "?", "!"), ("ㅇㅁ", "ㅇ", "0"), ("~", "~", "^")],
+            ]
         }
-        var bottom: [Key] = [Key("123", action: .symbols, style: .function)]
-        if showsGlobe { bottom.append(Key("", symbol: "globe", action: .nextKeyboard, style: .function)) }
-        bottom += [
-            Key("한/영", action: .toggleLanguage, style: .function),
-            jamo("ㅇㅁ", "ㅇ", "0"),
-            Key(".", longPress: "?"),
-            Key("", symbol: "return.left", action: .enter, style: .function),
+    }
+
+    /// 천지인·스카이·획추가형. 가운데 3×4 자모 칸, 왼쪽에 전환 키, 오른쪽에 편집 키.
+    public static func twelveKey(_ korean: KoreanLayout, showsGlobe: Bool) -> [[Key]] {
+        let side = 0.9
+        let left: [Key] = [
+            Key("한/영", action: .toggleLanguage, width: side, style: .function),
+            Key("123", action: .symbols, width: side, style: .function),
+            Key(",", width: side, style: .function, longPress: ";"),
+            showsGlobe
+                ? Key("", symbol: "globe", action: .nextKeyboard, width: side, style: .function)
+                : Key(".", width: side, style: .function, longPress: ":"),
         ]
-        return [
-            [jamo("ㅣ", "ㅣ", "1"), jamo("·", "·", "2"), jamo("ㅡ", "ㅡ", "3"), Key("", symbol: "delete.left", action: .backspace, style: .function)],
-            [jamo("ㄱㅋ", "ㄱ", "4"), jamo("ㄴㄹ", "ㄴ", "5"), jamo("ㄷㅌ", "ㄷ", "6"), Key("", symbol: "space", action: .space, style: .function)],
-            [jamo("ㅂㅍ", "ㅂ", "7"), jamo("ㅅㅎ", "ㅅ", "8"), jamo("ㅈㅊ", "ㅈ", "9"), Key(",", longPress: "!")],
-            bottom,
+        let right: [Key] = [
+            Key("", symbol: "delete.left", action: .backspace, width: side, style: .function),
+            Key("", symbol: "space", action: .space, width: side, style: .function),
+            Key("", symbol: "return.left", action: .enter, width: side, style: .function),
+            showsGlobe
+                ? Key(".", width: side, style: .function, longPress: ":")
+                : Key("'", width: side, style: .function, longPress: "\""),
+        ]
+        return grid(korean).enumerated().map { i, row in
+            [left[i]] + row.map { Key($0.label, action: .text($0.output), width: 1.15, longPress: $0.longPress) } + [right[i]]
+        }
+    }
+
+    /// 단모음. 두벌식에서 쌍자음·겹모음 자리를 빼고, 같은 키를 빨리 두 번 눌러 만든다.
+    public static func danmoeum(showsGlobe: Bool) -> [[Key]] {
+        [
+            letterRow("ㅂㅈㄷㄱㅅㅗㅐㅔ", "ㅃㅉㄸㄲㅆㅗㅒㅖ", longPress: "12345678"),
+            letterRow("ㅁㄴㅇㄹㅎㅓㅏㅣ", longPress: "90~@#₩%^"),
+            [shiftKey] + letterRow("ㅋㅌㅊㅍㅜㅡ", longPress: "-_\"'?!") + [backspaceKey],
+            bottomRow(modeKey: Key("123", action: .symbols, width: 1.4, style: .function), showsGlobe: showsGlobe),
         ]
     }
 
@@ -152,23 +199,5 @@ public enum KeyboardLayouts {
             [Key("123", action: .symbols, width: 1.4, style: .function)] + letterRow(".,?!'", width: 1.4) + [backspaceKey],
             bottomRow(modeKey: Key("가", action: .letters, width: 1.4, style: .function), showsGlobe: showsGlobe, languageKey: false),
         ]
-    }
-}
-
-/// 앱과 키보드 확장이 App Group 으로 함께 보는 설정.
-public enum MalangSettings {
-    public static let appGroup = "group.dev.malangkey"
-
-    public enum Keys {
-        public static let koreanLayout = "koreanLayout"
-    }
-
-    public static var defaults: UserDefaults {
-        UserDefaults(suiteName: appGroup) ?? .standard
-    }
-
-    public static var koreanLayout: KoreanLayout {
-        get { defaults.string(forKey: Keys.koreanLayout).flatMap(KoreanLayout.init(rawValue:)) ?? .dubeolsik }
-        set { defaults.set(newValue.rawValue, forKey: Keys.koreanLayout) }
     }
 }

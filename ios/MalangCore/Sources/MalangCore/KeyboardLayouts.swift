@@ -30,15 +30,18 @@ public struct Key: Hashable, Sendable {
     /// 한 줄 안에서 차지하는 비율.
     public var width: Double
     public var style: Style
+    /// 길게 누르면 넣는 글자. 키 오른쪽 위에 작게 보인다.
+    public var longPress: String?
 
     public init(_ label: String, shifted: String? = nil, symbol: String? = nil, action: KeyAction? = nil,
-                width: Double = 1, style: Style = .letter) {
+                width: Double = 1, style: Style = .letter, longPress: String? = nil) {
         self.label = label
         self.shifted = shifted
         self.symbol = symbol
         self.action = action ?? .text(label)
         self.width = width
         self.style = style
+        self.longPress = longPress
     }
 
     public func action(shifted isShifted: Bool) -> KeyAction {
@@ -85,46 +88,50 @@ public enum KeyboardLayouts {
         return row
     }
 
-    static func letterRow(_ lower: String, _ upper: String? = nil, width: Double = 1) -> [Key] {
+    static func letterRow(_ lower: String, _ upper: String? = nil, longPress: String? = nil, width: Double = 1) -> [Key] {
         let upperChars = upper.map { Array($0).map(String.init) }
+        let longChars = longPress.map { Array($0).map(String.init) }
         return Array(lower).enumerated().map { i, c in
-            Key(String(c), shifted: upperChars?[i], width: width)
+            Key(String(c), shifted: upperChars?[i], width: width, longPress: longChars?[i])
         }
     }
 
     public static func dubeolsik(showsGlobe: Bool) -> [[Key]] {
         [
-            letterRow("ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ", "ㅃㅉㄸㄲㅆㅛㅕㅑㅒㅖ"),
-            [Key.spacer(0.5)] + letterRow("ㅁㄴㅇㄹㅎㅗㅓㅏㅣ") + [Key.spacer(0.5)],
-            [shiftKey] + letterRow("ㅋㅌㅊㅍㅠㅜㅡ") + [backspaceKey],
+            letterRow("ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ", "ㅃㅉㄸㄲㅆㅛㅕㅑㅒㅖ", longPress: "1234567890"),
+            [Key.spacer(0.5)] + letterRow("ㅁㄴㅇㄹㅎㅗㅓㅏㅣ", longPress: "~@#₩%^&*(") + [Key.spacer(0.5)],
+            [shiftKey] + letterRow("ㅋㅌㅊㅍㅠㅜㅡ", longPress: "-_\"'?!/") + [backspaceKey],
             bottomRow(modeKey: Key("123", action: .symbols, width: 1.4, style: .function), showsGlobe: showsGlobe),
         ]
     }
 
     public static func qwerty(showsGlobe: Bool) -> [[Key]] {
         [
-            letterRow("qwertyuiop", "QWERTYUIOP"),
-            [Key.spacer(0.5)] + letterRow("asdfghjkl", "ASDFGHJKL") + [Key.spacer(0.5)],
-            [shiftKey] + letterRow("zxcvbnm", "ZXCVBNM") + [backspaceKey],
+            letterRow("qwertyuiop", "QWERTYUIOP", longPress: "1234567890"),
+            [Key.spacer(0.5)] + letterRow("asdfghjkl", "ASDFGHJKL", longPress: "~@#$%^&*(") + [Key.spacer(0.5)],
+            [shiftKey] + letterRow("zxcvbnm", "ZXCVBNM", longPress: "-_\"'?!/") + [backspaceKey],
             bottomRow(modeKey: Key("123", action: .symbols, width: 1.4, style: .function), showsGlobe: showsGlobe),
         ]
     }
 
     /// 천지인. 안드로이드 korean_cheonjiin_16 과 같은 3×4 배치.
     public static func cheonjiin(showsGlobe: Bool) -> [[Key]] {
-        func jamo(_ label: String, _ output: String) -> Key { Key(label, action: .text(output)) }
+        // 길게 누르면 숫자: 안드로이드 천지인과 같은 자리
+        func jamo(_ label: String, _ output: String, _ digit: String) -> Key {
+            Key(label, action: .text(output), longPress: digit)
+        }
         var bottom: [Key] = [Key("123", action: .symbols, style: .function)]
         if showsGlobe { bottom.append(Key("", symbol: "globe", action: .nextKeyboard, style: .function)) }
         bottom += [
             Key("한/영", action: .toggleLanguage, style: .function),
-            jamo("ㅇㅁ", "ㅇ"),
-            Key(".", shifted: nil),
+            jamo("ㅇㅁ", "ㅇ", "0"),
+            Key(".", longPress: "?"),
             Key("", symbol: "return.left", action: .enter, style: .function),
         ]
         return [
-            [jamo("ㅣ", "ㅣ"), jamo("·", "·"), jamo("ㅡ", "ㅡ"), Key("", symbol: "delete.left", action: .backspace, style: .function)],
-            [jamo("ㄱㅋ", "ㄱ"), jamo("ㄴㄹ", "ㄴ"), jamo("ㄷㅌ", "ㄷ"), Key("", symbol: "space", action: .space, style: .function)],
-            [jamo("ㅂㅍ", "ㅂ"), jamo("ㅅㅎ", "ㅅ"), jamo("ㅈㅊ", "ㅈ"), Key(",")],
+            [jamo("ㅣ", "ㅣ", "1"), jamo("·", "·", "2"), jamo("ㅡ", "ㅡ", "3"), Key("", symbol: "delete.left", action: .backspace, style: .function)],
+            [jamo("ㄱㅋ", "ㄱ", "4"), jamo("ㄴㄹ", "ㄴ", "5"), jamo("ㄷㅌ", "ㄷ", "6"), Key("", symbol: "space", action: .space, style: .function)],
+            [jamo("ㅂㅍ", "ㅂ", "7"), jamo("ㅅㅎ", "ㅅ", "8"), jamo("ㅈㅊ", "ㅈ", "9"), Key(",", longPress: "!")],
             bottom,
         ]
     }

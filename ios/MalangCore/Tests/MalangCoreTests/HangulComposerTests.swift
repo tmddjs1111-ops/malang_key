@@ -172,6 +172,15 @@ final class LayoutTests: XCTestCase {
         }
     }
 
+    func testLongPressDigits() {
+        let dubeolsik = KeyboardLayouts.dubeolsik(showsGlobe: false)[0].compactMap(\.longPress)
+        XCTAssertEqual(dubeolsik.joined(), "1234567890")
+        let cheonjiin = KeyboardLayouts.cheonjiin(showsGlobe: false).joined()
+            .filter { $0.style == .letter && $0.label.count > 0 && $0.label != "." && $0.label != "," }
+            .compactMap(\.longPress)
+        XCTAssertEqual(cheonjiin.sorted().joined(), "0123456789")
+    }
+
     func testShiftedLabel() {
         let first = KeyboardLayouts.dubeolsik(showsGlobe: false)[0][0]
         XCTAssertEqual(first.action(shifted: true), .text("ㅃ"))

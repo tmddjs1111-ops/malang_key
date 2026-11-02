@@ -76,6 +76,8 @@ struct KeyButton: View {
     @ObservedObject var model: KeyboardModel
     @State private var pressed = false
     @State private var repeatTimer: Timer?
+    @State private var longPressTimer: Timer?
+    @State private var longPressed = false
 
     private var isShifted: Bool { model.shift != .off }
 
@@ -90,6 +92,14 @@ struct KeyButton: View {
                     .padding(.horizontal, 3)
                     .padding(.vertical, 4)
                 content
+                if let hint = key.longPress {
+                    Text(hint)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(longPressed ? MalangPalette.accent : MalangPalette.text.opacity(0.45))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .padding(.top, 6)
+                        .padding(.trailing, 7)
+                }
             }
             .contentShape(Rectangle())
             .gesture(
@@ -149,11 +159,20 @@ struct KeyButton: View {
 
     private var fontSize: CGFloat {
         if key.style == .function || key.action == .space { return 15 }
+        if key.label == "·" { return 34 }
         return key.label.count > 1 ? 19 : 23
     }
 
-    /// 지우기는 누르는 순간 지우고, 계속 누르고 있으면 반복한다. 나머지 키는 뗄 때 입력한다.
+    /// 지우기는 누르는 순간 지우고, 계속 누르고 있으면 반복한다. 나머지 키는 뗄 때 입력하고,
+    /// 길게 누르면 오른쪽 위에 적힌 글자를 넣는다.
     private func touchDown() {
+        longPressed = false
+        if let alternate = key.longPress {
+            longPressTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: false) { _ in
+                longPressed = true
+                model.onAction?(.text(alternate))
+            }
+        }
         guard key.action == .backspace else { return }
         model.onAction?(.backspace)
         repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: false) { _ in
@@ -166,6 +185,12 @@ struct KeyButton: View {
     private func touchUp() {
         repeatTimer?.invalidate()
         repeatTimer = nil
+        longPressTimer?.invalidate()
+        longPressTimer = nil
+        if longPressed {
+            longPressed = false
+            return
+        }
         guard key.action != .backspace else { return }
         model.onAction?(key.action(shifted: isShifted))
     }

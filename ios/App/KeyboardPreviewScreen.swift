@@ -43,6 +43,7 @@ struct KeyboardPreviewScreen: View {
             .background(Color(uiColor: .systemBackground))
 
             KeyboardView(model: model)
+                .background(MalangPalette.background.ignoresSafeArea(edges: .bottom))
         }
         .navigationTitle("\(model.koreanLayout.title) 미리보기")
         .navigationBarTitleDisplayMode(.inline)

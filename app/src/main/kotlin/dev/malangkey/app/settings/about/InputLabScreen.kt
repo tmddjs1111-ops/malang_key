@@ -89,6 +89,8 @@ private fun createLabField(context: Context, field: LabField): EditText {
     )
     view.hint = "여기에 '손', '간' 을 쳐 보세요"
     view.textSize = 18f
+    view.setTextColor(android.graphics.Color.rgb(0x4A, 0x30, 0x28))
+    view.setHintTextColor(android.graphics.Color.rgb(0xB0, 0x9A, 0x90))
     view.contentDescription = "lab_${field.name.lowercase()}"
     when (field) {
         LabField.PASSWORD, LabField.BLOCKED_PASSWORD -> {

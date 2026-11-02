@@ -154,12 +154,14 @@ struct KeyButton: View {
 
     private var labelText: String {
         if key.action == .enter, let label = model.returnLabel { return label }
+        // 천지인 아래아 점은 글꼴에서 너무 작게 나와서 굵은 점으로 그린다. (넣는 글자는 그대로 '·')
+        if key.label == "·" { return "•" }
         return key.label(shifted: isShifted)
     }
 
     private var fontSize: CGFloat {
         if key.style == .function || key.action == .space { return 15 }
-        if key.label == "·" { return 34 }
+        if key.label == "·" { return 30 }
         return key.label.count > 1 ? 19 : 23
     }
 

@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.KeyboardHide
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Delete
@@ -221,7 +220,6 @@ fun MalangSlotsEditor() {
             QuickAction.QuickPhrase(""),
             QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT),
             QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE),
-            QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
             QuickAction.InsertKey(TextKeyData.IME_HIDE_UI),
             QuickAction.InsertKey(TextKeyData.SETTINGS),
         )
@@ -445,7 +443,6 @@ private fun koreanActionLabel(code: Int): String? = when (code) {
     TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
     KeyCode.TOGGLE_COMPACT_LAYOUT -> "한 손 키보드"
     KeyCode.TOGGLE_RESIZE_MODE -> "크기 조절"
-    KeyCode.VOICE_INPUT -> "음성 입력"
     KeyCode.IME_HIDE_UI -> "키보드 숨기기"
     KeyCode.SETTINGS -> "설정"
     else -> null
@@ -481,7 +478,6 @@ fun ActionIcon(
             TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> Icons.Default.Keyboard
             KeyCode.TOGGLE_COMPACT_LAYOUT -> Icons.Default.Smartphone
             KeyCode.TOGGLE_RESIZE_MODE -> Icons.Default.AspectRatio
-            KeyCode.VOICE_INPUT -> Icons.Default.Mic
             KeyCode.IME_HIDE_UI -> Icons.Default.KeyboardHide
             KeyCode.SETTINGS -> Icons.Default.Settings
             else -> null

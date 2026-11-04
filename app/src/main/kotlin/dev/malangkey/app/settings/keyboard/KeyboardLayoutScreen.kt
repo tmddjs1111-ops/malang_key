@@ -22,9 +22,10 @@ import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSliderRow
+import dev.malangkey.app.settings.smartbar.SmartbarSettingsContent
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 
-/** 키보드 설정 > 레이아웃: 높이·글자 크기·키 간격. */
+/** 키보드 설정 > 레이아웃: 높이·글자 크기·키 간격과 스마트 바. */
 @Composable
 fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtitle = "Layout") {
     val prefs by FlorisPreferenceStore
@@ -58,4 +59,6 @@ fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtit
             { MalangSliderRow(prefs.keyboard.gridKeySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
         ),
     )
+
+    SmartbarSettingsContent()
 }

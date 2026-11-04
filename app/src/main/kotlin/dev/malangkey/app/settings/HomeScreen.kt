@@ -197,7 +197,7 @@ private fun ColumnScope.MainTabContent(
             navController.navigate(Routes.Settings.InputFeedback)
         },
         MainTile("스마트 바", "Smart Bar", R.drawable.mk_ic_smartbar, accent = false) {
-            navController.navigate(Routes.Settings.Smartbar)
+            navController.navigate(Routes.Settings.KeyboardLayout)
         },
         MainTile("클립보드", "Clipboard", R.drawable.mk_ic_clipboard, accent = true) {
             navController.navigate(Routes.Settings.Clipboard)

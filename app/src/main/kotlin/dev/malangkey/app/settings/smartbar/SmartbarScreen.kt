@@ -21,6 +21,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -96,6 +97,12 @@ import org.florisboard.lib.snygg.ui.SnyggIcon
 
 @Composable
 fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = "Smart Bar") {
+    SmartbarSettingsContent()
+}
+
+/** 스마트 바 설정 묶음. 키보드 설정 > 레이아웃 화면에 들어간다. (예전 '스마트 바' 화면도 같은 내용을 보여준다) */
+@Composable
+fun ColumnScope.SmartbarSettingsContent() {
     val prefs by FlorisPreferenceStore
     val enabled by prefs.smartbar.enabled.collectAsState()
     val layout by prefs.smartbar.layout.collectAsState()

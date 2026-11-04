@@ -31,10 +31,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.KeyboardHide
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FirstPage
@@ -47,6 +57,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -206,6 +218,64 @@ fun MalangSlotsEditor() {
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
             QuickAction.InsertKey(TextKeyData.IME_UI_MODE_EDITING),
             QuickAction.InsertKey(TextKeyData.SYSTEM_INPUT_METHOD_PICKER),
+            // 누르면 넣을 문장을 정하는 창이 뜬다.
+            QuickAction.QuickPhrase(""),
+            QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT),
+            QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE),
+            QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE),
+            QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
+            QuickAction.InsertKey(TextKeyData.IME_HIDE_UI),
+            QuickAction.InsertKey(TextKeyData.SETTINGS),
+        )
+    }
+    var phraseDialogOpen by remember { mutableStateOf(false) }
+    var phraseText by remember { mutableStateOf("") }
+
+    /** 빈 칸 중 첫 번째에 [action]을 넣는다. 빈 칸이 없으면 아무것도 하지 않는다. */
+    fun addToFirstEmptySlot(action: QuickAction) {
+        val newList = malangSlots.toMutableList()
+        var index = -1
+        for (i in 0 until malangSlotsCount) {
+            if (i >= newList.size || newList[i].isEmptySlot()) {
+                index = i
+                break
+            }
+        }
+        if (index != -1) {
+            while (newList.size <= index) newList.add(QuickAction.InsertKey(TextKeyData.UNSPECIFIED))
+            newList[index] = action
+            scope.launch { prefs.smartbar.malangSlots.set(newList) }
+        }
+    }
+
+    if (phraseDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { phraseDialogOpen = false },
+            title = { Text("상용구 버튼") },
+            text = {
+                Column {
+                    Text("버튼을 누르면 넣을 문장을 적어 주세요.", fontSize = 13.sp, color = MalangSettingsSummary)
+                    OutlinedTextField(
+                        value = phraseText,
+                        onValueChange = { phraseText = it },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        placeholder = { Text("예: 지금 가고 있어요!") },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = phraseText.isNotBlank(),
+                    onClick = {
+                        addToFirstEmptySlot(QuickAction.QuickPhrase(phraseText.trim()))
+                        phraseText = ""
+                        phraseDialogOpen = false
+                    },
+                ) { Text("넣기") }
+            },
+            dismissButton = {
+                TextButton(onClick = { phraseDialogOpen = false }) { Text("취소") }
+            },
         )
     }
 
@@ -230,7 +300,7 @@ fun MalangSlotsEditor() {
                         .weight(1f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (action != null && action.keyData().code != 0) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
+                        .background(if (action != null && !action.isEmptySlot()) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
                         .clickable {
                             val newList = malangSlots.toMutableList()
                             if (i < newList.size) {
@@ -240,7 +310,7 @@ fun MalangSlotsEditor() {
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (action != null && action.keyData().code != 0) {
+                    if (action != null && !action.isEmptySlot()) {
                         ActionIcon(action, evaluator, tint = Color.White)
                     } else {
                         Icon(
@@ -283,18 +353,10 @@ fun MalangSlotsEditor() {
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(MalangSettingsBg)
                                 .clickable {
-                                    val newList = malangSlots.toMutableList()
-                                    var index = -1
-                                    for (i in 0 until malangSlotsCount) {
-                                        if (i >= newList.size || newList[i].keyData().code == 0) {
-                                            index = i
-                                            break
-                                        }
-                                    }
-                                    if (index != -1) {
-                                        while (newList.size <= index) newList.add(QuickAction.InsertKey(TextKeyData.UNSPECIFIED))
-                                        newList[index] = action
-                                        scope.launch { prefs.smartbar.malangSlots.set(newList) }
+                                    if (action is QuickAction.QuickPhrase) {
+                                        phraseDialogOpen = true
+                                    } else {
+                                        addToFirstEmptySlot(action)
                                     }
                                 }
                                 .padding(vertical = 12.dp, horizontal = 4.dp)
@@ -325,6 +387,9 @@ fun MalangSlotsEditor() {
 
 @Composable
 fun getActionLabel(action: QuickAction, evaluator: dev.malangkey.ime.keyboard.ComputingEvaluator): String {
+    if (action is QuickAction.QuickPhrase) {
+        return action.text.ifBlank { "상용구" }.let { if (it.length <= 6) it else it.take(5) + "…" }
+    }
     val keyData = action.keyData() as? TextKeyData ?: return "미정"
     // 한국어 이름이 있는 기능은 그것을 먼저 쓴다 (키보드가 주는 이름은 영어일 때가 있다).
     koreanActionLabel(keyData.code)?.let { return it }
@@ -380,8 +445,17 @@ private fun koreanActionLabel(code: Int): String? = when (code) {
     TextKeyData.IME_UI_MODE_MEDIA.code -> "이모지"
     TextKeyData.IME_UI_MODE_EDITING.code -> "커서 이동"
     TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
+    KeyCode.TOGGLE_COMPACT_LAYOUT -> "한 손 키보드"
+    KeyCode.TOGGLE_RESIZE_MODE -> "크기 조절"
+    KeyCode.TOGGLE_INCOGNITO_MODE -> "시크릿 모드"
+    KeyCode.VOICE_INPUT -> "음성 입력"
+    KeyCode.IME_HIDE_UI -> "키보드 숨기기"
+    KeyCode.SETTINGS -> "설정"
     else -> null
 }
+
+/** 아무 기능도 들어 있지 않은 칸. 상용구는 키 코드가 없지만 빈 칸이 아니다. */
+private fun QuickAction.isEmptySlot(): Boolean = this is QuickAction.InsertKey && data.code == 0
 
 @Composable
 fun ActionIcon(
@@ -389,6 +463,10 @@ fun ActionIcon(
     evaluator: dev.malangkey.ime.keyboard.ComputingEvaluator,
     tint: Color = Color.Unspecified
 ) {
+    if (action is QuickAction.QuickPhrase) {
+        Icon(Icons.Default.Bolt, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+        return
+    }
     val keyData = action.keyData() as? TextKeyData ?: return
     var imageVector = evaluator.computeImageVector(keyData)
     val label = evaluator.computeLabel(keyData)
@@ -404,6 +482,12 @@ fun ActionIcon(
             KeyCode.SPACE -> Icons.Default.SpaceBar
             TextKeyData.IME_SUBTYPE_PICKER.code -> Icons.Default.Language
             TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> Icons.Default.Keyboard
+            KeyCode.TOGGLE_COMPACT_LAYOUT -> Icons.Default.Smartphone
+            KeyCode.TOGGLE_RESIZE_MODE -> Icons.Default.AspectRatio
+            KeyCode.TOGGLE_INCOGNITO_MODE -> Icons.Default.VisibilityOff
+            KeyCode.VOICE_INPUT -> Icons.Default.Mic
+            KeyCode.IME_HIDE_UI -> Icons.Default.KeyboardHide
+            KeyCode.SETTINGS -> Icons.Default.Settings
             else -> null
         }
     }

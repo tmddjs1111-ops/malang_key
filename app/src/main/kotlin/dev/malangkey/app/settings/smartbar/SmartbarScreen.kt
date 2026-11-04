@@ -87,6 +87,7 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
+import dev.malangkey.app.apptheme.MalangSliderRow
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -120,6 +121,16 @@ fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = 
                         SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED to "추천 단어 + 기능 버튼 (한 줄)",
                         SmartbarLayout.SUGGESTIONS_ACTIONS_EXTENDED to "추천 단어 + 기능 버튼 (두 줄)",
                     ),
+                    enabled = enabled,
+                )
+            },
+            {
+                MalangSliderRow(
+                    prefs.smartbar.heightPercent,
+                    "스마트 바 높이",
+                    min = 60,
+                    max = 160,
+                    step = 5,
                     enabled = enabled,
                 )
             },

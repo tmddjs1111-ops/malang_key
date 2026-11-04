@@ -230,7 +230,11 @@ fun FlorisImeTheme(content: @Composable () -> Unit) {
                     propEditor.properties["shadow-elevation"] = SnyggDpSizeValue(0.dp)
                 }
                 if (isFontCustom) {
-                    val rulesWithText = listOf("keyboard", "key", "key-hint", "key-popup-element", "smartbar-action-tile", "smartbar-action-tile-text")
+                    // 키를 누르면 뜨는 말풍선(key-popup-box)도 글자를 그리므로 같은 글꼴을 쓴다. 빠지면 시스템 글꼴로 떠서 어색하다.
+                    val rulesWithText = listOf(
+                        "keyboard", "key", "key-hint", "key-popup-box", "key-popup-element",
+                        "smartbar-action-tile", "smartbar-action-tile-text",
+                    )
                     for (element in rulesWithText) {
                         val elementRule = SnyggRule.fromOrNull(element)
                         if (elementRule != null) {

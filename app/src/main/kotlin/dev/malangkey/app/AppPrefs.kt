@@ -726,6 +726,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "smartbar__extended_actions_placement",
             default = ExtendedActionsPlacement.ABOVE_CANDIDATES,
         )
+        /** 스마트 바 높이 (기본 높이의 %). 키보드 창은 내용 높이를 따르므로 전체 높이도 같이 바뀐다. */
+        val heightPercent = int(
+            key = "smartbar__height_percent",
+            default = 100,
+        )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
             default = 5,

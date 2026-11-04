@@ -127,7 +127,10 @@ fun ProvideKeyboardRowBaseHeight(content: @Composable () -> Unit) {
             rowHeight to smartbarRowHeight
         }
     }
-    val (rowHeight, smartbarRowHeight) = heights
+    val (rowHeight, baseSmartbarRowHeight) = heights
+    val prefs by FlorisPreferenceStore
+    val smartbarHeightPercent by prefs.smartbar.heightPercent.collectAsState()
+    val smartbarRowHeight = baseSmartbarRowHeight * (smartbarHeightPercent.coerceIn(50, 200) / 100f)
 
     SideEffect {
         val marginV = InlineSuggestionsChipMargin.calculateTopPadding() +

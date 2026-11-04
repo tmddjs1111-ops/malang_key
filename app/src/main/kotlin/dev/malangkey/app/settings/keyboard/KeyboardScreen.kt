@@ -130,7 +130,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "레이아웃",
-                    summary = "키보드 높이, 글자 크기, 키 간격을 설정합니다.",
+                    summary = "키보드·스마트 바 높이, 글자 크기, 키 간격을 설정합니다.",
                     onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
                 )
             },
@@ -151,7 +151,8 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                 MalangSwitchRow(
                     prefs.keyboard.mergeHintPopupsEnabled,
                     title = "힌트 팝업 병합",
-                    summary = "힌트와 키 팝업을 하나로 합칩니다.",
+                    summary = "키 모서리 힌트(숫자·기호)가 있는 키를 길게 누를 때, 그 힌트와 비슷한 기호까지 함께 보여 줍니다. " +
+                        "예: ㅂ(1)을 길게 누르면 1과 함께 ¹ ½ ⅓ 도 나와요.",
                 )
             },
             {

@@ -34,6 +34,7 @@ fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtit
         items = listOf(
             { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.smartbar.heightPercent, "스마트 바 높이", min = 60, max = 160, step = 5) },
             { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "전체 글자 배율 (세로 화면)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "전체 글자 배율 (가로 화면)", min = 50, max = 150) },
         ),

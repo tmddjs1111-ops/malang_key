@@ -294,7 +294,7 @@ fun ThemeScreen() = MalangSettingsScreen(title = "꾸미기", subtitle = "Custom
                         MalangNavRow(
                             title = "스마트바 버튼 바꾸기",
                             summary = "버튼 종류와 순서는 스마트바 설정에서 바꿔요.",
-                            onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
+                            onClick = { navController.navigate(Routes.Settings.Smartbar) },
                         )
                     }),
                 )

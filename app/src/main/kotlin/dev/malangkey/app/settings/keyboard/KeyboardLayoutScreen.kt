@@ -22,10 +22,9 @@ import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSliderRow
-import dev.malangkey.app.settings.smartbar.SmartbarSettingsContent
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 
-/** 키보드 설정 > 레이아웃: 높이·글자 크기·키 간격과 스마트 바. */
+/** 키보드 설정 > 레이아웃: 높이·글자 크기·키 간격. */
 @Composable
 fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtitle = "Layout") {
     val prefs by FlorisPreferenceStore
@@ -35,6 +34,7 @@ fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtit
         items = listOf(
             { MalangSliderRow(prefs.keyboard.heightFactorPortrait, "키보드 높이 (세로 화면)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.heightFactorLandscape, "키보드 높이 (가로 화면)", min = 50, max = 150) },
+            { MalangSliderRow(prefs.smartbar.heightPercent, "스마트 바 높이", min = 60, max = 160, step = 5) },
             { MalangSliderRow(prefs.keyboard.fontSizeMultiplierPortrait, "전체 글자 배율 (세로 화면)", min = 50, max = 150) },
             { MalangSliderRow(prefs.keyboard.fontSizeMultiplierLandscape, "전체 글자 배율 (가로 화면)", min = 50, max = 150) },
         ),
@@ -59,6 +59,4 @@ fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtit
             { MalangSliderRow(prefs.keyboard.gridKeySpacingVertical, "키 세로 간격", min = 0, max = 200, step = 5) },
         ),
     )
-
-    SmartbarSettingsContent()
 }

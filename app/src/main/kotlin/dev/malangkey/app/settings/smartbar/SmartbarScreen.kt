@@ -21,7 +21,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -45,7 +44,6 @@ import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FirstPage
@@ -88,7 +86,6 @@ import dev.malangkey.app.apptheme.MalangSettingsScreen
 import dev.malangkey.app.apptheme.MalangSettingsSection
 import dev.malangkey.app.apptheme.MalangSettingsSummary
 import dev.malangkey.app.apptheme.MalangSettingsTitle
-import dev.malangkey.app.apptheme.MalangSliderRow
 import dev.malangkey.app.apptheme.MalangSwitchRow
 import dev.malangkey.app.apptheme.MalangValueDialogRow
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -97,12 +94,6 @@ import org.florisboard.lib.snygg.ui.SnyggIcon
 
 @Composable
 fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = "Smart Bar") {
-    SmartbarSettingsContent()
-}
-
-/** 스마트 바 설정 묶음. 키보드 설정 > 레이아웃 화면에 들어간다. (예전 '스마트 바' 화면도 같은 내용을 보여준다) */
-@Composable
-fun ColumnScope.SmartbarSettingsContent() {
     val prefs by FlorisPreferenceStore
     val enabled by prefs.smartbar.enabled.collectAsState()
     val layout by prefs.smartbar.layout.collectAsState()
@@ -128,16 +119,6 @@ fun ColumnScope.SmartbarSettingsContent() {
                         SmartbarLayout.SUGGESTIONS_ACTIONS_SHARED to "추천 단어 + 기능 버튼 (한 줄)",
                         SmartbarLayout.SUGGESTIONS_ACTIONS_EXTENDED to "추천 단어 + 기능 버튼 (두 줄)",
                     ),
-                    enabled = enabled,
-                )
-            },
-            {
-                MalangSliderRow(
-                    prefs.smartbar.heightPercent,
-                    "스마트 바 높이",
-                    min = 60,
-                    max = 160,
-                    step = 5,
                     enabled = enabled,
                 )
             },
@@ -240,7 +221,6 @@ fun MalangSlotsEditor() {
             QuickAction.QuickPhrase(""),
             QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT),
             QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE),
-            QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE),
             QuickAction.InsertKey(TextKeyData.VOICE_INPUT),
             QuickAction.InsertKey(TextKeyData.IME_HIDE_UI),
             QuickAction.InsertKey(TextKeyData.SETTINGS),
@@ -465,7 +445,6 @@ private fun koreanActionLabel(code: Int): String? = when (code) {
     TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> "키보드 선택"
     KeyCode.TOGGLE_COMPACT_LAYOUT -> "한 손 키보드"
     KeyCode.TOGGLE_RESIZE_MODE -> "크기 조절"
-    KeyCode.TOGGLE_INCOGNITO_MODE -> "시크릿 모드"
     KeyCode.VOICE_INPUT -> "음성 입력"
     KeyCode.IME_HIDE_UI -> "키보드 숨기기"
     KeyCode.SETTINGS -> "설정"
@@ -502,7 +481,6 @@ fun ActionIcon(
             TextKeyData.SYSTEM_INPUT_METHOD_PICKER.code -> Icons.Default.Keyboard
             KeyCode.TOGGLE_COMPACT_LAYOUT -> Icons.Default.Smartphone
             KeyCode.TOGGLE_RESIZE_MODE -> Icons.Default.AspectRatio
-            KeyCode.TOGGLE_INCOGNITO_MODE -> Icons.Default.VisibilityOff
             KeyCode.VOICE_INPUT -> Icons.Default.Mic
             KeyCode.IME_HIDE_UI -> Icons.Default.KeyboardHide
             KeyCode.SETTINGS -> Icons.Default.Settings

@@ -130,7 +130,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "레이아웃",
-                    summary = "키보드 높이, 글자 크기, 키 간격, 스마트 바를 설정합니다.",
+                    summary = "키보드·스마트 바 높이, 글자 크기, 키 간격을 설정합니다.",
                     onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
                 )
             },

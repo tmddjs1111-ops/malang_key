@@ -357,6 +357,12 @@ class NlpManager(context: Context) {
         debugOverlayVersion.update { it + 1 }
     }
 
+    /** Forgets what the Japanese converter learned from the user. Used by the settings screen. */
+    suspend fun clearJapaneseLearning() {
+        val wrapper = providers.withLock { it[dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider.ProviderId] }
+        (wrapper?.provider as? dev.malangkey.ime.nlp.japanese.JapaneseLanguageProvider)?.clearLearning()
+    }
+
     private class ProviderInstanceWrapper(val provider: NlpProvider) {
         private var isInstanceAlive = AtomicBoolean(false)
 

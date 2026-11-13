@@ -65,3 +65,10 @@ jobs:
           finally:
               session.delete(f"{base}/edits/{edit_id}")
           PY
+
+      - name: Check privacy policy page
+        run: |
+          # 앱의 개인정보처리방침 링크(GitHub Pages)가 실제로 열리는지 본다.
+          url="https://tmddjs1111-ops.github.io/malang_key/privacy.html"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -L "$url")
+          echo "개인정보처리방침 $url → HTTP $code" | tee -a "$GITHUB_STEP_SUMMARY"

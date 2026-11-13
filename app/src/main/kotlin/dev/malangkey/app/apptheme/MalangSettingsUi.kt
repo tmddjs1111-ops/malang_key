@@ -70,7 +70,8 @@ val MalangSettingsBorder = Color(0xFFE5D8C6)
 val MalangSettingsDivider = Color(0xFFE9DCCB)
 val MalangSettingsSection = Color(0xFF68463B)
 val MalangSettingsTitle = Color(0xFF4A3028)
-val MalangSettingsSummary = Color(0xFF866A5F)
+// 크림 배경(#FBF0D1) 위에서도 글자 대비 4.5:1 이상이 되는 색
+val MalangSettingsSummary = Color(0xFF7D6157)
 
 /**
  * 피그마 설정 화면 틀: 뒤로가기 버튼과 한/영 제목이 있는 헤더, 스크롤되는 본문,

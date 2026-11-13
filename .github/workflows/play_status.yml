@@ -46,6 +46,18 @@ jobs:
               for t in tracks:
                   for r in t.get("releases", []):
                       print(f"| {t['track']} | {r.get('name', '')} | {', '.join(r.get('versionCodes', []))} | {r.get('status', '')} |")
+              # 트랙별 국가 설정과 테스터 그룹
+              for name in ("alpha", "internal"):
+                  t = session.get(f"{base}/edits/{edit_id}/tracks/{name}").json()
+                  for r in t.get("releases", []):
+                      ct = r.get("countryTargeting")
+                      print(f"\n{name} {r.get('name', '')} 국가 설정: {ct if ct else '없음(앱 전체 국가 설정 따름)'}")
+                  testers = session.get(f"{base}/edits/{edit_id}/testers/{name}").json()
+                  print(f"{name} 테스터 그룹: {testers.get('googleGroups', [])} (이메일 목록은 API로 안 보임)")
+              countries = session.get(f"{base}/edits/{edit_id}/countryAvailability/alpha").json()
+              print(f"\nalpha 배포 국가: {countries}")
+              details = session.get(f"{base}/edits/{edit_id}/details").json()
+              print(f"앱 기본 언어: {details.get('defaultLanguage')}")
               bundles = session.get(f"{base}/edits/{edit_id}/bundles").json().get("bundles", [])
               codes = sorted(b["versionCode"] for b in bundles)
               print()

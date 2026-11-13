@@ -255,8 +255,6 @@
     <string name="pref__spelling__title" comment="Preference group title">맞춤법 검사</string>
     <string name="pref__spelling__active_spellchecker__summary_none">설정한 맞춤법 검사기 서비스가 없습니다. 여기를 눌러 서비스를 설정하세요.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">언어</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">연락처 이름 사용</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">연락처 목록에서 이름을 찾아 표시</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">사용자 사전 사용</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">사용자 사전에서 항목을 찾아 표시</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">사용자 사전</string>

@@ -905,7 +905,9 @@ private class TextKeyboardLayoutController(
                                 popupUiController.showClipboardPopup(key, items, size, quickPhrasesGridRows)
                                 inputFeedbackController?.keyLongPress(key.computedData)
                                 true
-                            } else if (popupUiController.isSuitableForPopups(key) && key.computedPopups.getPopupKeys(
+                            } else if (key.computedData.code != KeyCode.ENTER &&
+                                // 엔터 길게 누르기의 옛 팝업(이모지·한손·클립보드)은 쓰지 않는다.
+                                popupUiController.isSuitableForPopups(key) && key.computedPopups.getPopupKeys(
                                     keyHintConfiguration
                                 ).isNotEmpty()
                             ) {

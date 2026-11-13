@@ -369,8 +369,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Systemweit deaktiviert. Es werden keine roten Linien in Textfeldern für falsche Wörter angezeigt. Zum Ändern antippen.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Keinen Inline-Rechtschreibprüfungs-Service eingestellt. Zum Ändern antippen.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Sprachen</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Namen aus Kontakten verwenden</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Nach Namen in der Kontaktliste Suchen</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Benutzerwörterbücher verwenden</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Nach Einträgen in den Benutzerwörterbüchern suchen</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Benutzerwörterbücher</string>

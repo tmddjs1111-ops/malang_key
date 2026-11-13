@@ -1,0 +1,13 @@
+# xcodegen 이 만드는 파일
+*.xcodeproj/
+App/Info.plist
+App/MalangKey.entitlements
+Keyboard/Info.plist
+Keyboard/MalangKeyboard.entitlements
+
+# Xcode / SwiftPM
+build/
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/

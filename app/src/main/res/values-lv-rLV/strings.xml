@@ -411,8 +411,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Atspējots sistēmā. Nepareizi vārdi netiks pasvītroti ar sarkanu līniju. Piesist, lai mainītu.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Nav norādīta iekļauta teksta lauka pareizrakstības pārbaudīšanas pakalpe. Piesist, lai mainītu.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Valodas</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Izmantot kontaktpersonu vārdus</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Meklēt vārdus kontaktpersonu sarakstā</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Izmantot lietotāja vārdnīcas ierakstus</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Meklēt ierakstus lietotāja vārdnīcās</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Lietotāja vārdnīcas</string>

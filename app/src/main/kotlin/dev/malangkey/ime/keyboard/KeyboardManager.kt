@@ -539,7 +539,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     /**
      * Handles a [KeyCode.DELETE] event.
      */
-    private fun handleBackwardDelete(unit: OperationUnit) {
+    private fun handleBackwardDelete(unit: OperationUnit, wholeCharacter: Boolean = false) {
         if (inputEventDispatcher.isPressed(KeyCode.SHIFT)) {
             return handleForwardDelete(unit)
         }
@@ -549,7 +549,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             it.isManualSelectionModeEnd = false
         }
         revertPreviouslyAcceptedCandidate()
-        editorInstance.deleteBackwards(unit)
+        editorInstance.deleteBackwards(unit, wholeCharacter)
     }
 
     /**
@@ -683,6 +683,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             editorInstance.syncContentIfStale()
             val composer = resources.composers.value[subtypeManager.activeSubtype.composer] ?: dev.malangkey.ime.text.composing.Appender
             val consumed = composer.onSpacePressed(editorInstance.activeContent.textBeforeSelection, layoutId)
+            // 글을 읽을 수 없는 입력칸에서 자체 조합 중이면, 스페이스로 글자를 확정할 때 그 조합도 끝낸다.
+            if (consumed) editorInstance.finishOwnComposing()
             val content = editorInstance.activeContent
             if (consumed || content.composing.isValid) {
                 val composingText = content.text.safeSubstring(content.localComposing.start, content.localComposing.end)
@@ -1048,6 +1050,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.MOVE_END_OF_PAGE,
             KeyCode.MOVE_START_OF_LINE,
             KeyCode.MOVE_END_OF_LINE -> handleArrow(data.code)
+            // 꾹 누르고 있으면 한글도 자모가 아니라 글자째 지운다.
+            KeyCode.DELETE -> handleBackwardDelete(OperationUnit.CHARACTERS, wholeCharacter = true)
             else -> onInputKeyUp(data)
         }
     }

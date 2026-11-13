@@ -1,0 +1,101 @@
+# 아이폰 버전(ios/)을 Mac 에서 빌드하고 한글 조합 시험을 돌린다.
+#
+# 쓰는 법
+#   - ios/ 아래 파일을 바꿔 푸시하면 자동으로 돈다. Actions 탭에서 직접 실행해도 된다.
+#   - 빌드한 앱을 아이폰 시뮬레이터에 깔아 미리보기 화면(-preview)을 찍고
+#     Releases 의 ios-shots 에 올린다.
+#     https://github.com/<저장소>/releases/tag/ios-shots
+#   - 서명 없이 시뮬레이터용으로만 빌드한다. 실제 아이폰에 깔려면 Apple Developer 계정과
+#     서명 설정(TestFlight)이 필요하다. ios/README.md 참고.
+
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/build_ios.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hangul composer tests
+        run: swift test --package-path ios/MalangCore
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build for simulator
+        run: |
+          cd ios
+          xcodebuild build \
+            -project MalangKey.xcodeproj \
+            -scheme MalangKey \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Screenshots on simulator
+        run: |
+          udid=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')
+          echo "simulator: $udid"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl status_bar "$udid" override --time 9:41 --batteryLevel 100 --cellularBars 4
+          xcrun simctl install "$udid" ios/build/Build/Products/Debug-iphonesimulator/MalangKey.app
+
+          mkdir -p shots
+          shot() {
+            name=$1; shift
+            xcrun simctl launch --terminate-running-process "$udid" dev.malangkey.ios "$@"
+            sleep 4
+            xcrun simctl io "$udid" screenshot "shots/$name.png"
+          }
+          xcrun simctl ui "$udid" appearance light
+          shot 01_home
+          shot 02_dubeolsik -preview -layout dubeolsik -text "말랑키 안녕"
+          shot 03_cheonjiin -preview -layout cheonjiin -text "천지인 자판"
+          shot 04_sky -preview -layout sky -text "스카이 자판"
+          shot 05_danmoeum -preview -layout danmoeum -text "단모음 자판"
+          shot 06_naratgul -preview -layout naratgul -text "획추가형 자판"
+          shot 07_english -preview -language english -text "Hello"
+          shot 08_symbols -preview -mode symbols
+          shot 09_emoji_suggest -preview -text "오늘 너무 행복"
+          shot 10_emoji_panel -preview -panel emoji
+          shot 11_themes -preview -panel themes
+          shot 12_settings -preview -panel settings
+          shot 13_phrases -preview -panel phrases
+          shot 14_theme_blue -preview -theme blue -text "블루 테마"
+          shot 15_theme_pink -preview -layout cheonjiin -theme pink -text "말랑 핑크"
+          xcrun simctl ui "$udid" appearance dark
+          shot 16_dark_auto -preview -layout dubeolsik -text "어두운 화면"
+          shot 17_dark_home
+          ls -la shots
+
+      - name: Upload screenshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ios-shots --cleanup-tag --yes || true
+          gh release create ios-shots shots/* \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "아이폰 시뮬레이터 화면 (${GITHUB_REF_NAME}, ${GITHUB_SHA::7})" \
+            --notes "아이폰 시뮬레이터에서 찍은 말랑키 미리보기 화면입니다."

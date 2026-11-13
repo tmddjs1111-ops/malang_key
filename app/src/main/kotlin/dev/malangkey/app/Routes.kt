@@ -40,6 +40,7 @@ import dev.malangkey.app.ext.ExtensionImportScreen
 import dev.malangkey.app.ext.ExtensionImportScreenType
 import dev.malangkey.app.settings.HomeScreen
 import dev.malangkey.app.settings.about.AboutScreen
+import dev.malangkey.app.settings.about.InputLabScreen
 import dev.malangkey.app.settings.about.ProjectLicenseScreen
 import dev.malangkey.app.settings.about.ThirdPartyLicensesScreen
 import dev.malangkey.app.settings.advanced.BackupScreen
@@ -52,6 +53,7 @@ import dev.malangkey.app.settings.gestures.GesturesScreen
 import dev.malangkey.app.settings.keyboard.InputFeedbackScreen
 import dev.malangkey.app.settings.keyboard.KeyboardScreen
 import dev.malangkey.app.settings.keyboard.KeyboardOrderScreen
+import dev.malangkey.app.settings.keyboard.KeyboardLayoutScreen
 import dev.malangkey.app.settings.keyboard.KeyboardSelectionScreen
 import dev.malangkey.app.settings.keyboard.KeyboardTestScreen
 import dev.malangkey.app.settings.media.MediaScreen
@@ -119,6 +121,10 @@ object Routes {
         object KeyboardOrder
 
         @Serializable
+        @Deeplink("settings/keyboard/layout")
+        object KeyboardLayout
+
+        @Serializable
         @Deeplink("settings/keyboard/test")
         object KeyboardTest
 
@@ -165,6 +171,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/about")
         object About
+
+        @Serializable
+        @Deeplink("settings/about/input-lab")
+        object InputLab
 
         @Serializable
         @Deeplink("settings/about/project-license")
@@ -218,6 +228,7 @@ object Routes {
             composableWithDeepLink(Settings.Keyboard::class) { KeyboardScreen() }
             composableWithDeepLink(Settings.KeyboardSelection::class) { KeyboardSelectionScreen() }
             composableWithDeepLink(Settings.KeyboardOrder::class) { KeyboardOrderScreen() }
+            composableWithDeepLink(Settings.KeyboardLayout::class) { KeyboardLayoutScreen() }
             composableWithDeepLink(Settings.KeyboardTest::class) { KeyboardTestScreen() }
             composableWithDeepLink(Settings.InputFeedback::class) { InputFeedbackScreen() }
 
@@ -241,6 +252,7 @@ object Routes {
             composableWithDeepLink(Settings.Restore::class) { RestoreScreen() }
 
             composableWithDeepLink(Settings.About::class) { AboutScreen() }
+            composableWithDeepLink(Settings.InputLab::class) { InputLabScreen() }
             composableWithDeepLink(Settings.ProjectLicense::class) { ProjectLicenseScreen() }
             composableWithDeepLink(Settings.ThirdPartyLicenses::class) { ThirdPartyLicensesScreen() }
 

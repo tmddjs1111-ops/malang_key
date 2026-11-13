@@ -1,0 +1,150 @@
+package dev.malangkey.ime.text.keyboard
+
+import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.OpenInFull
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import dev.malangkey.app.FlorisPreferenceStore
+import dev.malangkey.ime.input.LocalInputFeedbackController
+import dev.malangkey.ime.keyboard.ComputingEvaluator
+import dev.malangkey.ime.keyboard.FlorisImeSizing
+import dev.malangkey.ime.keyboard.GridWideAlignment
+import dev.malangkey.ime.keyboard.KeyboardMode
+import dev.malangkey.ime.theme.FlorisImeUi
+import dev.malangkey.ime.window.FoldState
+import dev.patrickgold.jetpref.datastore.model.collectAsState
+import kotlinx.coroutines.launch
+import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
+
+/**
+ * 글자 자판. 넓은 화면(펼침·가로·태블릿)의 격자 자판(천지인·20키 등)은 삼성 키보드의 '한 손 키보드'처럼
+ * 좁혀서 한쪽에 두고, 빈 쪽에 자판을 옮기거나(◀ ▶) 원래 너비로 넓히는(⤢) 버튼을 둔다.
+ * 그 밖에는 [TextKeyboardLayout]을 그대로 그린다.
+ */
+@Composable
+fun TextKeyboardWithWideGrid(evaluator: ComputingEvaluator) {
+    val prefs by FlorisPreferenceStore
+    val configuration = LocalConfiguration.current
+    val isUnfolded by FoldState.isUnfolded.collectAsState()
+    val compact by prefs.keyboard.gridWideCompact.collectAsState()
+    val widthPercent by prefs.keyboard.gridWideWidthPercent.collectAsState()
+    val alignment by prefs.keyboard.gridWideAlignment.collectAsState()
+
+    val isGrid = evaluator.keyboard.mode == KeyboardMode.GRID_16KEY
+    val isWide = isUnfolded ||
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE ||
+        configuration.smallestScreenWidthDp >= 600
+    if (!isGrid || !isWide || !compact) {
+        TextKeyboardLayout(evaluator = evaluator)
+        return
+    }
+
+    val scope = rememberCoroutineScope()
+    val inputFeedbackController = LocalInputFeedbackController.current
+    fun moveTo(target: GridWideAlignment) {
+        inputFeedbackController.keyPress()
+        scope.launch { prefs.keyboard.gridWideAlignment.set(target) }
+    }
+    fun expand() {
+        inputFeedbackController.keyPress()
+        scope.launch { prefs.keyboard.gridWideCompact.set(false) }
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val keyboardWidth = maxWidth * (widthPercent.coerceIn(30, 90) / 100f)
+        val freeWidth = maxWidth - keyboardWidth
+        val height = FlorisImeSizing.keyboardUiHeight()
+        Row {
+            when (alignment) {
+                GridWideAlignment.LEFT -> {
+                    TextKeyboardLayout(modifier = Modifier.width(keyboardWidth), evaluator = evaluator)
+                    SideControls(freeWidth, height) {
+                        SideButton(Icons.AutoMirrored.Default.KeyboardArrowRight, "가운데로") { moveTo(GridWideAlignment.CENTER) }
+                        SideButton(Icons.Default.OpenInFull, "넓게") { expand() }
+                    }
+                }
+                GridWideAlignment.CENTER -> {
+                    SideControls(freeWidth / 2, height) {
+                        SideButton(Icons.AutoMirrored.Default.KeyboardArrowLeft, "왼쪽으로") { moveTo(GridWideAlignment.LEFT) }
+                    }
+                    TextKeyboardLayout(modifier = Modifier.width(keyboardWidth), evaluator = evaluator)
+                    SideControls(freeWidth / 2, height) {
+                        SideButton(Icons.AutoMirrored.Default.KeyboardArrowRight, "오른쪽으로") { moveTo(GridWideAlignment.RIGHT) }
+                        SideButton(Icons.Default.OpenInFull, "넓게") { expand() }
+                    }
+                }
+                GridWideAlignment.RIGHT -> {
+                    SideControls(freeWidth, height) {
+                        SideButton(Icons.AutoMirrored.Default.KeyboardArrowLeft, "가운데로") { moveTo(GridWideAlignment.CENTER) }
+                        SideButton(Icons.Default.OpenInFull, "넓게") { expand() }
+                    }
+                    TextKeyboardLayout(modifier = Modifier.width(keyboardWidth), evaluator = evaluator)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SideControls(width: Dp, height: Dp, content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier.width(width).height(height),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        content()
+    }
+}
+
+/** 삼성 한 손 키보드의 옆 버튼처럼 키와 같은 색의 둥근 버튼. */
+@Composable
+private fun SideButton(icon: ImageVector, description: String, onClick: () -> Unit) {
+    val keyStyle = rememberSnyggThemeQuery(FlorisImeUi.Key.elementName)
+    val foreground = keyStyle.foreground(default = Color.DarkGray)
+    val shape = RoundedCornerShape(16.dp)
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(shape)
+            .background(keyStyle.background(default = Color.LightGray))
+            // 테마에 따라 키 색이 자판 배경과 같아 버튼이 안 보일 수 있어서, 글자색으로 옅게 칠하고 테두리를 두른다.
+            .background(foreground.copy(alpha = 0.08f))
+            .border(1.5.dp, foreground.copy(alpha = 0.3f), shape)
+            .clickable(onClickLabel = description, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = description,
+            modifier = Modifier.size(30.dp),
+            tint = foreground,
+        )
+    }
+}

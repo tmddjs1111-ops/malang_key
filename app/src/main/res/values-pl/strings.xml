@@ -460,8 +460,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Wyłączone w całym systemie. W przypadku nieprawidłowych słów w polach tekstowych nie pojawią się czerwone linie. Dotknij, aby zmienić.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Nie ustawiono usługi sprawdzania pisowni w tekście. Dotknij, aby zmienić.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Języki</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Użyj nazw kontaktów</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Wyszukaj nazwiska z listy kontaktów</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Użyj wpisów słownika użytkownika</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Wyszukaj hasła w słownikach użytkownika</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Słowniki użytkownika</string>

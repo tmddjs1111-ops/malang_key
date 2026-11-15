@@ -165,7 +165,7 @@ private fun ColorChip(title: String, slot: ColorSlot) {
                 scope.launch { slot.pref.set(selectedColor) }
                 showDialog = false
             },
-            dismissLabel = "취소",
+            dismissLabel = "닫기",
             onDismiss = { showDialog = false },
         ) {
             Column {

@@ -35,7 +35,7 @@ private fun maxSizeLabel(size: Int): String =
  * 각 묶음 이름에 어디서 쓰는지를 적는다. 정렬 방식·시작 글자 수 같은 세부 설정은 기본값 그대로 두고 숨긴다.
  */
 @Composable
-fun MediaScreen() = MalangSettingsScreen(title = "이모지", subtitle = "Emoji") {
+fun MediaScreen() = MalangSettingsScreen(title = "이모지") {
     val prefs by FlorisPreferenceStore
     val searchEnabled by prefs.keyboard.emoticonSuggestionEnabled.collectAsState()
     val historyEnabled by prefs.emoji.historyEnabled.collectAsState()

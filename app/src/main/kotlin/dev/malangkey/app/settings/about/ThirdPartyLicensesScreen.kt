@@ -34,7 +34,6 @@ import org.florisboard.lib.compose.stringRes
 @Composable
 fun ThirdPartyLicensesScreen() = MalangSettingsScreen(
     title = "오픈소스 라이선스",
-    subtitle = "Open Source Licenses",
     scrollable = false,
     showTestInput = false,
 ) {

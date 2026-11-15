@@ -109,7 +109,7 @@ fun BgImageCropDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MalangButton("취소", modifier = Modifier.weight(1f), primary = false, onClick = onDismiss)
+                MalangButton("닫기", modifier = Modifier.weight(1f), primary = false, onClick = onDismiss)
                 MalangButton(
                     "적용",
                     modifier = Modifier.weight(1f),

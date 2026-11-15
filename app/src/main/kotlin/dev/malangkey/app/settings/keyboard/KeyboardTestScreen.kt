@@ -59,7 +59,6 @@ private data class TestMessage(val text: String, val mine: Boolean)
 @Composable
 fun KeyboardTestScreen() = MalangSettingsScreen(
     title = "키보드 테스트",
-    subtitle = "Keyboard Test",
     scrollable = false,
     showTestInput = false,
 ) {

@@ -52,6 +52,7 @@ import dev.malangkey.app.FlorisPreferenceStore
 import dev.malangkey.app.apptheme.JuaFontFamily
 import dev.malangkey.app.apptheme.MalangChoiceRow
 import dev.malangkey.app.apptheme.MalangInfoCard
+import dev.malangkey.app.apptheme.MalangSettingsDanger
 import dev.malangkey.app.apptheme.MalangSettingsBorder
 import dev.malangkey.app.apptheme.MalangSettingsCard
 import dev.malangkey.app.apptheme.MalangSettingsScreen
@@ -85,12 +86,12 @@ private val TriggerKeyEntries = listOf(
 )
 
 @Composable
-fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드", subtitle = "Clipboard") {
+fun ClipboardScreen() = MalangSettingsScreen(title = "클립보드") {
     val prefs by FlorisPreferenceStore
     val triggerKey by prefs.clipboard.quickPhraseTriggerKey.collectAsState()
 
     val triggerKeyName = TriggerKeyEntries.first { it.first == triggerKey }.second
-    MalangInfoCard("키보드에서 $triggerKeyName 키를 길게 누르면 상용구 표가 뜨고, 원하는 칸에서 손을 떼면 바로 입력됩니다. 모든 키보드 레이아웃에서 동작해요.")
+    MalangInfoCard("키보드에서 $triggerKeyName 키를 길게 누르면 상용구 표가 뜨고, 원하는 칸에서 손을 떼면 바로 입력돼요. 모든 키보드 레이아웃에서 동작해요.")
 
     MalangSettingsSection(
         title = "클립보드",
@@ -228,9 +229,9 @@ fun QuickPhraseGridEditor() {
                         TextButton(onClick = {
                             save(index, "")
                             editingIndex = -1
-                        }) { Text("지우기", color = Color(0xFFB3261E)) }
+                        }) { Text("지우기", color = MalangSettingsDanger) }
                     }
-                    TextButton(onClick = { editingIndex = -1 }) { Text("취소", color = MalangSettingsSummary) }
+                    TextButton(onClick = { editingIndex = -1 }) { Text("닫기", color = MalangSettingsSummary) }
                 }
             },
         )

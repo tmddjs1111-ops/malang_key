@@ -281,7 +281,7 @@ fun BackupScreen() {
         }
     }
 
-    MalangSettingsScreen(title = "설정 백업", subtitle = "Back Up", showTestInput = false) {
+    MalangSettingsScreen(title = "설정 백업", showTestInput = false) {
         MalangSettingsSection(
             title = "저장 위치",
             items = listOf(

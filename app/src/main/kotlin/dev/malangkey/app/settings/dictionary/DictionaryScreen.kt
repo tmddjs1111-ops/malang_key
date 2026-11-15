@@ -38,7 +38,7 @@ import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import kotlinx.coroutines.launch
 
 @Composable
-fun DictionaryScreen() = MalangSettingsScreen(title = "사용자 사전", subtitle = "Dictionary") {
+fun DictionaryScreen() = MalangSettingsScreen(title = "사용자 사전") {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val florisEnabled by prefs.dictionary.enableFlorisUserDictionary.collectAsState()
@@ -51,13 +51,13 @@ fun DictionaryScreen() = MalangSettingsScreen(title = "사용자 사전", subtit
                 MalangSwitchRow(
                     prefs.dictionary.enableFlorisUserDictionary,
                     title = "말랑키 사전 사용",
-                    summary = "말랑키 안에만 저장되는 나만의 단어를 추천에 씁니다.",
+                    summary = "말랑키 안에만 저장되는 나만의 단어를 추천에 써요.",
                 )
             },
             {
                 MalangNavRow(
                     title = "말랑키 사전 관리",
-                    summary = "단어와 줄임말을 추가하거나 지웁니다.",
+                    summary = "단어와 줄임말을 추가하거나 지워요.",
                     enabled = florisEnabled,
                     onClick = { navController.navigate(Routes.Settings.UserDictionary(UserDictionaryType.FLORIS)) },
                 )
@@ -72,13 +72,13 @@ fun DictionaryScreen() = MalangSettingsScreen(title = "사용자 사전", subtit
                 MalangSwitchRow(
                     prefs.dictionary.enableSystemUserDictionary,
                     title = "시스템 사전 사용",
-                    summary = "안드로이드에 저장된 개인 사전 단어도 추천에 씁니다.",
+                    summary = "안드로이드에 저장된 개인 사전 단어도 추천에 써요.",
                 )
             },
             {
                 MalangNavRow(
                     title = "시스템 사전 관리",
-                    summary = "다른 키보드와 함께 쓰는 개인 사전입니다.",
+                    summary = "다른 키보드와 함께 쓰는 개인 사전이에요.",
                     enabled = systemEnabled,
                     onClick = { navController.navigate(Routes.Settings.UserDictionary(UserDictionaryType.SYSTEM)) },
                 )
@@ -106,7 +106,7 @@ private fun JapaneseLearningResetRow() {
 
     MalangNavRow(
         title = "일본어 학습 기록 지우기",
-        summary = "일본어 변환에서 자주 고른 후보를 앞에 보여 주려고 기억한 내용을 지웁니다.",
+        summary = "일본어 변환에서 자주 고른 후보를 앞에 보여 주려고 기억한 내용을 지워요.",
         onClick = { showDialog = true },
     )
 
@@ -121,7 +121,7 @@ private fun JapaneseLearningResetRow() {
                     Toast.makeText(context, "일본어 학습 기록을 지웠어요.", Toast.LENGTH_SHORT).show()
                 }
             },
-            dismissLabel = "취소",
+            dismissLabel = "닫기",
             onDismiss = { showDialog = false },
         ) {
             Text("변환 후보 순서가 처음 상태로 돌아가요. 사용자 사전의 단어는 지워지지 않아요.")

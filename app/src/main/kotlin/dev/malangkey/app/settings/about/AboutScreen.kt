@@ -48,7 +48,7 @@ import dev.malangkey.lib.util.launchUrl
 import org.florisboard.lib.compose.FlorisCanvasIcon
 
 @Composable
-fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", subtitle = "About", showTestInput = false) {
+fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", showTestInput = false) {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val clipboardManager by context.clipboardManager()
@@ -136,7 +136,7 @@ fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", subtitle = "About
             {
                 MalangNavRow(
                     title = "FlorisBoard 기반",
-                    summary = "말랑키는 FlorisBoard(Apache 2.0)를 수정해 만든 앱입니다.",
+                    summary = "말랑키는 FlorisBoard(Apache 2.0)를 수정해 만든 앱이에요.",
                 ) {
                     context.launchUrl("https://github.com/florisboard/florisboard")
                 }

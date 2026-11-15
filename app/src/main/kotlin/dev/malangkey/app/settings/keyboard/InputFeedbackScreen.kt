@@ -38,7 +38,7 @@ private val ActivationModeEntries = listOf(
 
 
 @Composable
-fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subtitle = "Sound & Haptic") {
+fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동") {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val vibrator = context.systemVibratorOrNull()
@@ -53,7 +53,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                 MalangSwitchRow(
                     prefs.inputFeedback.audioEnabled,
                     title = "키 소리",
-                    summary = "키를 누를 때 소리를 냅니다. 휴대폰이 무음·진동 모드면 소리가 나지 않아요.",
+                    summary = "키를 누를 때 소리를 내요. 휴대폰이 무음·진동 모드면 소리가 나지 않아요.",
                 )
             },
             { KeySoundPicker(enabled = audioEnabled) },
@@ -102,7 +102,7 @@ fun InputFeedbackScreen() = MalangSettingsScreen(title = "소리·진동", subti
                 MalangSwitchRow(
                     prefs.inputFeedback.hapticEnabled,
                     title = "키 진동",
-                    summary = "키를 누를 때 진동을 줍니다.",
+                    summary = "키를 누를 때 진동을 줘요.",
                 )
             },
             { HapticFeelPicker(enabled = isCustomHaptic, vibrator = vibrator) },

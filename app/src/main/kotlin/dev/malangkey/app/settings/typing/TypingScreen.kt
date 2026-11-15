@@ -34,7 +34,7 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 import org.florisboard.lib.android.AndroidVersion
 
 @Composable
-fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle = "Typing") {
+fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정") {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val suggestionEnabled by prefs.suggestion.enabled.collectAsState()
@@ -47,14 +47,14 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
                 MalangSwitchRow(
                     prefs.correction.autoCapitalization,
                     title = "자동 대문자",
-                    summary = "영어 문장의 첫 글자를 대문자로 바꿉니다.",
+                    summary = "영어 문장의 첫 글자를 대문자로 바꿔요.",
                 )
             },
             {
                 MalangSwitchRow(
                     prefs.correction.doubleSpacePeriod,
                     title = "스페이스 두 번으로 마침표",
-                    summary = "스페이스바를 빠르게 두 번 누르면 마침표와 띄어쓰기를 넣습니다.",
+                    summary = "스페이스바를 빠르게 두 번 누르면 마침표와 띄어쓰기를 넣어요.",
                 )
             },
             {
@@ -64,7 +64,7 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
                     summary = if (autoSpacePunctuation) {
                         "실험 기능이라 가끔 의도와 다르게 띄어질 수 있어요."
                     } else {
-                        "마침표·쉼표 뒤에 자동으로 띄어씁니다. (실험 기능)"
+                        "마침표·쉼표 뒤에 자동으로 띄어 써요. (실험 기능)"
                     },
                 )
             },
@@ -72,13 +72,13 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
                 MalangSwitchRow(
                     prefs.correction.rememberCapsLockState,
                     title = "Caps Lock 상태 기억",
-                    summary = "키보드를 다시 열어도 Caps Lock을 유지합니다.",
+                    summary = "키보드를 다시 열어도 Caps Lock을 유지해요.",
                 )
             },
         ),
     )
 
-    MalangInfoCard("단어 추천과 맞춤법 검사는 아직 준비 중이에요. 켜두셔도 지금은 일부 기능만 동작합니다.")
+    MalangInfoCard("단어 추천과 맞춤법 검사는 아직 준비 중이에요. 켜 둬도 지금은 일부 기능만 동작해요.")
 
     MalangSettingsSection(
         title = "단어 추천",
@@ -87,7 +87,7 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
                 MalangSwitchRow(
                     prefs.suggestion.enabled,
                     title = "단어 추천",
-                    summary = "입력 중인 단어를 스마트 바에 추천합니다.",
+                    summary = "입력 중인 단어를 스마트 바에 추천해요.",
                 )
             },
             {
@@ -114,7 +114,7 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
                     MalangSwitchRow(
                         prefs.suggestion.api30InlineSuggestionsEnabled,
                         title = "자동 완성 추천 표시",
-                        summary = "비밀번호 관리자 등 앱이 보내는 자동 완성을 스마트 바에 보여줍니다.",
+                        summary = "비밀번호 관리자 등 앱이 보내는 자동 완성을 스마트 바에 보여 줘요.",
                     )
                 }
             } else {
@@ -157,7 +157,7 @@ fun TypingScreen() = MalangSettingsScreen(title = "입력 및 수정", subtitle 
             {
                 MalangNavRow(
                     title = "사용자 사전",
-                    summary = "자주 쓰는 단어와 줄임말을 등록합니다.",
+                    summary = "자주 쓰는 단어와 줄임말을 등록해요.",
                     onClick = { navController.navigate(Routes.Settings.Dictionary) },
                 )
             },

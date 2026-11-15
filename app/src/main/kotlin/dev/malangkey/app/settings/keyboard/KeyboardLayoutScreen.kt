@@ -26,7 +26,7 @@ import dev.patrickgold.jetpref.datastore.model.collectAsState
 
 /** 키보드 설정 > 레이아웃: 높이·글자 크기·키 간격. */
 @Composable
-fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃", subtitle = "Layout") {
+fun KeyboardLayoutScreen() = MalangSettingsScreen(title = "레이아웃") {
     val prefs by FlorisPreferenceStore
 
     MalangSettingsSection(

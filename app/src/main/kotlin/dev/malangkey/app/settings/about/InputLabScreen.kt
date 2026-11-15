@@ -108,7 +108,7 @@ private fun createLabField(context: Context, field: LabField): EditText {
  * 위: 진단 기록 켜기와 기록 보기. 아래: 보안 입력칸을 흉내 낸 실험용 입력칸들.
  */
 @Composable
-fun InputLabScreen() = MalangSettingsScreen(title = "입력칸 실험실", subtitle = "Input Lab", showTestInput = false) {
+fun InputLabScreen() = MalangSettingsScreen(title = "입력칸 실험실", showTestInput = false) {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val clipboardManager by context.clipboardManager()

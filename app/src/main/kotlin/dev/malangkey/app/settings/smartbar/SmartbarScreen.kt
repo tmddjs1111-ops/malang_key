@@ -93,7 +93,7 @@ import kotlinx.coroutines.launch
 import org.florisboard.lib.snygg.ui.SnyggIcon
 
 @Composable
-fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = "Smart Bar") {
+fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바") {
     val prefs by FlorisPreferenceStore
     val enabled by prefs.smartbar.enabled.collectAsState()
     val layout by prefs.smartbar.layout.collectAsState()
@@ -105,7 +105,7 @@ fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = 
                 MalangSwitchRow(
                     prefs.smartbar.enabled,
                     title = "스마트 바 사용",
-                    summary = "키보드 위에 자주 쓰는 기능 버튼 줄을 표시합니다.",
+                    summary = "키보드 위에 자주 쓰는 기능 버튼 줄을 보여 줘요.",
                 )
             },
             {
@@ -144,7 +144,7 @@ fun SmartbarScreen() = MalangSettingsScreen(title = "스마트 바", subtitle = 
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                         Text("슬롯 편집", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         Text(
-                            "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어갑니다.",
+                            "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어가요.",
                             modifier = Modifier.padding(top = 6.dp),
                             color = MalangSettingsSummary,
                             fontSize = 13.sp,
@@ -272,7 +272,7 @@ fun MalangSlotsEditor() {
                 ) { Text("넣기") }
             },
             dismissButton = {
-                TextButton(onClick = { phraseDialogOpen = false }) { Text("취소") }
+                TextButton(onClick = { phraseDialogOpen = false }) { Text("닫기") }
             },
         )
     }

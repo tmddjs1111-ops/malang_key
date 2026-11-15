@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -72,6 +73,8 @@ val MalangSettingsSection = Color(0xFF68463B)
 val MalangSettingsTitle = Color(0xFF4A3028)
 // 크림 배경(#FBF0D1) 위에서도 글자 대비 4.5:1 이상이 되는 색
 val MalangSettingsSummary = Color(0xFF7D6157)
+/** 되돌리기·지우기처럼 설정이 사라지는 확인 버튼 글자. */
+val MalangSettingsDanger = Color(0xFFB3402A)
 
 /**
  * 피그마 설정 화면 틀: 뒤로가기 버튼과 한/영 제목이 있는 헤더, 스크롤되는 본문,
@@ -80,7 +83,8 @@ val MalangSettingsSummary = Color(0xFF7D6157)
 @Composable
 fun MalangSettingsScreen(
     title: String,
-    subtitle: String,
+    /** 제목 아래 작은 글. 영어 부제는 두지 않고, 게임 모드처럼 뜻이 있는 것만 넣는다. */
+    subtitle: String? = null,
     /** 뒤로가기 버튼 동작. null이면 이전 화면으로 돌아간다. */
     onBack: (() -> Unit)? = null,
     /** 헤더 오른쪽에 둘 버튼(메뉴 등). */
@@ -121,7 +125,7 @@ fun MalangSettingsScreen(
 @Composable
 private fun MalangSettingsHeader(
     title: String,
-    subtitle: String,
+    subtitle: String?,
     onBack: (() -> Unit)?,
     actions: @Composable RowScope.() -> Unit,
 ) {
@@ -145,7 +149,9 @@ private fun MalangSettingsHeader(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, color = MalangDarkCard, fontSize = 24.sp, lineHeight = 28.sp, fontFamily = JuaFontFamily, maxLines = 1)
-                Text(subtitle, color = MalangSettingsSummary, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1)
+                if (subtitle != null) {
+                    Text(subtitle, color = MalangSettingsSummary, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1)
+                }
             }
             actions()
         }
@@ -279,6 +285,8 @@ fun MalangNavRow(
     title: String,
     summary: String? = null,
     summaryBold: Boolean = false,
+    /** 지금 값(예: 400ms, 현재 언어). 설명 줄 대신 행 오른쪽 끝, 화살표 앞에 둔다. */
+    value: String? = null,
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
@@ -291,6 +299,18 @@ fun MalangNavRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RowTexts(title, summary, Modifier.weight(1f), summaryBold)
+        if (value != null) {
+            Text(
+                value,
+                modifier = Modifier.widthIn(max = 150.dp),
+                color = MalangSettingsSection,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.End,
+                maxLines = 2,
+                style = KoreanWordBreak,
+            )
+        }
         Image(
             painter = painterResource(R.drawable.mk_chevron_right),
             contentDescription = null,
@@ -496,7 +516,7 @@ fun <T : Any> MalangChoiceRow(
     var open by remember { mutableStateOf(false) }
     MalangNavRow(
         title = title,
-        summary = entries.firstOrNull { it.first == value }?.second,
+        value = entries.firstOrNull { it.first == value }?.second,
         enabled = enabled,
         onClick = { open = true },
     )
@@ -527,7 +547,7 @@ fun MalangValueDialogRow(
     val stored by pref.collectAsState()
     val scope = rememberCoroutineScope()
     var open by remember { mutableStateOf(false) }
-    MalangNavRow(title = title, summary = valueLabel(stored), summaryBold = true, enabled = enabled, onClick = { open = true })
+    MalangNavRow(title = title, value = valueLabel(stored), enabled = enabled, onClick = { open = true })
     if (open) {
         var local by remember { mutableFloatStateOf(stored.coerceIn(min, max).toFloat()) }
         AlertDialog(
@@ -564,7 +584,7 @@ fun MalangValueDialogRow(
                 }) { Text("확인", color = MalangSettingsSection) }
             },
             dismissButton = {
-                TextButton(onClick = { open = false }) { Text("취소", color = MalangSettingsSummary) }
+                TextButton(onClick = { open = false }) { Text("닫기", color = MalangSettingsSummary) }
             },
         )
     }

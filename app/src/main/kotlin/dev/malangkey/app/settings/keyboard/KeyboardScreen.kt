@@ -57,7 +57,7 @@ private val WideScreenKoreanLayoutEntries = listOf(
 )
 
 @Composable
-fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle = "Keyboard Settings") {
+fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정") {
     val prefs by FlorisPreferenceStore
     val navController = LocalNavController.current
     val numberRow by prefs.keyboard.numberRow.collectAsState()
@@ -70,34 +70,32 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "키보드 언어 및 레이아웃",
-                    summary = "시스템에 추가할 언어와 레이아웃을 선택합니다.",
                     onClick = { navController.navigate(Routes.Settings.KeyboardSelection) },
                 )
             },
             {
                 MalangNavRow(
                     title = "내 키보드 순서",
-                    summary = "사용 중인 키보드를 끌어서 전환 순서를 정합니다.",
                     onClick = { navController.navigate(Routes.Settings.KeyboardOrder) },
                 )
             },
             {
                 MalangNavRow(
                     title = "입력 및 수정",
-                    summary = "자동 교정, 대문자 자동 변환 등 입력 방식을 설정합니다.",
+                    summary = "자동 대문자, 단어 추천, 사용자 사전",
                     onClick = { navController.navigate(Routes.Settings.Typing) },
                 )
             },
             {
                 MalangSwitchRow(
                     prefs.keyboard.numberRow,
-                    title = "숫자 행 표시",
-                    summary = "키보드 상단에 숫자 키 행을 표시합니다.",
+                    title = "숫자 행",
+                    summary = "맨 위에 1~0 줄을 보여 줘요.",
                 )
             },
             {
                 HintModeRow(
-                    title = "힌트 숫자 행 모드",
+                    title = "힌트 숫자 행",
                     enabledPref = prefs.keyboard.hintedNumberRowEnabled,
                     modePref = prefs.keyboard.hintedNumberRowMode,
                     enabled = !numberRow,
@@ -105,7 +103,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             },
             {
                 HintModeRow(
-                    title = "힌트 기호 모드",
+                    title = "힌트 기호",
                     enabledPref = prefs.keyboard.hintedSymbolsEnabled,
                     modePref = prefs.keyboard.hintedSymbolsMode,
                 )
@@ -113,7 +111,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangChoiceRow(
                     prefs.keyboard.spaceBarMode,
-                    title = "스페이스바 표시 모드",
+                    title = "스페이스바에 표시",
                     entries = listOf(
                         SpaceBarMode.NOTHING to "빈 공간",
                         SpaceBarMode.CURRENT_LANGUAGE to "현재 언어 표시",
@@ -130,7 +128,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "레이아웃",
-                    summary = "키보드·스마트 바 높이, 글자 크기, 키 간격을 설정합니다.",
+                    summary = "키보드·스마트 바 높이, 글자 크기, 키 간격",
                     onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
                 )
             },
@@ -143,22 +141,22 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangSwitchRow(
                     prefs.keyboard.popupEnabled,
-                    title = "키 팝업 활성화",
-                    summary = "키를 누를 때 팝업을 표시합니다.",
+                    title = "키 팝업",
+                    summary = "누른 글자를 키 위에 크게 보여 줘요.",
                 )
             },
             {
                 MalangSwitchRow(
                     prefs.keyboard.mergeHintPopupsEnabled,
-                    title = "힌트 팝업 병합",
-                    summary = "키 모서리 힌트(숫자·기호)가 있는 키를 길게 누를 때, 그 힌트와 비슷한 기호까지 함께 보여 줍니다. " +
+                    title = "힌트 팝업 합치기",
+                    summary = "힌트가 있는 키를 길게 누르면 비슷한 기호도 함께 보여 줘요. " +
                         "예: ㅂ(1)을 길게 누르면 1과 함께 ¹ ½ ⅓ 도 나와요.",
                 )
             },
             {
                 MalangValueDialogRow(
                     prefs.keyboard.longPressDelay,
-                    title = "길게 누르기 지연 시간",
+                    title = "길게 누르기 시간",
                     min = 100,
                     max = 700,
                     step = 10,
@@ -194,14 +192,14 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                 MalangSwitchRow(
                     prefs.keyboard.splitWhenUnfolded,
                     title = "펼쳤을 때 쿼티 자판 나누기",
-                    summary = "폴더블 폰을 펼치면 쿼티 자판을 가운데에서 나눠 양손으로 치기 쉽게 합니다. 태블릿에도 적용돼요.",
+                    summary = "가운데에서 나눠 양손으로 치기 쉽게 해요. 태블릿에도 적용돼요.",
                 )
             },
             {
                 MalangSwitchRow(
                     prefs.keyboard.splitWhenFolded,
                     title = "접었을 때도 나누기",
-                    summary = "일반 폰 화면에서도 자판을 나눕니다.",
+                    summary = "일반 폰 화면에서도 나눠요.",
                 )
             },
             { MalangSliderRow(prefs.keyboard.splitGapPercent, "가운데 간격", min = 10, max = 35) },
@@ -209,7 +207,7 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
                 MalangSwitchRow(
                     prefs.keyboard.gridWideCompact,
                     title = "격자 자판 좁히기 (천지인·20키)",
-                    summary = "펼치거나 가로로 돌리면 삼성 키보드의 한 손 키보드처럼 좁혀서 한쪽에 둡니다. " +
+                    summary = "펼치거나 가로로 돌리면 한 손 키보드처럼 좁혀서 한쪽에 둬요. " +
                         "빈 쪽의 화살표 버튼으로 옮기고, 넓히기 버튼으로 원래 너비로 돌릴 수 있어요.",
                 )
             },
@@ -244,14 +242,14 @@ fun KeyboardScreen() = MalangSettingsScreen(title = "키보드 설정", subtitle
             {
                 MalangNavRow(
                     title = "설정 백업",
-                    summary = "키보드·테마 설정을 파일로 저장합니다.",
+                    summary = "키보드·테마 설정을 파일로 저장해요.",
                     onClick = { navController.navigate(Routes.Settings.Backup) },
                 )
             },
             {
                 MalangNavRow(
                     title = "설정 복원",
-                    summary = "백업 파일에서 설정을 불러옵니다.",
+                    summary = "백업 파일에서 설정을 불러와요.",
                     onClick = { navController.navigate(Routes.Settings.Restore) },
                 )
             },

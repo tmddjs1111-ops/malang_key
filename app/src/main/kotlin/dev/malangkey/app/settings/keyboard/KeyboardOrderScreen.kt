@@ -74,7 +74,7 @@ private val ItemHeight = 68.dp
  * switch key and swipe gestures cycle through them.
  */
 @Composable
-fun KeyboardOrderScreen() = MalangSettingsScreen(title = "내 키보드 순서", subtitle = "Keyboard Order") {
+fun KeyboardOrderScreen() = MalangSettingsScreen(title = "내 키보드 순서") {
     val context = LocalContext.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
@@ -98,7 +98,7 @@ fun KeyboardOrderScreen() = MalangSettingsScreen(title = "내 키보드 순서",
             dragOffset = 0f
         }
 
-        MalangInfoCard("오른쪽 ≡ 를 끌어서 순서를 바꾸세요. 지구본 키와 스페이스바 좌우 밀기로 이 순서대로 전환됩니다.")
+        MalangInfoCard("오른쪽 ≡ 를 끌어서 순서를 바꿔 보세요. 지구본 키와 스페이스바 좌우 밀기로 이 순서대로 바뀌어요.")
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             order.forEachIndexed { index, subtype ->

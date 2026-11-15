@@ -521,11 +521,11 @@ private fun FeedbackStep() {
     val audioEnabled by prefs.inputFeedback.audioEnabled.collectPrefAsState()
     MalangSettingsSection(
         items = listOf(
-            { MalangSwitchRow(prefs.inputFeedback.audioEnabled, "키 소리", "키를 누를 때 소리를 냅니다.") },
+            { MalangSwitchRow(prefs.inputFeedback.audioEnabled, "키 소리", "키를 누를 때 소리를 내요.") },
             { KeySoundPicker(enabled = audioEnabled) },
-            { MalangSwitchRow(prefs.inputFeedback.hapticEnabled, "키 진동", "키를 누를 때 진동을 줍니다.") },
-            { MalangSwitchRow(prefs.keyboard.popupEnabled, "키 팝업", "누른 글자를 키 위에 크게 보여줍니다.") },
-            { MalangSwitchRow(prefs.keyboard.numberRow, "숫자 행 표시", "키보드 맨 위에 숫자 줄을 항상 보여줍니다.") },
+            { MalangSwitchRow(prefs.inputFeedback.hapticEnabled, "키 진동", "키를 누를 때 진동을 줘요.") },
+            { MalangSwitchRow(prefs.keyboard.popupEnabled, "키 팝업", "누른 글자를 키 위에 크게 보여 줘요.") },
+            { MalangSwitchRow(prefs.keyboard.numberRow, "숫자 행 표시", "키보드 맨 위에 숫자 줄을 항상 보여 줘요.") },
         ),
     )
     Text(
@@ -551,12 +551,12 @@ private fun SmartbarStep() {
     MalangInfoCard("처음에는 붙여넣기 · 복사 · 이모지 · ← · → 가 들어 있어요. 대부분 이대로 쓰시는 걸 추천해요!")
     MalangSettingsSection(
         items = listOf(
-            { MalangSwitchRow(prefs.smartbar.enabled, "스마트 바 사용", "키보드 위에 기능 버튼 줄을 표시합니다.") },
+            { MalangSwitchRow(prefs.smartbar.enabled, "스마트 바 사용", "키보드 위에 기능 버튼 줄을 보여 줘요.") },
             {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                     Text("버튼 바꾸기", color = MalangSettingsTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어갑니다.",
+                        "위 칸을 누르면 비우고, 아래 기능을 누르면 빈 칸에 들어가요.",
                         modifier = Modifier.padding(top = 6.dp),
                         color = MalangSettingsSummary,
                         fontSize = 13.sp,
@@ -588,7 +588,7 @@ private fun ClipboardStep() {
 
     MalangInfoCard(
         "상용구: $triggerName 키를 길게 누르면 \"감사합니다.\", \"지금 가고 있어요.\" 같은 문구 표가 떠요. " +
-            "원하는 칸에서 손을 떼면 바로 입력됩니다. 문구는 아래 표에서 바로 바꿀 수 있어요."
+            "원하는 칸에서 손을 떼면 바로 입력돼요. 문구는 아래 표에서 바로 바꿀 수 있어요."
     )
     MalangSettingsSection(
         items = listOf(

@@ -61,11 +61,11 @@ private val SwipeRightEntries = listOf(
 )
 
 @Composable
-fun GesturesScreen() = MalangSettingsScreen(title = "제스처", subtitle = "Gesture") {
+fun GesturesScreen() = MalangSettingsScreen(title = "제스처") {
     val prefs by FlorisPreferenceStore
     val glideEnabled by prefs.glide.enabled.collectAsState()
 
-    MalangInfoCard("스페이스바를 좌우로 밀면 언어가 바뀝니다. 글자 키 위에서 밀었을 때의 동작은 아래에서 고를 수 있어요.")
+    MalangInfoCard("스페이스바를 좌우로 밀면 언어가 바뀌어요. 글자 키 위에서 밀었을 때의 동작은 아래에서 고를 수 있어요.")
 
     MalangSettingsSection(
         title = "글자 키 스와이프",

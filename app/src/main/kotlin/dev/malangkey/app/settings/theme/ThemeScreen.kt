@@ -228,7 +228,7 @@ private enum class CustomizeTab(val label: String) { COLORS("색상"), PHOTO("�
  * 키 모양(외곽선·글꼴·글자 크기)은 어느 테마에나 공통이라 테마 탭에 있다.
  */
 @Composable
-fun ThemeScreen() = MalangSettingsScreen(title = "꾸미기", subtitle = "Customize", scrollable = false) {
+fun ThemeScreen() = MalangSettingsScreen(title = "꾸미기", scrollable = false) {
     val prefs by FlorisPreferenceStore
     val context = LocalContext.current
     val currentThemeId = rememberCurrentThemeId()
@@ -807,7 +807,7 @@ private fun ThemeNameDialog(
             ) { Text("저장", color = MalangSettingsSection) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("취소", color = MalangSettingsSummary) }
+            TextButton(onClick = onDismiss) { Text("닫기", color = MalangSettingsSummary) }
         },
     )
 }

@@ -242,7 +242,7 @@ fun RestoreScreen() {
         }
     }
 
-    MalangSettingsScreen(title = "설정 복원", subtitle = "Restore", showTestInput = false) {
+    MalangSettingsScreen(title = "설정 복원", showTestInput = false) {
         MalangSettingsSection(
             title = "복원 방식",
             items = listOf(

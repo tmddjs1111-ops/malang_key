@@ -196,7 +196,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) {
         MalangSettingsSection(
             items = listOfNotNull<@Composable () -> Unit>(
                 {
-                    MalangNavRow(title = "단어 추가", summary = "단어와 줄임말을 새로 등록합니다.") {
+                    MalangNavRow(title = "단어 추가", summary = "단어와 줄임말을 새로 등록해요.") {
                         userDictionaryEntryForDialog = UserDictionaryEntryToAdd
                     }
                 },

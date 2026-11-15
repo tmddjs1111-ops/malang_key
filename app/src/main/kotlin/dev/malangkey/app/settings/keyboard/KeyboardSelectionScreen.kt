@@ -23,7 +23,7 @@ import dev.malangkey.app.setup.KeyboardLayoutPicker
 import dev.malangkey.lib.FlorisLocale
 
 @Composable
-fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 및 레이아웃", subtitle = "Keyboards") {
+fun KeyboardSelectionScreen() = MalangSettingsScreen(title = "키보드 언어 및 레이아웃") {
     MalangInfoCard("사용할 자판을 켜세요. 여러 개를 켜면 지구본 키나 스페이스바 좌우 밀기로 바꿔 쓸 수 있어요. 마지막 하나는 끌 수 없어요.")
 
     // 이름만으로는 어떤 자판인지 알기 어려워서 간단 설정처럼 실제 키보드 모양을 같이 보여준다.

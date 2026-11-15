@@ -439,7 +439,7 @@ private fun ComingSoonTab(title: String, subtitle: String) {
         Text(title, color = MalangDarkCard, fontSize = 32.sp, fontFamily = MalangJuaFont)
         Text(subtitle, color = MalangDarkCard.copy(alpha = 0.6f), fontSize = 15.sp, fontFamily = MalangJuaFont)
         Spacer(modifier = Modifier.height(12.dp))
-        Text("준비 중이에요. 곧 업데이트될 예정입니다!", color = MalangDarkCard, fontSize = 16.sp, fontFamily = MalangJuaFont)
+        Text("준비 중이에요. 곧 업데이트할 예정이에요!", color = MalangDarkCard, fontSize = 16.sp, fontFamily = MalangJuaFont)
     }
 }
 
@@ -500,14 +500,14 @@ private fun ThemeTabContent(
                 {
                     MalangNavRow(
                         title = "테마 확장 파일 가져오기",
-                        summary = "FlorisBoard용 테마 확장을 불러옵니다. 말랑키 테마 파일은 내 테마에서 가져와요.",
+                        summary = "FlorisBoard용 테마 확장을 불러와요. 말랑키 테마 파일은 내 테마에서 가져와요.",
                         onClick = { navController.navigate(Routes.Ext.Import(ExtensionImportScreenType.EXT_THEME)) },
                     )
                 },
                 {
                     MalangNavRow(
                         title = "처음 모양으로 되돌리기",
-                        summary = "커스텀 색, 배경 사진, 키 모양, 글꼴, 글자 크기를 기본값으로 돌립니다.",
+                        summary = "커스텀 색, 배경 사진, 키 모양, 글꼴, 글자 크기를 기본값으로 돌려요.",
                         onClick = { confirmReset = true },
                     )
                 },
@@ -547,10 +547,10 @@ private fun ThemeTabContent(
                         CustomThemeImage.reset(context, prefs)
                         CustomSmartbarIcons.reset(context, prefs)
                     }
-                }) { Text("되돌리기", color = MalangSettingsSection) }
+                }) { Text("되돌리기", color = MalangSettingsDanger) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmReset = false }) { Text("취소", color = MalangSettingsSummary) }
+                TextButton(onClick = { confirmReset = false }) { Text("닫기", color = MalangSettingsSummary) }
             },
         )
     }
@@ -713,7 +713,7 @@ fun MalangColorPreference(
                 }
                 showDialog = false
             },
-            dismissLabel = "취소",
+            dismissLabel = "닫기",
             onDismiss = { showDialog = false }
         ) {
             JetPrefColorPicker(

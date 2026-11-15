@@ -115,6 +115,26 @@ class MozcSession(private val context: Context) {
         }
     }
 
+    /**
+     * Forgets everything Mozc learned from the user (conversion history and predictions).
+     * If the engine was never loaded in this process, its profile folder is simply deleted.
+     */
+    suspend fun clearUserData() = withContext(dispatcher) {
+        mutex.withLock {
+            if (nativeReady == true) {
+                for (type in listOf(Input.CommandType.CLEAR_USER_HISTORY, Input.CommandType.CLEAR_USER_PREDICTION)) {
+                    try {
+                        eval(Input.newBuilder().setType(type))
+                    } catch (e: Throwable) {
+                        flogError { "Mozc $type failed: $e" }
+                    }
+                }
+            } else {
+                File(context.filesDir, ProfileDirName).deleteRecursively()
+            }
+        }
+    }
+
     suspend fun close() = withContext(dispatcher) {
         mutex.withLock {
             val id = sessionId ?: return@withLock

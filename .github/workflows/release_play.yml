@@ -1,0 +1,170 @@
+# 새 버전을 Google Play Console에 올린다.
+#
+# 쓰는 법
+#   1. gradle.properties 의 projectVersionCode(숫자, 매번 1 이상 올림)와 projectVersionName 을 올린다.
+#   2. main 에 합치면(PR 머지) versionCode 가 올라간 경우 자동으로 올라간다.
+#      태그를 달아 푸시해도 된다.  예) git tag v1.53 && git push origin v1.53
+#   3. 이 워크플로가 서명된 AAB를 빌드해 PLAY_TRACK 트랙에 올린다. (Google 검토 후 배포)
+#   Actions 탭에서 직접 실행하면 트랙을 고를 수 있다.
+#
+# 올릴 트랙: 저장소 Variables 의 PLAY_TRACK (없으면 alpha = 비공개 테스트 기본 트랙)
+#   신규 개인 계정은 비공개 테스트(12명 × 14일)를 마쳐야 프로덕션이 열린다.
+#   프로덕션 권한을 받으면 PLAY_TRACK 을 production 으로 바꾸면 된다.
+#
+# 필요한 저장소 Secrets (Settings > Secrets and variables > Actions)
+#   PLAY_SERVICE_ACCOUNT_JSON  Play Console API용 서비스 계정 키(JSON 전체 내용)
+#   UPLOAD_KEYSTORE_BASE64     업로드 키스토어(.jks)를 base64로 바꾼 값
+#   UPLOAD_KEYSTORE_PASSWORD   키스토어 비밀번호
+#   UPLOAD_KEY_ALIAS           키 별칭 (지금은 upload)
+#   UPLOAD_KEY_PASSWORD        키 비밀번호
+#
+# 출시 노트는 distribution/whatsnew/whatsnew-ko-KR 파일이 있으면 함께 올린다. (500자 이내)
+
+name: Release to Google Play
+
+on:
+  push:
+    tags:
+      - 'v*'
+    # main 에 버전(gradle.properties)이 바뀐 커밋이 들어오면 자동으로 올린다.
+    branches:
+      - main
+    paths:
+      - gradle.properties
+  workflow_dispatch:
+    inputs:
+      track:
+        description: '올릴 트랙'
+        type: choice
+        options:
+          - alpha
+          - internal
+          - production
+        default: alpha
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-play
+  cancel-in-progress: false
+
+jobs:
+  # main 에 들어온 커밋이 versionCode 를 올렸을 때만 올린다. (다른 설정만 바뀐 경우는 건너뛴다)
+  gate:
+    runs-on: ubuntu-24.04
+    outputs:
+      release: ${{ steps.check.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: check
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "push" ] || [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          now=$(grep '^projectVersionCode=' gradle.properties | cut -d= -f2)
+          before=$(git show HEAD^:gradle.properties 2>/dev/null | grep '^projectVersionCode=' | cut -d= -f2)
+          echo "versionCode: ${before:-?} -> $now"
+          if [ -n "$before" ] && [ "$now" -gt "$before" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.track || vars.PLAY_TRACK || 'alpha' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true  # Mozc 엔진(libmozc.so, mozc.data)은 LFS에 있다. 없으면 포인터 파일만 들어가 일본어 변환이 죽는다.
+
+      - name: Check Mozc files are real binaries, not LFS pointers
+        run: |
+          for f in app/src/main/assets/mozc/mozc.data app/src/main/jniLibs/*/libmozc.so; do
+            size=$(stat -c %s "$f")
+            if [ "$size" -lt 1000000 ]; then
+              echo "::error::$f 가 ${size}바이트입니다. LFS 파일을 받지 못했습니다."
+              exit 1
+            fi
+          done
+
+      - name: Check tag matches app version
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          name="$(grep '^projectVersionName=' gradle.properties | cut -d= -f2)"
+          if [ "$tag" != "$name" ]; then
+            echo "::error::태그($GITHUB_REF_NAME)와 gradle.properties 의 projectVersionName($name)이 다릅니다."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare upload signing key
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$UPLOAD_KEYSTORE_BASE64" ]; then
+            echo "::error::UPLOAD_KEYSTORE_BASE64 Secret 이 없습니다."
+            exit 1
+          fi
+          keystore="$RUNNER_TEMP/upload.jks"
+          echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          {
+            echo "upload.storeFile=$keystore"
+            echo "upload.keyAlias=$UPLOAD_KEY_ALIAS"
+            echo "upload.storePassword=$UPLOAD_KEYSTORE_PASSWORD"
+            echo "upload.keyPassword=$UPLOAD_KEY_PASSWORD"
+          } > local.properties
+
+      - name: Build release bundle
+        run: ./gradlew :app:bundleRelease --no-configuration-cache
+
+      - name: Upload to Google Play (with release notes)
+        if: hashFiles('distribution/whatsnew/*') != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.malangkey
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+          whatsNewDirectory: distribution/whatsnew
+          track: ${{ env.TRACK }}
+          status: completed
+
+      - name: Upload to Google Play
+        if: hashFiles('distribution/whatsnew/*') == ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.malangkey
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+          track: ${{ env.TRACK }}
+          status: completed
+
+      - name: Keep the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          # 브랜치에서 직접 실행하면 ref_name 에 / 가 들어가 이름으로 쓸 수 없어 실행 번호를 쓴다.
+          name: app-release-${{ github.run_number }}
+          path: |
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/mapping/release/mapping.txt
+          retention-days: 30

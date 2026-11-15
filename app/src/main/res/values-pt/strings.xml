@@ -448,8 +448,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Desativado globalmente. Não serão mostradas riscas vermelhas se existirem palavras erradas. Toque para alterar.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Não definiu o serviço de verificação ortográfica. Toque para alterar.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Idiomas</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Usar nomes de contatos</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Procure nomes da sua lista de contatos</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Utilizar entradas do dicionário de utilizador</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Procurar entradas nos dicionários do utilizador</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Dicionários do utilizador</string>

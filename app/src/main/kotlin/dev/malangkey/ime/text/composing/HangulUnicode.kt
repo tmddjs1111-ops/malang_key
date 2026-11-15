@@ -311,6 +311,8 @@ object HangulUnicode : Composer {
             }
         } else if (choseongMap.containsKey(key)) {
             if (state.cho == null) {
+                // 홀로 있는 모음(ㅏ) 뒤의 자음은 그 모음과 합치지 않고 새 글자로 시작한다. (ㅏ+ㄱ → ㅏㄱ, 가 아님)
+                if (state.jung != null) state.commitPreedit()
                 state.cho = choseongMap[key]
             } else if (state.jung == null) {
                 state.commitPreedit()

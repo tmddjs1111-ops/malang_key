@@ -19,8 +19,14 @@ package dev.malangkey.ime.smartbar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import dev.malangkey.ime.smartbar.quickaction.QuickAction
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -436,12 +442,27 @@ private fun MalangSmartbarRow(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val slotsToShow = malangSlots.take(malangSlotsCount)
+        val highlighted by SmartbarHighlight.keyCodes.collectAsState()
+        val glow by rememberInfiniteTransition(label = "smartbarGlow").animateFloat(
+            initialValue = 0.35f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(650), RepeatMode.Reverse),
+            label = "smartbarGlowAlpha",
+        )
         for (action in slotsToShow) {
+            val isHighlighted = action is QuickAction.InsertKey && action.data.code in highlighted
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(horizontal = 2.dp, vertical = 4.dp),
+                    .padding(horizontal = 2.dp, vertical = 4.dp)
+                    .then(
+                        if (isHighlighted) {
+                            Modifier.border(2.dp, SmartbarHighlightColor.copy(alpha = glow), RoundedCornerShape(12.dp))
+                        } else {
+                            Modifier
+                        }
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 QuickActionButton(

@@ -33,6 +33,13 @@
   "key[code=-5]": { "background": "var(--key-bg-pressed)", "foreground": "var(--key-fg)" },
   "smartbar": { "background": "var(--bg)" },
   "smartbar-item": { "foreground": "var(--key-fg)" },
+  "smartbar-action-key": { "foreground": "var(--key-fg)" },
+  "smartbar-action-key-icon": { "foreground": "var(--key-fg)" },
+  "smartbar-action-tile": { "foreground": "var(--key-fg)" },
+  "smartbar-action-tile-icon": { "foreground": "var(--key-fg)" },
+  "smartbar-action-tile-text": { "foreground": "var(--key-fg)" },
+  "smartbar-shared-actions-toggle": { "foreground": "var(--key-fg)" },
+  "smartbar-extended-actions-toggle": { "foreground": "var(--key-fg)" },
   "smartbar-candidate-word": { "padding": "10dp 0dp", "margin": "4dp" },
   "key-hint": { "font-size": "12sp" }
 }

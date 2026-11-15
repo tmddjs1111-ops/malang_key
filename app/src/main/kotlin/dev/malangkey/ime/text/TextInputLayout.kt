@@ -33,7 +33,7 @@ import dev.malangkey.ime.smartbar.IncognitoDisplayMode
 import dev.malangkey.ime.smartbar.InlineSuggestionsStyleCache
 import dev.malangkey.ime.smartbar.Smartbar
 import dev.malangkey.ime.smartbar.quickaction.QuickActionsOverflowPanel
-import dev.malangkey.ime.text.keyboard.TextKeyboardLayout
+import dev.malangkey.ime.text.keyboard.TextKeyboardWithWideGrid
 import dev.malangkey.ime.theme.FlorisImeUi
 import dev.malangkey.keyboardManager
 import dev.patrickgold.jetpref.datastore.model.collectAsState
@@ -84,7 +84,7 @@ fun TextInputLayout(
                         painter = painterResource(R.drawable.ic_incognito),
                     )
                 }
-                TextKeyboardLayout(evaluator = evaluator)
+                TextKeyboardWithWideGrid(evaluator = evaluator)
             }
         }
     }

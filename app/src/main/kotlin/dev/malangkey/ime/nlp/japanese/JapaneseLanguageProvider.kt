@@ -347,6 +347,13 @@ class JapaneseLanguageProvider(val context: Context) : SpellingProvider, Suggest
         return 0.0
     }
 
+    /** Deletes the learned candidate order: our per-reading history and Mozc's own user history. */
+    suspend fun clearLearning() {
+        userHistory.clear()
+        historyFile.delete()
+        mozc.clearUserData()
+    }
+
     override suspend fun destroy() {
         mozc.close()
         scope.cancel()

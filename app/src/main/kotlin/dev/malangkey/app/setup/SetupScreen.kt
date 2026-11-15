@@ -72,6 +72,7 @@ import dev.malangkey.lib.compose.FlorisScreen
 import dev.malangkey.lib.util.InputMethodUtils
 import dev.malangkey.lib.util.launchActivity
 import dev.malangkey.lib.util.launchUrl
+import dev.malangkey.subtypeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -112,6 +113,7 @@ fun SetupScreen() = FlorisScreen {
         }
 
         val finish: () -> Unit = {
+            ensureDefaultSubtype(context)
             scope.launch { prefs.internal.isImeSetUp.set(true) }
             navController.navigate(Routes.Settings.Home) {
                 popUpTo(navController.graph.id) { inclusive = true }
@@ -197,7 +199,11 @@ fun SetupScreen() = FlorisScreen {
                         .padding(horizontal = 24.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    MalangButton("건너뛰기", modifier = Modifier.weight(1f), primary = false, onClick = finish)
+                    // 자판을 두 개 이상 고르기 전에는 건너뛰어도 자판 고르는 단계로 보낸다.
+                    MalangButton("건너뛰기", modifier = Modifier.weight(1f), primary = false) {
+                        val subtypeManager by context.subtypeManager()
+                        if (subtypeManager.subtypes.size >= 2) finish() else navController.navigate(Routes.Setup.Quick)
+                    }
                     MalangButton("간단 설정 시작", modifier = Modifier.weight(2f)) {
                         navController.navigate(Routes.Setup.Quick)
                     }

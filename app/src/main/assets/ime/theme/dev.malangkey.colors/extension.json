@@ -75,6 +75,15 @@
       "stylesheet": "stylesheets/purple.json"
     },
     {
+      "id": "vanilla",
+      "label": "말랑키 바닐라 (Vanilla)",
+      "authors": [
+        "Malang Key"
+      ],
+      "isNight": false,
+      "stylesheet": "stylesheets/vanilla.json"
+    },
+    {
       "id": "black",
       "label": "블랙 (Black)",
       "authors": [

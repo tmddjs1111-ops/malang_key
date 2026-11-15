@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="qs.css">
+<script src="lucide.js"></script><script src="qs.js"></script>
+<script>
+function layoutCard(name, who, on) {
+  return `<div class="card" style="padding:11px 13px;display:flex;align-items:center;gap:10px;${on ? "border:2px solid var(--sec)" : ""}">
+    <div style="flex:1"><div style="font-size:15px;font-weight:700">${name}</div><div style="font-size:12px;color:var(--sum);margin-top:2px">${who}</div></div>
+    <span style="width:22px;height:22px;border-radius:6px;${on ? "background:var(--sec)" : "border:1.5px solid var(--border)"};display:flex;align-items:center;justify-content:center;color:#fff">${on ? I("check", 'style="width:15px;height:15px"') : ""}</span>
+  </div>`;
+}
+function s1() {
+  return statusBar() + wizTop(1, "언어·자판", "평소 쓰던 자판을 고르면 돼요", { noMore: true }) +
+    `<div class="body">${layoutCard("두벌식", "컴퓨터 키보드와 같은 배치", true)}${layoutCard("천지인", "버튼 12개 · 예전 폰 자판", true)}</div>` +
+    mission("스페이스바를 옆으로 밀어 자판을 바꿔 보세요", "지금 자판: 두벌식", "0 / 1") +
+    testbar("안녕") +
+    strip("자판", [["두벌식", 1, "check"], ["천지인", 1, "check"], ["단모음"], ["획추가"]]) +
+    keyboard({ space: "◀  두벌식  ▶", glow: "space" }) + `<div class="gesture"><i></i></div>`;
+}
+function slotRow() {
+  const slots = [["clipboard-paste", "붙여넣기"], ["copy", "복사"], ["undo-2", "실행 취소", 1], ["smile", "이모지"], ["chevron-left", "왼쪽"], ["chevron-right", "오른쪽"]];
+  return `<div style="background:var(--sec);border-radius:14px;padding:6px;display:flex;gap:5px">${slots.map(([ic, t, nw]) =>
+    `<div style="flex:1;height:44px;border-radius:9px;background:${nw ? "#FFF1CF" : "rgba(255,255,255,.14)"};color:${nw ? "var(--cocoa)" : "#FFF1CF"};display:flex;align-items:center;justify-content:center;${nw ? "outline:2px solid var(--mark);outline-offset:1px" : ""}">${I(ic, 'style="width:18px;height:18px"')}</div>`).join("")}</div>`;
+}
+function palette() {
+  const p = [["scissors", "잘라내기"], ["undo-2", "실행 취소", 1], ["redo-2", "다시 실행"], ["text-cursor-input", "커서 이동"]];
+  return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${p.map(([ic, t, on]) =>
+    `<div style="height:58px;border-radius:12px;background:${on ? "var(--sec)" : "#FCF1D2"};color:${on ? "#fff" : "var(--title)"};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600">${I(ic, 'style="width:18px;height:18px"')}${t}</div>`).join("")}</div>`;
+}
+function s3() {
+  return statusBar() + wizTop(3, "스마트 바", "키보드 위 버튼 줄에 뭘 둘지 골라요", { done: [1, 2], noMore: true }) +
+    `<div class="body" style="gap:8px"><div style="font-size:12px;font-weight:700;color:var(--sec)">지금 버튼 줄</div>${slotRow()}<div style="font-size:12px;font-weight:700;color:var(--sec)">넣을 수 있는 기능</div>${palette()}</div>` +
+    mission("붙여넣기 성공!", "‘말랑키 테스트’를 미리 복사해 뒀어요", "1 / 1", true) +
+    testbar("말랑키 테스트") +
+    keyboard({ sb: ["clipboard-paste", "copy", "undo-2", "smile", "chevron-left", "chevron-right"], sbNew: 2 }) + `<div class="gesture"><i></i></div>`;
+}
+function phraseGrid() {
+  const ph = [["안녕하세요!"], ["감사합니다."], ["지금 가고 있어요."], ["네, 알겠습니다."], ["조금 늦을 것 같아요."], ["연락 드릴게요!"], ["", 1], ["", 1], ["", 1]];
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${ph.map(([t, e]) =>
+    e ? `<div style="height:40px;border-radius:11px;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;color:#B9A79A;font-size:12px;font-weight:600">＋ 추가</div>`
+      : `<div style="height:40px;border-radius:11px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;font-weight:600;padding:0 4px;color:var(--title)">${t}</div>`).join("")}</div>`;
+}
+function s4() {
+  return statusBar() + wizTop(4, "클립보드·상용구", "자주 쓰는 말을 꾹 눌러 한 번에", { done: [1, 2, 3], noMore: true }) +
+    `<div class="body">${phraseGrid()}</div>` +
+    mission("마침표를 꾹 눌러 ‘감사합니다.’를 넣어 보세요", null, "0 / 1") +
+    testbar("오늘 도와줘서 ") +
+    keyboard({ glow: "." }) + `<div class="gesture"><i></i></div>`;
+}
+</script>
+<style> body { width: 1320px; } .col { width: 340px; } </style>
+</head>
+<body><div class="canvas">
+  <div class="eyebrow">빠른 설정 개선 · 단계별</div>
+  <div class="h1">설명은 글 대신, 키보드 위를 직접 가리킨다</div>
+  <div class="lead">각 단계의 설명이 “위쪽 글”이 아니라 <b style="color:var(--cocoa)">아래 테스트 키보드의 그 키</b>에 붙습니다. 그리고 그 키를 실제로 눌러보는 게 미션입니다.</div>
+
+  <div class="row">
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="s1"></div>
+        <div class="tip down" style="left:70px;top:598px;--ax:96px">옆으로 밀면 <b>천지인</b>으로 바뀌어요</div>
+        <div class="hand" style="left:214px;top:664px"><i data-lucide="pointer"></i></div>
+      </div>
+      <div class="cap"><b><span class="num">1</span>언어·자판</b><span>카드마다 “누구한테 맞는 자판인지” 한 줄. 두 개 이상 고르면 미션이 생기고, 스페이스바가 반짝이며 <b>밀어서 바꾸는 법</b>을 그 자리에서 알려줘요. 고른 자판은 키보드 위 칩으로 남아 바로 바꿔 쳐볼 수 있어요.</span></div>
+    </div>
+
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="s3"></div>
+        <div class="tip up" style="left:96px;top:300px;--ax:90px">실행 취소 · <code>말랑키|</code> → <code>말랑|</code><br>방금 친 걸 되돌려요</div>
+        <div class="tip down" style="left:128px;top:438px;--ax:16px">넣자마자 여기 생겨요</div>
+      </div>
+      <div class="cap"><b><span class="num">3</span>스마트 바</b><span>기능을 누르면 <b>무슨 일이 일어나는지</b> 예시로 보여주고, 버튼 줄을 바꾸면 아래 진짜 스마트바가 즉시 바뀌어요. 붙여넣기를 눌러보라는 미션을 위해 테스트 문구를 <b>미리 복사</b>해 둬서 “눌렀는데 아무 일도 없네?”가 안 생겨요.</span></div>
+    </div>
+
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="s4"></div>
+        <div class="pgrid" style="left:96px;top:440px;width:236px">
+          <div>안녕하세요!</div><div class="sel">감사합니다.</div><div>지금 가고 있어요.</div>
+          <div>네, 알겠습니다.</div><div>조금 늦을 것 같아요.</div><div>연락 드릴게요!</div>
+          <div class="empty">＋</div><div class="empty">＋</div><div class="empty">＋</div>
+        </div>
+        <div class="hand" style="left:206px;top:462px"><i data-lucide="pointer"></i></div>
+        <div class="tip" style="left:30px;top:300px">① 마침표를 꾹 → ② 원하는 칸으로 밀고<br>→ ③ 손을 떼면 바로 입력돼요</div>
+      </div>
+      <div class="cap"><b><span class="num">4</span>클립보드·상용구</b><span>3줄짜리 설명 대신 <b>꾹 → 밀기 → 떼기</b> 동작을 키보드 위에서 그대로 재생. 채워진 칸은 흰 바탕, 빈칸은 점선 “＋ 추가”라서 진한 색이 “선택됨”으로 오해되지 않아요.</span></div>
+    </div>
+  </div>
+</div></body></html>

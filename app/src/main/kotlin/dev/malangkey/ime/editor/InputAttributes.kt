@@ -28,7 +28,13 @@ import android.view.inputmethod.EditorInfo
 @JvmInline
 value class InputAttributes private constructor(val raw: Int) {
     val type: Type
-        get() = Type.fromInt(raw and InputType.TYPE_MASK_CLASS)
+        get() {
+            val cls = raw and InputType.TYPE_MASK_CLASS
+            // PASS 등 일부 보안 앱은 클래스 비트 없이 variation/flag만 넘긴다 (예: 0x200060).
+            // 진짜 TYPE_NULL(0)이 아니면 텍스트 입력란으로 보고 한글 조합이 되게 한다.
+            if (cls == InputType.TYPE_NULL && raw != InputType.TYPE_NULL) return Type.TEXT
+            return Type.fromInt(cls)
+        }
 
     val variation: Variation
         get() = when (type) {

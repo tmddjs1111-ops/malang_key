@@ -47,7 +47,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import dev.malangkey.R
 import dev.malangkey.app.LocalNavController
-import dev.malangkey.app.settings.theme.DialogProperty
 import dev.malangkey.ime.dictionary.DictionaryManager
 import dev.malangkey.ime.dictionary.FREQUENCY_MAX
 import dev.malangkey.ime.dictionary.FREQUENCY_MIN
@@ -73,6 +72,9 @@ import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisIconButton
 import org.florisboard.lib.compose.rippleClickable
 import org.florisboard.lib.compose.stringRes
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
 
 private val AllLanguagesLocale = FlorisLocale.from(language = "zz")
 private val UserDictionaryEntryToAdd = UserDictionaryEntry(id = 0, "", 255, null, null)
@@ -345,5 +347,27 @@ fun UserDictionaryScreen(type: UserDictionaryType) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DialogProperty(
+    text: String,
+    modifier: Modifier = Modifier,
+    trailingIconTitle: @Composable () -> Unit = { },
+    content: @Composable () -> Unit,
+) {
+    Column(modifier = modifier.padding(bottom = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 8.dp),
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            trailingIconTitle()
+        }
+        content()
     }
 }

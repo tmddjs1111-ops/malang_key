@@ -459,8 +459,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Изключено от системните настройки. Правописмите грешки няма да бъдат подчертавани с червено. Докоснете, за да промените.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Не е избрана услуга за проверка на правописа в текстови полета. Докоснете, за да промените.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Езици</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Използване на имената от контактите</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Търси в имената от списъка с контакти</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Потребителски речнци</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Търси в потребителските речници</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Потребителски речници</string>

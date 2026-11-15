@@ -23,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import dev.malangkey.app.ext.EditorAction
 import dev.malangkey.app.settings.advanced.Backup
 import dev.malangkey.appContext
 import dev.malangkey.ime.theme.ThemeExtensionEditor
@@ -53,6 +52,8 @@ import org.florisboard.lib.kotlin.io.subFile
 import java.io.Closeable
 import java.io.File
 import java.util.UUID
+import dev.malangkey.lib.ext.ExtensionComponent
+import kotlin.reflect.KClass
 
 class CacheManager(context: Context) {
     companion object {
@@ -239,4 +240,16 @@ class CacheManager(context: Context) {
         val ext: Extension?,
         var skipReason: Int = NATIVE_NULLPTR.toInt(),
     )
+}
+
+sealed class EditorAction {
+    object ManageMetaData : EditorAction()
+
+    object ManageDependencies : EditorAction()
+
+    object ManageFiles : EditorAction()
+
+    data class CreateComponent<T : ExtensionComponent>(val type: KClass<T>) : EditorAction()
+
+    data class ManageComponent(val editor: ExtensionComponent) : EditorAction()
 }

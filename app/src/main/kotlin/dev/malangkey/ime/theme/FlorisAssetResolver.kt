@@ -23,7 +23,12 @@ import org.florisboard.lib.snygg.value.SnyggAssetResolver
 import java.net.URI
 
 class FlorisAssetResolver(val context: Context, val themeInfo: ThemeManager.ThemeInfo) : SnyggAssetResolver {
-    override fun resolveAbsolutePath(uri: String) = runCatching {
+    override fun resolveAbsolutePath(uri: String): Result<String> {
+        CustomThemeImage.resolve(context, uri)?.let { return it }
+        return resolveFlexPath(uri)
+    }
+
+    private fun resolveFlexPath(uri: String) = runCatching {
         val uri = URI.create(uri)
         require(uri.scheme == "flex")
         require(uri.authority.isNullOrEmpty())

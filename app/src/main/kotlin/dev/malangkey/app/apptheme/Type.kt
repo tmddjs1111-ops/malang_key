@@ -32,7 +32,10 @@ val JuaFontFamily = FontFamily(
     Font(R.font.m_plus_rounded_1c, FontWeight.Normal)
 )
 val GmarketSansFontFamily = FontFamily(Font(R.font.gmarket_sans, FontWeight.Normal))
-val PretendardFontFamily = FontFamily(Font(R.font.pretendard, FontWeight.Normal))
+val PretendardFontFamily = FontFamily(
+    Font(R.font.pretendard, FontWeight.Normal),
+    Font(R.font.pretendard_bold, FontWeight.Bold),
+)
 // noto_sans.ttf is a variable font (wght 100-900) whose default instance is Thin; pin it to Regular.
 @OptIn(ExperimentalTextApi::class)
 val NotoSansFontFamily = FontFamily(

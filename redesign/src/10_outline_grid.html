@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+  @font-face { font-family: "Pretendard"; src: url("PretendardVariable.woff2") format("woff2-variations"); font-weight: 45 920; }
+  @font-face { font-family: "Jua"; src: url("jua.ttf"); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1240px; background: #F2EADB; font-family: "Pretendard"; color: #3A211B; padding: 36px 40px; }
+  h1 { font-family: "Jua"; font-weight: 400; font-size: 32px; }
+  p.lead { font-size: 15px; color: #866A5F; margin-top: 6px; line-height: 1.55; }
+  .grid { display: grid; grid-template-columns: repeat(3, 360px); gap: 30px; margin-top: 26px; }
+  .lab { font-size: 15px; font-weight: 700; margin-bottom: 8px; display: flex; gap: 8px; align-items: baseline; }
+  .lab small { font-size: 12.5px; font-weight: 500; color: #866A5F; }
+  .row-title { grid-column: 1 / -1; font-size: 14px; font-weight: 700; color: #68463B; margin-top: 8px; margin-bottom: -16px; }
+  /* 360px = 휴대폰 키보드 폭(dp). 키 사이 간격: 좌우 4dp, 위아래 10dp */
+  .kb { width: 360px; padding: 8px 2px 10px; border-radius: 14px; }
+  .r { display: flex; gap: 4px; margin-top: 10px; }
+  .r:first-child { margin-top: 0; }
+  .k { flex: 1; height: 44px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: "Jua"; font-size: 19px; position: relative; }
+  .k sup { position: absolute; top: 3px; right: 4px; font-size: 8.5px; font-family: "Pretendard"; opacity: .6; }
+  .k.w { flex: 1.45; font-size: 13px; }
+  .k.sp { flex: 4.2; font-size: 13px; }
+  .pad { padding: 0 17px; }
+  .k.g { height: 44px; font-size: 18px; }
+</style>
+<script>
+const THEMES = {
+  cream: { bg: "#FCF5D6", key: "#FFFFFF", fg: "#311D18", fkey: "#311D18", ffg: "#FCF5D6", ent: "#5D4037", efg: "#FFFFFF" },
+  pink:  { bg: "#FFF0F5", key: "#FFD1DC", fg: "#4A3B32", fkey: "#FFB6C1", ffg: "#4A3B32", ent: "#FF8DA1", efg: "#FFFFFF" },
+};
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+// 외곽선은 키 바깥(간격 쪽)으로, 키마다 자기 글자색 30%.
+function grid(theme, outDp, inDp) {
+  const t = THEMES[theme];
+  const st = (fg) => (outDp > 0 ? `box-shadow:0 0 0 ${outDp}px ${hexA(fg, 0.3)}${inDp > 0 ? `, inset 0 0 0 ${inDp}px ${hexA(fg, 0.3)}` : ""};` : "");
+  const k = (c) => `<div class="k g" style="background:${t.key};color:${t.fg};${st(t.fg)}">${c}</div>`;
+  const f = (c) => `<div class="k g" style="background:${t.fkey};color:${t.ffg};${st(t.ffg)};font-size:15px">${c}</div>`;
+  const e = `<div class="k g" style="background:${t.ent};color:${t.efg};${st(t.efg)}">↵</div>`;
+  return `<div class="kb" style="background:${t.bg}">
+    <div class="r">${f("⌨")}${k("ㅣ")}${k("ㆍ")}${k("ㅡ")}${f("⌫")}</div>
+    <div class="r">${f(",")}${k("ㄱㅋ")}${k("ㄴㄹ")}${k("ㄷㅌ")}${f("한")}</div>
+    <div class="r">${f("123")}${k("ㅂㅍ")}${k("ㅅㅎ")}${k("ㅈㅊ")}${e}</div>
+    <div class="r">${f("?123")}${f("␣")}${k("ㅇㅁ")}${f(".")}${f("·")}</div>
+  </div>`;
+}
+function kb(theme, dp) {
+  const t = THEMES[theme];
+  const ring = (fg) => dp > 0 ? `box-shadow:0 0 0 ${dp}px ${hexA(fg, 0.3)};` : "";
+  const k = (c, sup, cls = "") => `<div class="k ${cls}" style="background:${t.key};color:${t.fg};${ring(t.fg)}">${c}${sup ? `<sup>${sup}</sup>` : ""}</div>`;
+  const f = (c, cls = "w") => `<div class="k ${cls}" style="background:${t.fkey};color:${t.ffg};${ring(t.ffg)}">${c}</div>`;
+  const e = `<div class="k w" style="background:${t.ent};color:${t.efg};${ring(t.efg)}">↵</div>`;
+  const r1 = "ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ".split(""), h = "1234567890".split("");
+  return `<div class="kb" style="background:${t.bg}">
+    <div class="r">${r1.map((c, i) => k(c, h[i])).join("")}</div>
+    <div class="r pad">${"ㅁㄴㅇㄹㅎㅗㅓㅏㅣ".split("").map(c => k(c)).join("")}</div>
+    <div class="r">${f("⇧")}${"ㅋㅌㅊㅍㅠㅜㅡ".split("").map(c => k(c)).join("")}${f("⌫")}</div>
+    <div class="r">${f("?123")}${f(",", "")}${k("한국어", "", "sp")}${f(".", "")}${e}</div>
+  </div>`;
+}
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-grid]").forEach(el => {
+    const [theme, o, i] = el.dataset.grid.split(":");
+    el.innerHTML = grid(theme, parseFloat(o), parseFloat(i));
+  });
+  document.querySelectorAll("[data-kb]").forEach(el => {
+    const [theme, dp] = el.dataset.kb.split(":");
+    el.innerHTML = kb(theme, parseFloat(dp));
+  });
+});
+</script>
+</head>
+<body>
+  <h1>20키(천지인)에서 최대 두께</h1>
+  <p class="lead">20키는 키가 쿼티보다 두 배 넓지만 키 사이 간격은 같아요 (좌우 4dp). 그래서 바깥으로만 그리면 최대 2dp에서 멈춥니다.<br>색은 키마다 자기 글자색 30%.</p>
+  <div class="grid">
+    <div class="row-title">기본 화이트 · 20키</div>
+    <div><div class="lab">0 <small>외곽선 없음</small></div><div data-grid="cream:0:0"></div></div>
+    <div><div class="lab">A · 10 <small>바깥 2dp만 (지금 계획)</small></div><div data-grid="cream:2:0"></div></div>
+    <div><div class="lab">B · 10 <small>바깥 2dp + 안쪽 2dp = 4dp</small></div><div data-grid="cream:2:2"></div></div>
+    <div class="row-title">파스텔 핑크 · 20키</div>
+    <div><div class="lab">0 <small>외곽선 없음</small></div><div data-grid="pink:0:0"></div></div>
+    <div><div class="lab">A · 10 <small>바깥 2dp만</small></div><div data-grid="pink:2:0"></div></div>
+    <div><div class="lab">B · 10 <small>바깥 2dp + 안쪽 2dp</small></div><div data-grid="pink:2:2"></div></div>
+  </div>
+</body></html>

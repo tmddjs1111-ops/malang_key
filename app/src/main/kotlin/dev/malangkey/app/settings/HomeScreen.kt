@@ -38,6 +38,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import dev.malangkey.ime.theme.CustomSmartbarIcons
+import dev.malangkey.app.settings.theme.ThemePickerSection
+import dev.malangkey.app.settings.theme.MyThemesSection
+import dev.malangkey.app.settings.theme.CurrentThemeCard
+import dev.malangkey.ime.theme.CustomThemeImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -169,19 +174,20 @@ private fun ColumnScope.MainTabContent(
     if (!isFlorisBoardEnabled) {
         MalangErrorCard(
             modifier = warningModifier,
-            text = stringRes(R.string.settings__home__ime_not_enabled),
+            text = "말랑키가 꺼져 있어요. 눌러서 켜 주세요.",
             onClick = { dev.malangkey.lib.util.InputMethodUtils.showImeEnablerActivity(context) },
         )
     } else if (!isFlorisBoardSelected) {
         MalangWarningCard(
             modifier = warningModifier,
-            text = stringRes(R.string.settings__home__ime_not_selected),
+            text = "지금 키보드가 말랑키가 아니에요. 눌러서 말랑키로 바꿔 주세요.",
             onClick = { dev.malangkey.lib.util.InputMethodUtils.showImePicker(context) },
         )
     } else if (subtypes.isEmpty()) {
-        MalangErrorCard(
+        // 자판을 하나도 고르지 않아도 기본 한국어 자판으로 쓸 수 있으니 오류가 아닌 안내로 보여 준다.
+        MalangWarningCard(
             modifier = warningModifier,
-            text = "현재 말랑키 키보드 설정이 안되어있습니다\n키보드를 선택해주세요",
+            text = "아직 고른 자판이 없어서 기본 한국어 자판이 나와요. 눌러서 쓸 자판을 골라 주세요.",
             onClick = { navController.navigate(Routes.Settings.Keyboard) },
         )
     }
@@ -378,6 +384,9 @@ private fun MainNavItem(
 private fun GameTabContent(navController: androidx.navigation.NavController) {
     val prefs by FlorisPreferenceStore
     val best by prefs.malang.anthemBestScore.collectAsState()
+    val bestFull by prefs.malang.anthemBestScoreFull.collectAsState()
+    fun bestLabel(score: Int) =
+        if (score > 0) "최고 ${score}점 · ${dev.malangkey.app.game.TypingScore.gradeOf(score)}등급" else "아직 기록 없음"
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -396,29 +405,25 @@ private fun GameTabContent(navController: androidx.navigation.NavController) {
             Text("가사를 빠르고 정확하게 따라 쳐 보세요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
             Text("Typing Game", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                if (best > 0) "내 최고 점수  ${best}점 · ${dev.malangkey.app.game.TypingScore.gradeOf(best)}등급" else "아직 기록이 없어요",
-                color = MalangCardText,
-                fontSize = 17.sp,
-                fontFamily = MalangJuaFont,
-            )
+            Text("1절  ·  ${bestLabel(best)}", color = MalangCardText, fontSize = 17.sp, fontFamily = MalangJuaFont)
+            Text("전체  ·  ${bestLabel(bestFull)}", color = MalangCardText, fontSize = 17.sp, fontFamily = MalangJuaFont)
         }
         MalangSettingsSection(
             title = "도전하기",
             items = listOf(
                 {
-                    MalangNavRow(title = "1절 도전", summary = "1절과 후렴 · 4줄") {
+                    MalangNavRow(title = "1절 도전", summary = "1절과 후렴 · 4줄 · ${bestLabel(best)}") {
                         navController.navigate(Routes.Game.Anthem(full = false))
                     }
                 },
                 {
-                    MalangNavRow(title = "전체 도전", summary = "1~4절과 후렴 · 16줄") {
+                    MalangNavRow(title = "전체 도전", summary = "1~4절과 후렴 · 16줄 · ${bestLabel(bestFull)}") {
                         navController.navigate(Routes.Game.Anthem(full = true))
                     }
                 },
             ),
         )
-        MalangInfoCard("점수 = 타수 × 정확도². 빨리 칠수록 올라가고, 오타가 나면 크게 깎여요. 결과 화면에서 점수 카드를 사진으로 저장할 수 있어요.")
+        MalangInfoCard("점수 = 타수 × 정확도². 빨리 칠수록 올라가고, 오타가 나면 크게 깎여요. 최고 기록은 '고스트'가 되어 다음 판에서 함께 달려요. 결과 화면에서 점수 카드를 사진으로 저장할 수 있어요.")
     }
 }
 
@@ -451,19 +456,27 @@ private fun ThemeTabContent(
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ThemeHeroCard(onClick = { navController.navigate(Routes.Settings.Theme) })
+        CurrentThemeCard(onCustomize = { navController.navigate(Routes.Settings.Theme) })
+        ThemePickerSection()
+        MyThemesSection()
 
         MalangSettingsSection(
-            title = "외곽선",
+            title = "키 모양",
             items = listOf(
-                { MalangSliderRow(prefs.malang.keyBorderThickness, "두께", min = 0, max = 5, unit = "dp") },
-                { MalangSliderRow(prefs.malang.keyBorderOpacity, "불투명도", min = 0, max = 100) },
-            ),
-        )
-
-        MalangSettingsSection(
-            title = "글꼴",
-            items = listOf(
+                {
+                    // 0은 테마에 들어 있는 테두리 그대로. dp 같은 개발 단위는 보여주지 않는다.
+                    MalangSliderRow(
+                        prefs.malang.keyBorderThickness, "외곽선 두께", min = 0, max = 10,
+                        valueLabel = { if (it == 0) "테마 기본" else "$it" },
+                        // 오른쪽 값에 이미 '테마 기본'이 보이므로 양 끝은 숫자로 둔다.
+                        rangeLabels = "0" to "10",
+                    )
+                },
+                {
+                    // '테마 기본'(0)에서는 테마 테두리를 그대로 쓰므로 불투명도가 적용되지 않는다.
+                    val thickness by prefs.malang.keyBorderThickness.collectAsState()
+                    MalangSliderRow(prefs.malang.keyBorderOpacity, "외곽선 불투명도", min = 0, max = 100, enabled = thickness > 0)
+                },
                 {
                     MalangChoiceRow(
                         prefs.malang.keyboardFontFamily,
@@ -475,7 +488,7 @@ private fun ThemeTabContent(
                     MalangNavRow(
                         title = "글자 크기·키 간격",
                         summary = "쿼티와 격자 자판(천지인·20키)을 따로 조절해요.",
-                        onClick = { navController.navigate(Routes.Settings.Keyboard) },
+                        onClick = { navController.navigate(Routes.Settings.KeyboardLayout) },
                     )
                 },
             ),
@@ -486,15 +499,15 @@ private fun ThemeTabContent(
             items = listOf(
                 {
                     MalangNavRow(
-                        title = "공유된 테마 가져오기",
-                        summary = "다른 사람이 만든 테마 파일을 불러옵니다.",
+                        title = "테마 확장 파일 가져오기",
+                        summary = "FlorisBoard용 테마 확장을 불러옵니다. 말랑키 테마 파일은 내 테마에서 가져와요.",
                         onClick = { navController.navigate(Routes.Ext.Import(ExtensionImportScreenType.EXT_THEME)) },
                     )
                 },
                 {
                     MalangNavRow(
                         title = "처음 모양으로 되돌리기",
-                        summary = "커스텀 색, 키 모양, 글꼴, 글자 크기를 기본값으로 돌립니다.",
+                        summary = "커스텀 색, 배경 사진, 키 모양, 글꼴, 글자 크기를 기본값으로 돌립니다.",
                         onClick = { confirmReset = true },
                     )
                 },
@@ -504,15 +517,17 @@ private fun ThemeTabContent(
 
     if (confirmReset) {
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
         AlertDialog(
             onDismissRequest = { confirmReset = false },
             containerColor = MalangSettingsCard,
             title = { Text("처음 모양으로 되돌릴까요?", color = MalangSettingsTitle, fontFamily = MalangJuaFont, fontSize = 20.sp) },
-            text = { Text("커스텀 색과 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요.", color = MalangSettingsSummary) },
+            text = { Text("커스텀 색과 배경 사진, 스마트바 사진 아이콘, 외곽선, 글꼴, 글자 크기가 기본값으로 돌아가요. 저장해 둔 내 테마는 남아요.", color = MalangSettingsSummary) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmReset = false
                     scope.launch {
+                        prefs.malang.customBaseThemeId.set("")
                         prefs.malang.customKeyboardBgColor.set(Color.Unspecified)
                         prefs.malang.customKeyBgColor.set(Color.Unspecified)
                         prefs.malang.customKeyTextColor.set(Color.Unspecified)
@@ -526,40 +541,17 @@ private fun ThemeTabContent(
                         prefs.malang.gridKeyFontSizeMultiplier.set(100)
                         prefs.malang.gridKeyHintFontSizeMultiplier.set(100)
                         prefs.malang.keyBorderThickness.set(0)
-                        prefs.malang.keyBorderOpacity.set(20)
+                        prefs.malang.keyBorderOpacity.set(prefs.malang.keyBorderOpacity.default)
+                        prefs.malang.customSmartbarBgColor.set(Color.Unspecified)
+                        prefs.malang.customSmartbarIconColor.set(Color.Unspecified)
+                        CustomThemeImage.reset(context, prefs)
+                        CustomSmartbarIcons.reset(context, prefs)
                     }
                 }) { Text("되돌리기", color = MalangSettingsSection) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmReset = false }) { Text("취소", color = MalangSettingsSummary) }
             },
-        )
-    }
-}
-
-/** 테마 탭 맨 위 카드: 테마 고르기 화면으로 간다. 메인 탭의 큰 카드와 같은 모양. */
-@Composable
-private fun ThemeHeroCard(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(132.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(MalangCocoa)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("테마 고르기", color = MalangCardText, fontSize = 30.sp, lineHeight = 34.sp, fontFamily = MalangJuaFont)
-            Text("키보드 색과 배경을 바꿔요", color = MalangCardSubLight, fontSize = 15.sp, fontFamily = MalangGowunFont)
-            Text("Keyboard Theme", color = MalangCardSubMuted, fontSize = 12.sp, fontFamily = MalangGowunFont)
-        }
-        Icon(
-            painter = painterResource(R.drawable.mk_tab_theme),
-            contentDescription = null,
-            tint = MalangCardText,
-            modifier = Modifier.size(64.dp),
         )
     }
 }

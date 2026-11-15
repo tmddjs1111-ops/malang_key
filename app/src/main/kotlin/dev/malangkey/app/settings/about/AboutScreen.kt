@@ -16,6 +16,9 @@
 
 package dev.malangkey.app.settings.about
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.BuildConfig
@@ -86,8 +90,41 @@ fun AboutScreen() = MalangSettingsScreen(title = "앱 정보", subtitle = "About
                 }
             },
             {
+                MalangNavRow(
+                    title = "입력칸 실험실",
+                    summary = "보안 입력칸에서 한글이 안 붙을 때 원인을 기록해요.",
+                ) {
+                    navController.navigate(Routes.Settings.InputLab)
+                }
+            },
+            {
                 MalangNavRow(title = "개인정보처리방침") {
                     context.launchUrl(R.string.florisboard__privacy_policy_url)
+                }
+            },
+        ),
+    )
+
+    MalangSettingsSection(
+        title = "개발자",
+        items = listOf(
+            {
+                val email = stringResource(R.string.malang__developer_email)
+                MalangNavRow(title = "문의하기", summary = "개인 개발자 · $email") {
+                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
+                        .putExtra(Intent.EXTRA_SUBJECT, "[말랑키] 문의 ($appVersion)")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        clipboardManager.addNewPlaintext(email)
+                        Toast.makeText(context, "메일 앱이 없어 주소를 복사했어요.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            {
+                MalangNavRow(title = "소스 코드", summary = "GitHub") {
+                    context.launchUrl(R.string.florisboard__repo_url)
                 }
             },
         ),

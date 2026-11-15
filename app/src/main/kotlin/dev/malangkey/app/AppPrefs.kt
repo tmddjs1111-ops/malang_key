@@ -29,10 +29,12 @@ import dev.malangkey.ime.core.DisplayLanguageNamesIn
 import dev.malangkey.ime.core.Subtype
 import dev.malangkey.ime.input.CapitalizationBehavior
 
-import dev.malangkey.ime.input.HapticVibrationPrimitive
+import dev.malangkey.ime.input.HapticFeel
 import dev.malangkey.ime.input.InputFeedbackActivationMode
+import dev.malangkey.ime.keyboard.GridWideAlignment
 import dev.malangkey.ime.keyboard.IncognitoMode
 import dev.malangkey.ime.keyboard.SpaceBarMode
+import dev.malangkey.ime.keyboard.WideScreenCondition
 import dev.malangkey.ime.landscapeinput.LandscapeInputUiMode
 import dev.malangkey.ime.media.emoji.EmojiHairStyle
 import dev.malangkey.ime.media.emoji.EmojiHistory
@@ -97,7 +99,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val quickPhraseTriggerKey = enum(
             key = "clipboard__quick_phrase_trigger_key",
-            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.PERIOD,
+            default = dev.malangkey.ime.clipboard.QuickPhraseTriggerKey.ENTER,
         )
         val syncToFloris = enum(
             key = "clipboard__sync_to_floris",
@@ -168,10 +170,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "clipboard__history_hide_on_next_text_field",
             default = true,
         )
-        val advancedClipboardPopup = boolean(
-            key = "clipboard__advanced_clipboard_popup",
-            default = false,
-        )
         val clearPrimaryClipAffectsHistoryIfUnpinned = boolean(
             key = "clipboard__clear_primary_clip_affects_history_if_unpinned",
             default = true,
@@ -190,7 +188,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val doubleSpacePeriod = boolean(
             key = "correction__double_space_period",
-            default = true,
+            default = false,
         )
         val rememberCapsLockState = boolean(
             key = "correction__remember_caps_lock_state",
@@ -202,6 +200,11 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
     inner class Devtools {
         val enabled = boolean(
             key = "devtools__enabled",
+            default = false,
+        )
+        /** 입력칸 진단 기록 (앱 정보 > 입력칸 실험실). 친 글자가 기록에 남으므로 기본은 끈다. */
+        val inputDiagnostics = boolean(
+            key = "devtools__input_diagnostics",
             default = false,
         )
         val showPrimaryClip = boolean(
@@ -248,13 +251,9 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
 
     val emoji = Emoji()
     inner class Emoji {
-        val preferredHairStyle = enum(
-            key = "emoji__preferred_hair_style",
-            default = EmojiHairStyle.DEFAULT,
-        )
         val historyEnabled = boolean(
             key = "emoji__history_enabled",
-            default = true,
+            default = false,
         )
         val historyData = custom(
             key = "emoji__history_data",
@@ -279,7 +278,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionEnabled = boolean(
             key = "emoji__suggestion_enabled",
-            default = true,
+            default = false,
         )
         val suggestionType = enum(
             key = "emoji__suggestion_type",
@@ -287,7 +286,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val suggestionUpdateHistory = boolean(
             key = "emoji__suggestion_update_history",
-            default = true,
+            default = false,
         )
         val suggestionCandidateShowName = boolean(
             key = "emoji__suggestion_candidate_show_name",
@@ -320,22 +319,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val swipeRight = enum(
             key = "gestures__swipe_right",
             default = SwipeAction.SWITCH_TO_PREV_SUBTYPE,
-        )
-        val spaceBarSwipeUp = enum(
-            key = "gestures__space_bar_swipe_up",
-            default = SwipeAction.NO_ACTION,
-        )
-        val spaceBarSwipeLeft = enum(
-            key = "gestures__space_bar_swipe_left",
-            default = SwipeAction.MOVE_CURSOR_LEFT,
-        )
-        val spaceBarSwipeRight = enum(
-            key = "gestures__space_bar_swipe_right",
-            default = SwipeAction.MOVE_CURSOR_RIGHT,
-        )
-        val spaceBarLongPress = enum(
-            key = "gestures__space_bar_long_press",
-            default = SwipeAction.SHOW_INPUT_METHOD_PICKER,
         )
         val deleteKeySwipeLeft = enum(
             key = "gestures__delete_key_swipe_left",
@@ -391,6 +374,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val audioActivationMode = enum(
             key = "input_feedback__audio_activation_mode",
+            // 더 이상 쓰지 않는다. 키 소리는 스위치와 휴대폰 무음·진동 모드만 따른다.
             default = InputFeedbackActivationMode.RESPECT_SYSTEM_SETTINGS,
         )
         val audioVolume = int(
@@ -431,13 +415,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_activation_mode",
             default = InputFeedbackActivationMode.IGNORE_SYSTEM_SETTINGS,
         )
-        val hapticVibrationPrimitive = enum(
-            key = "input_feedback__haptic_vibration_primitive",
-            default = HapticVibrationPrimitive.QUICK_CLICK,
+        /** 말랑 진동의 느낌. 1.60의 쿵·기계식은 길어서 없애고, 모두 새 기본(시스템)에서 시작하도록 새 키를 쓴다. */
+        val hapticFeel = enum(
+            key = "input_feedback__haptic_feel_v4",
+            default = HapticFeel.SYSTEM,
         )
+        /** 진동 세기(%). 진동 길이는 그대로 두고 크기만 바꾼다. */
         val hapticVibrationIntensity = int(
-            key = "input_feedback__haptic_vibration_intensity",
-            default = 70,
+            key = "input_feedback__haptic_strength",
+            default = 50,
         )
         val hapticFeatKeyPress = boolean(
             key = "input_feedback__haptic_feat_key_press",
@@ -445,7 +431,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticFeatKeyLongPress = boolean(
             key = "input_feedback__haptic_feat_key_long_press",
-            default = false,
+            default = true,
         )
         val hapticFeatKeyRepeatedAction = boolean(
             key = "input_feedback__haptic_feat_key_repeated_action",
@@ -530,7 +516,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val capitalizationBehavior = enum(
             key = "keyboard__capitalization_behavior",
-            default = CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP,
+            default = CapitalizationBehavior.CAPSLOCK_BY_CYCLE,
         )
         val fontSizeMultiplierPortrait = int(
             key = "keyboard__font_size_multiplier_portrait",
@@ -579,11 +565,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val longPressDelay = int(
             key = "keyboard__long_press_delay",
-            default = 400,
-        )
-        val spaceBarSwitchesToCharacters = boolean(
-            key = "keyboard__space_bar_switches_to_characters",
-            default = true,
+            default = 200,
         )
         val incognitoDisplayMode = enum(
             key = "keyboard__incognito_indicator",
@@ -606,6 +588,33 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val splitWhenFolded = boolean(
             key = "keyboard__split_when_folded",
             default = false,
+        )
+        /** 펼쳤을 때·가로 화면에서 쓸 한글 자판 id (예: korean). 비어 있으면 바꾸지 않는다. */
+        val wideScreenKoreanLayout = string(
+            key = "keyboard__wide_screen_korean_layout",
+            default = "",
+        )
+        val wideScreenCondition = enum(
+            key = "keyboard__wide_screen_condition",
+            default = WideScreenCondition.UNFOLDED_OR_LANDSCAPE,
+        )
+        /**
+         * 넓은 화면(펼침·가로·태블릿)에서 격자 자판(천지인·20키 등)을 삼성 키보드의 '한 손 키보드'처럼
+         * 좁혀서 한쪽에 둔다. 빈 쪽에는 자판을 옮기거나 넓히는 버튼이 생긴다.
+         */
+        val gridWideCompact = boolean(
+            key = "keyboard__grid_wide_compact",
+            default = true,
+        )
+        /** 좁힌 격자 자판의 너비 (화면 너비의 %). */
+        val gridWideWidthPercent = int(
+            key = "keyboard__grid_wide_width_percent",
+            default = 50,
+        )
+        /** 좁힌 격자 자판의 위치. 삼성 키보드의 한 손 키보드처럼 오른쪽이 기본이다. */
+        val gridWideAlignment = enum(
+            key = "keyboard__grid_wide_alignment",
+            default = GridWideAlignment.RIGHT,
         )
         /** 나눈 자판 가운데 빈 칸의 너비 (키보드 너비의 %). */
         val splitGapPercent = int(
@@ -717,16 +726,20 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "smartbar__extended_actions_placement",
             default = ExtendedActionsPlacement.ABOVE_CANDIDATES,
         )
+        /** 스마트 바 높이 (기본 높이의 %). 키보드 창은 내용 높이를 따르므로 전체 높이도 같이 바뀐다. */
+        val heightPercent = int(
+            key = "smartbar__height_percent",
+            default = 100,
+        )
         val malangSlotsCount = int(
             key = "smartbar__malang_slots_count",
-            default = 6,
+            default = 5,
         )
         val malangSlots = custom(
             key = "smartbar__malang_slots",
             default = listOf(
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_PASTE),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_COPY),
-                QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
                 // 자판에는 이모지 키가 없어서 이모지 패널은 여기서 연다.
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
@@ -780,6 +793,71 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = Color.Unspecified,
             serializer = ColorPreferenceSerializer,
         )
+        /**
+         * 커스텀 테마가 바탕으로 쓰는 테마("확장:테마"). 커스텀으로 바꿀 때 쓰던 테마가 들어간다.
+         * 비어 있으면 말랑키 기본 크림 테마를 바탕으로 쓴다. 고르지 않은(Unspecified) 커스텀 색은 이 테마 색을 따른다.
+         */
+        val customBaseThemeId = string(
+            key = "malang__custom_base_theme_id",
+            default = "",
+        )
+        /** 커스텀 테마의 스마트바 배경색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarBgColor = custom(
+            key = "malang__custom_smartbar_bg_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마의 스마트바 아이콘·글자 색. 고르지 않으면(Unspecified) 바탕 테마를 따른다. */
+        val customSmartbarIconColor = custom(
+            key = "malang__custom_smartbar_icon_color",
+            default = Color.Unspecified,
+            serializer = ColorPreferenceSerializer,
+        )
+        /** 커스텀 테마에서 스마트바 버튼 대신 쓰는 사진. [dev.malangkey.ime.theme.CustomSmartbarIcons] 참고. */
+        val customSmartbarIcons = string(
+            key = "malang__custom_smartbar_icons",
+            default = "",
+        )
+        /** 커스텀 테마 배경 사진의 파일 이름. 비어 있으면 사진 없이 색만 쓴다. */
+        val customBgImageFile = string(
+            key = "malang__custom_bg_image_file",
+            default = "",
+        )
+        /** 위치를 다시 맞출 때 쓰는 원본 사진의 파일 이름. */
+        val customBgImageSource = string(
+            key = "malang__custom_bg_image_source",
+            default = "",
+        )
+        /** 원본 사진에서 잘라 쓴 영역. "왼,위,오른,아래" 비율(0~1). */
+        val customBgImageCrop = string(
+            key = "malang__custom_bg_image_crop",
+            default = "",
+        )
+        /** 키보드 창의 가로÷세로 비율. 키보드가 뜰 때 기록해서 사진 자르기 틀에 쓴다. */
+        val keyboardWindowAspect = float(
+            key = "malang__keyboard_window_aspect",
+            default = 1.45f,
+        )
+        /** 배경 사진 흐림 단계(0~10). 0이면 흐리게 하지 않는다. */
+        val customBgImageBlur = int(
+            key = "malang__custom_bg_image_blur",
+            default = 0,
+        )
+        /** 내 테마 목록(JSON). [dev.malangkey.ime.theme.CustomThemeLibrary]가 읽고 쓴다. */
+        val customThemeLibrary = string(
+            key = "malang__custom_theme_library",
+            default = "[]",
+        )
+        /** 배경 사진 위에 배경 색상을 덮는 정도(%). */
+        val customBgImageDim = int(
+            key = "malang__custom_bg_image_dim",
+            default = 15,
+        )
+        /** 배경 사진이 있을 때 키캡 불투명도(%). */
+        val customBgImageKeyOpacity = int(
+            key = "malang__custom_bg_image_key_opacity",
+            default = 55,
+        )
         val keyboardFontFamily = string(
             key = "malang__keyboard_font_family",
             default = "jua",
@@ -807,7 +885,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val keyBorderOpacity = int(
             key = "malang__key_border_opacity",
-            default = 20,
+            default = 100,
         )
         val bgImageUri = string(
             key = "malang__bg_image_uri",
@@ -821,10 +899,24 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "malang__sound_enabled",
             default = false,
         )
-        /** 애국가 빨리치기 최고 점수. */
+        /** 애국가 빨리치기 1절 최고 점수. (예전에는 두 모드가 함께 썼다) */
         val anthemBestScore = int(
             key = "malang__anthem_best_score",
             default = 0,
+        )
+        /** 애국가 빨리치기 전체(1~4절) 최고 점수. */
+        val anthemBestScoreFull = int(
+            key = "malang__anthem_best_score_full",
+            default = 0,
+        )
+        /** 최고 기록 판의 줄별 끝낸 시각(ms, 쉼표로 구분). 다음 판의 고스트가 된다. */
+        val anthemGhost = string(
+            key = "malang__anthem_ghost",
+            default = "",
+        )
+        val anthemGhostFull = string(
+            key = "malang__anthem_ghost_full",
+            default = "",
         )
     }
 
@@ -833,10 +925,6 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val languageMode = enum(
             key = "spelling__language_mode",
             default = SpellingLanguageMode.USE_KEYBOARD_SUBTYPES,
-        )
-        val useContacts = boolean(
-            key = "spelling__use_contacts",
-            default = true,
         )
         val useUdmEntries = boolean(
             key = "spelling__use_udm_entries",
@@ -879,14 +967,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__mode",
             default = ThemeMode.FOLLOW_SYSTEM,
         )
+        // 처음 설치하면 말랑키 바닐라로 시작한다. 밤 테마도 같게 두어 다크 모드에서도 같은 모양이 나온다.
         val dayThemeId = custom(
             key = "theme__day_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val nightThemeId = custom(
             key = "theme__night_theme_id",
-            default = ExtensionComponentName("dev.malangkey.colors", "custom"),
+            default = ExtensionComponentName("dev.malangkey.colors", "vanilla"),
             serializer = ExtensionComponentName.Serializer,
         )
         val accentColor = custom(

@@ -6,4 +6,7 @@
     <cache-path
         name="game"
         path="game/"/>
+    <cache-path
+        name="theme_share"
+        path="theme-share/"/>
 </paths>

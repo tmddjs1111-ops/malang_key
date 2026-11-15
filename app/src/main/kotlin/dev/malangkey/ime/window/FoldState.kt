@@ -1,5 +1,6 @@
 package dev.malangkey.ime.window
 
+import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
@@ -19,6 +20,14 @@ import kotlinx.coroutines.launch
 object FoldState {
     private val _isUnfolded = MutableStateFlow(false)
     val isUnfolded: StateFlow<Boolean> = _isUnfolded.asStateFlow()
+
+    private val _isLandscape = MutableStateFlow(false)
+    /** 화면이 가로 방향인지. 키보드 서비스가 화면 설정이 바뀔 때마다 알려준다. */
+    val isLandscape: StateFlow<Boolean> = _isLandscape.asStateFlow()
+
+    fun onConfigurationChanged(config: Configuration) {
+        _isLandscape.value = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+    }
 
     fun observe(service: InputMethodService, scope: CoroutineScope) {
         scope.launch {

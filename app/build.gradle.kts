@@ -15,6 +15,7 @@
  */
 
 import com.android.build.api.dsl.ApplicationExtension
+import java.util.Properties
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -46,6 +47,12 @@ val projectVersionNameSuffix = projectVersionName.substringAfter("-", "").let { 
 }
 val projectBuildTimestamp: String = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z"))
+
+// Play upload key, read from the untracked local.properties. Release stays unsigned when absent.
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val uploadStoreFile: String? = localProperties.getProperty("upload.storeFile")
 
 kotlin {
     compilerOptions {
@@ -108,6 +115,17 @@ configure<ApplicationExtension> {
         compose = true
     }
 
+    signingConfigs {
+        if (uploadStoreFile != null) {
+            create("upload") {
+                storeFile = file(uploadStoreFile)
+                storePassword = localProperties.getProperty("upload.storePassword")
+                keyAlias = localProperties.getProperty("upload.keyAlias")
+                keyPassword = localProperties.getProperty("upload.keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         named("debug") {
             applicationIdSuffix = ".debug"
@@ -128,6 +146,9 @@ configure<ApplicationExtension> {
 
         named("release") {
             versionNameSuffix = projectVersionNameSuffix
+            if (uploadStoreFile != null) {
+                signingConfig = signingConfigs.getByName("upload")
+            }
 
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             isMinifyEnabled = true

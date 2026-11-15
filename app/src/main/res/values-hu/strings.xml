@@ -458,8 +458,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">Rendszerszintű kikapcsolás. Nem fognak piros vonalak megjelenni a szövegmezőkben a hibás szavak alatt. Érintse meg a változtatáshoz.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Nincs kiválasztva helyesírás ellenőrző szolgáltatás. Érintse meg a változtatáshoz.</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">Nyelvek</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">Névjegyekben lévő nevek használata</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">Nevek kikeresése a névjegyekből</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">Felhasználói szótárbejegyzések használata</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">Bejegyzések kikeresése a felhasználói szótárakból</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">Felhasználói szótárak</string>

@@ -430,8 +430,6 @@
     <string name="pref__spelling__active_spellchecker__summary_disabled">システム全体で無効。誤った単語のテキストフィールドに赤い線は表示されません。タップして変更。</string>
     <string name="pref__spelling__active_spellchecker__summary_none">インラインテキストスペルチェッカーサービスが設定されていません。タップして変更。</string>
     <string name="pref__spelling__language_mode__label" comment="Label of Language mode pref">言語</string>
-    <string name="pref__spelling__use_contacts__label" comment="Label of Use contact list pref">連絡先から名前を使用</string>
-    <string name="pref__spelling__use_contacts__summary" comment="Summary of Use contact list pref">連絡先リストから名前を検索します</string>
     <string name="pref__spelling__use_udm_entries__label" comment="Label of Use user dictionary entries pref">ユーザー辞書のエントリを使用</string>
     <string name="pref__spelling__use_udm_entries__summary" comment="Summary of Use user dictionary entries pref">ユーザー辞書からエントリを検索します</string>
     <string name="settings__dictionary__title" comment="Title of the User dictionaries screen">ユーザー辞書</string>

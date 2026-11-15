@@ -84,6 +84,7 @@ import org.florisboard.lib.kotlin.io.deleteContentsRecursively
 import org.florisboard.lib.kotlin.io.readJson
 import org.florisboard.lib.kotlin.io.subDir
 import org.florisboard.lib.kotlin.io.subFile
+import dev.malangkey.ime.theme.CustomThemeImage
 
 object Restore {
     const val MIN_VERSION_CODE = 64
@@ -161,6 +162,9 @@ fun RestoreScreen() {
             }
         }
         val workspaceFilesDir = workspace.outputDir.subDir("files")
+        if (restoreFilesSelector.jetprefDatastore) {
+            CustomThemeImage.restoreFrom(context, workspaceFilesDir)
+        }
         if (restoreFilesSelector.imeKeyboard) {
             val srcDir = workspaceFilesDir.subDir(ExtensionManager.IME_KEYBOARD_PATH)
             val dstDir = context.filesDir.subDir(ExtensionManager.IME_KEYBOARD_PATH)

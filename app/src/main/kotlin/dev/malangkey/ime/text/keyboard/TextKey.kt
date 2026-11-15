@@ -367,6 +367,12 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
                     computedHintData = TextKeyData.UNSPECIFIED
                 }
             }
+            // 기호 자판: 길게 누르면 나오는 글자 중 가장 쓸 만한 것을 모서리 힌트로 보여준다.
+            if (hintedLabel == null && data.type == KeyType.CHARACTER && prefs.keyboard.hintedSymbolsEnabled.get() &&
+                (evaluator.keyboard.mode == KeyboardMode.SYMBOLS || evaluator.keyboard.mode == KeyboardMode.SYMBOLS2)
+            ) {
+                hintedLabel = symbolPopupHint(data.code)
+            }
             if (evaluator.keyboard.mode == KeyboardMode.GRID_16KEY && data.type == KeyType.CHARACTER) {
                 val numHint = computedPopups.main?.asString(isForDisplay = true)?.takeIf { it.length == 1 && (it[0].isDigit() || "=*#?".contains(it[0])) }
                     ?: computedPopups.relevant.find { it.asString(isForDisplay = true).length == 1 && (it.asString(isForDisplay = true)[0].isDigit() || "=*#?".contains(it.asString(isForDisplay = true)[0])) }?.asString(isForDisplay = true)
@@ -378,7 +384,28 @@ class TextKey(override val data: AbstractKeyData) : Key(data) {
         }
     }
 
+    /**
+     * 기호 키 힌트: 정해 둔 글자가 팝업에 있으면 그것, 없으면 팝업의 첫 글자(main), 그다음 나머지 중 첫 글자.
+     */
+    private fun symbolPopupHint(code: Int): String? {
+        val popupLabels = buildList {
+            computedPopups.main?.let { add(it.asString(isForDisplay = true)) }
+            computedPopups.relevant.forEach { add(it.asString(isForDisplay = true)) }
+        }.filter { it.isNotBlank() && it.length <= 2 && it != code.toChar().toString() }
+        val preferred = PreferredSymbolHints[code]
+        return preferred?.takeIf { it in popupLabels } ?: popupLabels.firstOrNull()
+    }
+
     override fun toString(): String {
         return computedData.toString()
     }
 }
+
+/** 길게 누르면 여러 글자가 나오는 기호 키에서, 첫 글자보다 더 자주 쓰는 것을 힌트로 고른다. */
+private val PreferredSymbolHints = mapOf(
+    '*'.code to "★",
+    '•'.code to "♥",
+    'π'.code to "α",
+    '√'.code to "✓",
+    '→'.code to "←",
+)

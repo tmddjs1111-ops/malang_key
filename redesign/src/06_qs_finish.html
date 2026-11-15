@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="qs.css">
+<script src="lucide.js"></script><script src="qs.js"></script>
+<script>
+function themeCard(name, bg, key, ent, glyphOnDark, on) {
+  const g = glyphOnDark ? "#FFF1CF" : "#3B2420";
+  const row = (n) => `<div style="display:flex;gap:2px">${Array.from({ length: n }, () => `<i style="flex:1;height:11px;border-radius:3px;background:${key};display:block"></i>`).join("")}</div>`;
+  return `<div class="card" style="padding:8px;${on ? "border:2px solid var(--sec)" : ""};position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;margin-bottom:6px">${name}${on ? `<span style="width:18px;height:18px;border-radius:5px;background:var(--sec);color:#fff;display:flex;align-items:center;justify-content:center">${I("check", 'style="width:12px;height:12px"')}</span>` : ""}</div>
+    <div style="background:${bg};border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:3px">
+      <div style="font-family:Jua;font-size:15px;color:${g};text-align:center;padding:2px 0 4px">가나다 말랑</div>
+      ${row(8)}${row(7)}
+      <div style="display:flex;gap:2px"><i style="flex:4;height:11px;border-radius:3px;background:${key};display:block"></i><i style="flex:1;height:11px;border-radius:3px;background:${ent};display:block"></i></div>
+    </div></div>`;
+}
+function s5() {
+  return statusBar() + wizTop(5, "테마·글꼴", "키보드 색과 글자 모양을 골라요", { done: [1, 2, 3, 4], noMore: true }) +
+    `<div class="body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${themeCard("다크 초콜릿", "#3E2A24", "#5A4038", "#F6B65A", true, true)}
+      ${themeCard("파스텔 핑크", "#FFE4EA", "#FFF6F8", "#F28AA0", false, false)}
+    </div></div>` +
+    mission("고른 글꼴로 내 이름을 써 보세요", null, "") +
+    testbar(`<span style="font-family:Jua;font-size:17px">김말랑</span>`) +
+    strip("글꼴", [["주아체", 1, "check"], ["고운돋움"], ["프리텐다드"], ["감자꽃"]]) +
+    `<div style="--kbd:#3E2A24;--key:#5A4038;--glyph:#FFF1CF;--fkey:#2A1B17;--enter:#F6B65A">` +
+    keyboard({ font: "Jua" }).replace(/color: var\(--glyph\)/g, "") + `</div><div class="gesture" style="background:#3E2A24"><i style="background:#FFF1CF"></i></div>`;
+}
+function sum(ic, label, val) {
+  return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px">
+    <span style="width:32px;height:32px;border-radius:10px;background:#FCF1D2;display:flex;align-items:center;justify-content:center;color:var(--sec)">${I(ic, 'style="width:17px;height:17px"')}</span>
+    <div style="flex:1"><div style="font-size:12px;color:var(--sum)">${label}</div><div style="font-size:14.5px;font-weight:700">${val}</div></div>
+    <span style="width:20px;height:20px;border-radius:10px;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center">${I("check", 'style="width:12px;height:12px;stroke-width:3"')}</span>
+  </div>`;
+}
+function fin() {
+  return statusBar() +
+    `<div style="flex:1;display:flex;flex-direction:column;padding:26px 22px 0">
+      <div style="display:flex;justify-content:center;gap:6px">${[1, 2, 3, 4, 5].map(n => `<span style="width:30px;height:30px;border-radius:15px;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">${n}</span>`).join("")}</div>
+      <div class="jua" style="font-size:30px;color:var(--cocoa);text-align:center;margin-top:18px">준비 끝!</div>
+      <div style="font-size:14.5px;color:var(--sum);text-align:center;margin-top:4px">다섯 단계 모두 직접 쳐 보고 골랐어요</div>
+      <div class="card" style="margin-top:20px;padding:4px 0">
+        ${sum("languages", "자판", "두벌식 · 천지인")}
+        <div style="height:1px;background:var(--div);margin:0 14px"></div>
+        ${sum("volume-2", "소리 · 진동", "말랑 뽁 · 진동 켬")}
+        <div style="height:1px;background:var(--div);margin:0 14px"></div>
+        ${sum("layout-grid", "스마트 바", "붙여넣기 · 복사 · 실행 취소 외 3개")}
+        <div style="height:1px;background:var(--div);margin:0 14px"></div>
+        ${sum("quote", "상용구", "마침표 꾹 · 6개")}
+        <div style="height:1px;background:var(--div);margin:0 14px"></div>
+        ${sum("palette", "테마 · 글꼴", "다크 초콜릿 · 주아체")}
+      </div>
+      <div style="font-size:12.5px;color:var(--sum);text-align:center;margin-top:14px;line-height:1.5">바꾸고 싶으면 언제든<br><b style="color:var(--sec)">홈 › 빠른 설정</b>에서 다시 할 수 있어요</div>
+      <div style="flex:1"></div>
+      <div style="height:52px;border-radius:26px;background:var(--sec);color:#fff;font-family:Jua;font-size:19px;display:flex;align-items:center;justify-content:center;margin-bottom:26px">말랑키 시작하기</div>
+    </div>`;
+}
+const LAYOUT_DETAIL = [
+  ["keyboard", "두벌식: 컴퓨터 키보드와 같은 자리. 키가 작아요."],
+  ["grid-3x3", "천지인: 버튼 12개로 모음을 조합해요. 키가 커요."],
+  ["arrow-left-right", "여러 개 고르면 스페이스바를 밀어서 바꿔요."],
+];
+function layoutCard(name, who, on) {
+  return `<div class="card" style="padding:11px 13px;display:flex;align-items:center;gap:10px;${on ? "border:2px solid var(--sec)" : ""}">
+    <div style="flex:1"><div style="font-size:15px;font-weight:700">${name}</div><div style="font-size:12px;color:var(--sum);margin-top:2px">${who}</div></div>
+    <span style="width:22px;height:22px;border-radius:6px;${on ? "background:var(--sec)" : "border:1.5px solid var(--border)"};display:flex;align-items:center;justify-content:center;color:#fff">${on ? I("check", 'style="width:15px;height:15px"') : ""}</span>
+  </div>`;
+}
+function s1closed() {
+  return statusBar() + wizTop(1, "언어·자판", "평소 쓰던 자판을 고르면 돼요", { detail: LAYOUT_DETAIL }) +
+    `<div class="body" style="gap:8px">
+      <div style="display:flex;gap:6px">${["한국어", "영어", "일본어", "기타"].map((t, i) => `<span style="height:32px;padding:0 13px;border-radius:16px;font-size:13px;font-weight:700;display:flex;align-items:center;${i === 0 ? "background:var(--sec);color:#fff" : "background:#fff;border:1px solid var(--border)"}">${t}</span>`).join("")}</div>
+      ${layoutCard("두벌식", "컴퓨터 키보드와 같은 배치", true)}
+      ${layoutCard("천지인", "버튼 12개 · 예전 폰 자판", false)}
+      ${layoutCard("단모음", "키가 커서 오타가 적어요", false)}
+    </div>` +
+    mission("자판을 고르고 아래에 ‘안녕’을 쳐 보세요", null, "0 / 1") +
+    testbar("여기를 눌러 쳐 보세요…", true) + `<div class="gesture" style="background:var(--cocoa)"><i style="background:#FFF1CF"></i></div>`;
+}
+</script>
+<style> body { width: 1320px; } .col { width: 340px; } </style>
+</head>
+<body><div class="canvas">
+  <div class="eyebrow">빠른 설정 개선 · 설명 펼치기 / 마지막 단계 / 완료</div>
+  <div class="h1">고른 걸 눈으로 보고, 끝에서 한 번 더 확인한다</div>
+  <div class="lead">처음 보는 사람에게 필요한 설명은 펼쳐서, 아는 사람은 한 줄만 보고 지나가게. 끝나면 무엇을 골랐는지 요약.</div>
+
+  <div class="row">
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="s1closed"></div></div>
+      <div class="cap"><b><span class="num">1</span>설명 3단 · 펼친 상태</b><span>항상 보이는 건 굵은 한 줄. “자세히”를 누르면 아이콘 3줄로 자판 차이를 설명해요. 카드에도 “누구한테 맞는지” 한 줄씩. 긴 문단은 없어요.</span></div>
+    </div>
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="s5"></div>
+        <div class="tip up" style="left:150px;top:520px;--ax:24px">미리보기와 아래 키보드가<br>지금 고른 글꼴로 바로 바뀌어요</div>
+      </div>
+      <div class="cap"><b><span class="num">5</span>테마·글꼴</b><span>테마 카드 안 글자가 <b>방금 고른 글꼴</b>로 그려지고, 지금 쓰는 테마에 체크가 돼 있어요. 미션은 “내 이름 써 보기” — 체크용이라기보다 내 이름이 그 글꼴로 찍히는 걸 보는 재미예요.</span></div>
+    </div>
+    <div class="col">
+      <div class="phone"><div class="screen" data-tpl="fin"></div></div>
+      <div class="cap"><b><span class="num" style="background:var(--ok);width:24px;height:24px;display:inline-flex">✓</span>완료 화면 (새로 추가)</b><span>지금은 “시작하기”를 누르면 바로 홈으로 가요. 그 사이에 고른 것 요약 한 장을 넣어 “내가 뭘 골랐지?”를 없애고, 다시 바꾸는 곳(홈 › 빠른 설정)을 알려줘요.</span></div>
+    </div>
+  </div>
+</div></body></html>

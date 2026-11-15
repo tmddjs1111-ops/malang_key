@@ -45,6 +45,20 @@ class InputEventDispatcher private constructor(private val repeatableKeyCodes: I
         private val DoubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
         private val KeyRepeatDelay = ViewConfiguration.getKeyRepeatDelay().toLong()
 
+        /** 지우기 키를 누르고 이만큼(ms) 지나야 연속 삭제를 시작한다. */
+        private const val DeleteRepeatStartDelay = 300L
+        private const val DeleteRepeatSlowInterval = 65L
+        private const val DeleteRepeatFastInterval = 30L
+        private const val DeleteRepeatRampMillis = 1000L
+
+        /**
+         * 연속 삭제 간격: 처음엔 1초에 15글자쯤으로 지우다가 1초에 걸쳐 1초에 33글자쯤까지 빨라진다.
+         */
+        private fun deleteRepeatInterval(elapsed: Long): Long {
+            val t = (elapsed.toFloat() / DeleteRepeatRampMillis).coerceIn(0f, 1f)
+            return (DeleteRepeatSlowInterval + (DeleteRepeatFastInterval - DeleteRepeatSlowInterval) * t).toLong()
+        }
+
         fun new(repeatableKeyCodes: IntArray = intArrayOf()) = InputEventDispatcher(repeatableKeyCodes.clone())
     }
 
@@ -115,13 +129,25 @@ class InputEventDispatcher private constructor(private val repeatableKeyCodes: I
                     } else if (repeatableKeyCodes.contains(data.code)) {
                         val repeatData = determineRepeatData(data)
                         val repeatDelay = determineRepeatDelay(repeatData)
+                        val isDelete = repeatData.code == KeyCode.DELETE || repeatData.code == KeyCode.FORWARD_DELETE
+                        if (isDelete) {
+                            // 살짝 길게 누른 것까지 연속 삭제로 받지 않도록, 지우기 반복은 조금 더 기다렸다 시작한다.
+                            delay((DeleteRepeatStartDelay - longPressDelay).coerceAtLeast(0L))
+                        }
+                        val repeatStart = SystemClock.uptimeMillis()
                         while (isActive) {
                             val onRepeatResult = withContext(Dispatchers.Main) { onRepeat() }
                             if (onRepeatResult) {
                                 keyEventReceiver?.onInputKeyRepeat(repeatData)
                                 pressedKeyInfo.blockUp = true
                             }
-                            delay(repeatDelay)
+                            delay(
+                                if (isDelete) {
+                                    deleteRepeatInterval(SystemClock.uptimeMillis() - repeatStart)
+                                } else {
+                                    repeatDelay
+                                }
+                            )
                         }
                     }
                 }

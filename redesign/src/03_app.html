@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<script src="lucide.js"></script><script src="kb.js"></script>
+<style>
+  body { width: 1360px; }
+  .row { margin-top: 44px; gap: 52px; }
+  .hello { display: flex; align-items: center; gap: 12px; }
+  .hello .ic { width: 44px; height: 44px; border-radius: 13px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .stat { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .stat i.dot { width: 8px; height: 8px; border-radius: 4px; background: #3BB273; display: block; }
+  .chipsrow { display: flex; gap: 6px; margin-top: 12px; }
+  .chipsrow span { font-size: 12.5px; font-weight: 600; background: var(--oat); padding: 6px 10px; border-radius: 9px; }
+  .try { margin-top: 12px; height: 42px; border-radius: 12px; background: var(--oat); display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: var(--ink3); gap: 8px; }
+  .try svg { width: 16px; height: 16px; }
+  .seg { display: flex; background: var(--paper); border-radius: 14px; padding: 4px; }
+  .seg span { flex: 1; text-align: center; font-size: 13px; font-weight: 600; padding: 8px 0; border-radius: 10px; color: var(--ink2); }
+  .seg span.on { background: var(--ink); color: #fff; }
+  .pal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .pal div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--ink2); }
+  .pal i { width: 52px; height: 52px; border-radius: 16px; display: block; position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+  .pal i b { position: absolute; right: 7px; bottom: 7px; width: 14px; height: 14px; border-radius: 4px; }
+  .pal div.on i { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+  .mini { display: flex; flex-direction: column; gap: 10px; }
+  .mini .r { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .mini .r .tr { flex: 1; height: 6px; border-radius: 3px; background: var(--line); position: relative; }
+  .mini .r .tr i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--ink); display: block; }
+  .mini .r .tr em { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 9px; background: #fff; border: 2px solid var(--ink); transform: translate(-50%, -50%); display: block; }
+  .mini .r .v { width: 34px; text-align: right; color: var(--ink); }
+  .fonts { display: flex; gap: 6px; }
+  .fonts span { font-size: 13px; padding: 8px 12px; border-radius: 10px; background: var(--paper); font-weight: 600; color: var(--ink2); }
+  .fonts span.on { background: var(--ink); color: #fff; }
+  .live { font-size: 11.5px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+  .live i { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); display: block; }
+</style></head>
+<body><div class="canvas">
+  <div class="eyebrow">말랑키 2.0 · 앱</div>
+  <div class="h1">타일 메뉴판 대신, 지금 상태와 바로가기</div>
+  <div class="lead">홈은 “무엇을 쓰고 있는지”를 먼저 보여주고, 테마는 바꾸는 즉시 아래 키보드로 보여준다. 게임은 탭에서 내리고 설정 안으로.</div>
+
+  <div class="row">
+    <!-- 홈 -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status" style="background:var(--oat)"></div>
+        <div class="app">
+          <div class="top">
+            <div class="hello">
+              <div class="ic"><svg viewBox="0 0 100 100" width="28" height="28" fill="none" stroke="#fff" stroke-width="11" stroke-linejoin="round"><path d="M31 29 C43 26 57 26 69 29 Q85 29 85 45 V55 Q85 71 69 71 C57 74 43 74 31 71 Q15 71 15 55 V45 Q15 29 31 29 Z"/></svg></div>
+              <div class="t">말랑키</div>
+            </div>
+            <i data-lucide="search" style="width:22px;height:22px;color:var(--ink2)"></i>
+          </div>
+          <div class="card">
+            <div class="stat"><i class="dot"></i>사용 중</div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.03em;margin-top:6px">두벌식 · 영어 쿼티</div>
+            <div class="chipsrow"><span>소리 켬</span><span>진동 켬</span><span>오트 테마</span></div>
+            <div class="try"><i data-lucide="keyboard"></i>여기에 입력해 보기</div>
+          </div>
+          <div class="lbl">입력</div>
+          <div class="list">
+            <div class="li"><div class="ico"><i data-lucide="languages"></i></div><div class="tx"><b>자판</b><span>두벌식 외 1개</span></div><div class="ch"><i data-lucide="chevron-right"></i></div></div>
+            <div class="li"><div class="ico"><i data-lucide="volume-2"></i></div><div class="tx"><b>소리 · 진동</b><span>기본 딸깍 · 35%</span></div><div class="ch"><i data-lucide="chevron-right"></i></div></div>
+            <div class="li"><div class="ico"><i data-lucide="pointer"></i></div><div class="tx"><b>제스처</b><span>스페이스 밀어 커서 이동</span></div><div class="ch"><i data-lucide="chevron-right"></i></div></div>
+          </div>
+          <div class="lbl">키보드 위 버튼</div>
+          <div class="list">
+            <div class="li"><div class="ico"><i data-lucide="layout-grid"></i></div><div class="tx"><b>빠른 설정 · 스마트 바</b><span>토글 8개 · 버튼 4개</span></div><div class="ch"><i data-lucide="chevron-right"></i></div></div>
+            <div class="li"><div class="ico"><i data-lucide="quote"></i></div><div class="tx"><b>상용구</b><span>마침표 길게 · 6개</span></div><div class="ch"><i data-lucide="chevron-right"></i></div></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><i data-lucide="house"></i>홈</div>
+          <div><i data-lucide="languages"></i>자판</div>
+          <div><i data-lucide="palette"></i>테마</div>
+          <div><i data-lucide="settings"></i>설정</div>
+        </div>
+      </div></div>
+      <div class="caption"><b>홈: 상태 카드 + 묶인 목록</b><span>무늬 배경 · 영어 부제 · 들쭉날쭉한 타일 색을 뺐다. 항목마다 지금 값이 보이니 들어가 보지 않아도 된다.</span></div>
+    </div>
+
+    <!-- 테마 -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status" style="background:var(--oat)"></div>
+        <div class="app" style="gap:12px">
+          <div class="top"><div class="t">테마</div></div>
+          <div class="seg"><span>라이트</span><span>다크</span><span class="on">시스템 따라</span></div>
+          <div class="pal">
+            <div class="on"><i style="background:#E8E4DE"><b style="background:#F0643C"></b></i>오트</div>
+            <div><i style="background:#1B1A19"><b style="background:#F0643C"></b></i>잉크</div>
+            <div><i style="background:#DDE3DA"><b style="background:#4F6B57"></b></i>세이지</div>
+            <div><i style="background:#DCE1E8"><b style="background:#3E5878"></b></i>슬레이트</div>
+            <div><i style="background:#EADFDD"><b style="background:#A5534A"></b></i>로즈</div>
+          </div>
+          <div class="card mini">
+            <div class="r"><span style="width:56px">모서리</span><div class="tr"><i style="width:45%"></i><em style="left:45%"></em></div><span class="v">9</span></div>
+            <div class="r"><span style="width:56px">키 간격</span><div class="tr"><i style="width:30%"></i><em style="left:30%"></em></div><span class="v">5</span></div>
+          </div>
+          <div class="fonts"><span class="on">Pretendard</span><span>고운돋움</span><span style="font-family:serif">나눔명조</span></div>
+          <div class="live"><i></i>미리보기 · 바꾸면 바로 반영</div>
+        </div>
+        <div class="kb" data-mode="keys"></div>
+        <div class="gesture" style="background:var(--kbd)"></div>
+      </div></div>
+      <div class="caption"><b>테마: 고르면 아래에서 바로 보인다</b><span>“0dp” 같은 개발 단위 대신 숫자만. 테마 이름은 크레파스 색이 아니라 소재 이름. 다크는 시스템 설정을 따라갈 수 있다.</span></div>
+    </div>
+
+    <!-- 다크 키보드 -->
+    <div>
+      <div class="phone"><div class="screen dark" style="background:var(--d-bg)">
+        <div class="status" style="color:var(--d-ink);background:#0B0B0A"></div>
+        <div class="chat">
+          <div class="bub l">회의 몇 시였지?</div>
+          <div class="bub r">3:30! 회의실 B</div>
+          <div class="input" style="color:var(--d-ink)">알겠어 (조금 늦을 수도)<span class="cur"></span></div>
+        </div>
+        <div class="kb" data-mode="sym"></div>
+        <div class="gesture" style="background:var(--d-kbd)"></div>
+      </div></div>
+      <div class="caption"><b>잉크 테마 · 기호 화면</b><span>한글로 돌아가는 키는 “ABC”가 아니라 “가”. 스페이스바는 비우지 않고 지금 화면 이름을 적는다. 다크에서도 포인트는 엔터 하나.</span></div>
+    </div>
+  </div>
+</div></body></html>

@@ -19,6 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.malangkey.editorInstance
 import dev.malangkey.ime.nlp.StyleAndEmoticonProvider
+import dev.malangkey.ime.theme.FlorisImeUi
+import dev.malangkey.ime.theme.rememberIsCustomBgImageActive
+import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
 import dev.malangkey.keyboardManager
 
 @Composable
@@ -40,11 +43,19 @@ fun EmoticonSearchPanel(
         StyleAndEmoticonProvider.generateCandidates(currentWord)
     }
 
+    // 스페이스바를 꾹 눌러 자판 위로 올라오는 창이라, 배경 사진을 쓸 때도 사진 없이 테마 배경색 단색으로 칠한다.
+    val isBgImageActive = rememberIsCustomBgImageActive()
+    val windowStyle = rememberSnyggThemeQuery(FlorisImeUi.Window.elementName)
+    val windowForeground = windowStyle.foreground()
+    val panelBackground = if (isBgImageActive) windowStyle.background() else Color(0xFFFCF5D6) // Malang Key default bg
+    val textColor = if (isBgImageActive) windowForeground else Color(0xFF311D18)
+    val subTextColor = if (isBgImageActive) windowForeground.copy(alpha = 0.7f) else Color(0xFF887766)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .height(250.dp)
-            .background(Color(0xFFFCF5D6)) // Malang Key default bg
+            .background(panelBackground)
     ) {
         // Panel Header with Title and Close Button
         Row(
@@ -56,7 +67,7 @@ fun EmoticonSearchPanel(
         ) {
             Text(
                 text = if (currentWord.isEmpty()) "이모티콘 & 인스타체 추천" else "'$currentWord' 변환 결과",
-                color = Color(0xFF887766),
+                color = subTextColor,
                 fontSize = 14.sp
             )
             IconButton(
@@ -66,7 +77,7 @@ fun EmoticonSearchPanel(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "닫기",
-                    tint = Color(0xFF311D18)
+                    tint = textColor
                 )
             }
         }
@@ -97,14 +108,14 @@ fun EmoticonSearchPanel(
                     Text(
                         text = candidate.text.toString(),
                         fontSize = 18.sp,
-                        color = Color(0xFF311D18),
+                        color = textColor,
                         modifier = Modifier.weight(1f)
                     )
                     if (candidate.secondaryText != null) {
                         Text(
                             text = candidate.secondaryText.toString(),
                             fontSize = 12.sp,
-                            color = Color(0xFF887766),
+                            color = subTextColor,
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }

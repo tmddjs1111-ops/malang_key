@@ -1,0 +1,14 @@
+{
+  "uniqueId": "unicode-cldr",
+  "name": "Unicode CLDR (emoji names and keywords)",
+  "developers": [
+    {
+      "name": "Unicode, Inc.",
+      "organisationUrl": "https://cldr.unicode.org"
+    }
+  ],
+  "website": "https://cldr.unicode.org",
+  "licenses": [
+    "unicode-3.0"
+  ]
+}

@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -39,6 +42,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import dev.malangkey.app.FlorisPreferenceStore
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -155,6 +164,24 @@ fun BoxScope.ImeWindow() {
 
     FloatingDockToFixedIndicator()
 
+    // 배경 사진 자르기 틀이 실제 키보드 모양과 같도록, 고정 키보드의 가로÷세로 비율을 남겨 둔다.
+    // 이모티콘 검색창처럼 자판 위로 올라온 창이 있을 때는 높이가 달라서 기록하지 않는다.
+    val prefs by FlorisPreferenceStore
+    val scope = rememberCoroutineScope()
+    val keyboardManager by LocalContext.current.keyboardManager()
+    val keyboardState by keyboardManager.activeState.collectAsState()
+    val isEmoticonSearchVisible by keyboardManager.isEmoticonSearchVisible.collectAsState()
+    // 가로 화면은 키보드가 납작해서 틀 비율로 쓰면 안 된다. 세로 화면일 때만 기록한다.
+    val isPortrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+    val isFixedWindow = windowSpec is ImeWindowSpec.Fixed && isPortrait &&
+        keyboardState.imeUiMode == ImeUiMode.TEXT && !isEmoticonSearchVisible
+    // 배경 사진은 소프트바(내비게이션 바) 위에서 끝낸다. 소프트바 자리는 키보드 배경색으로 남는다.
+    val bgImageBottomInset = if (windowSpec is ImeWindowSpec.Fixed) {
+        WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding()
+    } else {
+        0.dp
+    }
+
     SnyggBox(
         elementName = FlorisImeUi.Window.elementName,
         attributes = attributes,
@@ -174,8 +201,19 @@ fun BoxScope.ImeWindow() {
                 val boundsPx = coords.boundsInRoot().roundToIntRect()
                 val newInsets = with(density) { ImeInsets.Window.of(boundsPx) }
                 windowController.updateWindowInsets(newInsets)
+                // 자르기 틀은 사진이 실제로 보이는 곳(소프트바 위)의 비율로 맞춘다.
+                val bgImageHeightPx = boundsPx.height - with(density) { bgImageBottomInset.roundToPx() }
+                if (isFixedWindow && boundsPx.width > 0 && bgImageHeightPx > 0) {
+                    val aspect = boundsPx.width.toFloat() / bgImageHeightPx
+                    if (abs(aspect - prefs.malang.keyboardWindowAspect.get()) > 0.01f) {
+                        scope.launch { prefs.malang.keyboardWindowAspect.set(aspect) }
+                    }
+                }
             },
         supportsBackgroundImage = true,
+        // 자판 위로 창이 올라와 키보드가 높아져도, 배경 사진은 자판 쪽(아래)에 붙어 그대로 있게 한다.
+        backgroundImageAlignment = Alignment.BottomCenter,
+        backgroundImageBottomInset = bgImageBottomInset,
         allowClip = false,
     ) {
         OneHandedPanel()

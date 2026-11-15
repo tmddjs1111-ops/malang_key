@@ -350,7 +350,10 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
      *
      * @return True on success, false if an error occurred or the input connection is invalid.
      */
-    fun deleteBackwards(unit: OperationUnit): Boolean {
+    /**
+     * @param wholeCharacter 한글을 자모 단위로 풀지 않고 글자째 지운다. 삭제 키를 꾹 누르고 있을 때 쓴다.
+     */
+    fun deleteBackwards(unit: OperationUnit, wholeCharacter: Boolean = false): Boolean {
         val content = activeContent
         if (unit == OperationUnit.CHARACTERS) {
             if (phantomSpace.isActive && content.currentWord.isValid && prefs.glide.immediateBackspaceDeletesWord.get()) {
@@ -359,6 +362,21 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
         }
         autoSpace.setInactive()
         phantomSpace.setInactive()
+        if (ownComposing.isNotEmpty()) {
+            // 글을 읽을 수 없는 입력칸에서 자체 조합 중: 들고 있는 글자에서 지운다.
+            val composer = determineComposer(subtypeManager.activeSubtype.composer)
+            if (unit == OperationUnit.CHARACTERS) {
+                val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
+                val actions = composer.getActionsForBackspace(ownComposing, layoutId)
+                val updated = if (actions == null || wholeCharacter) {
+                    ownComposing.dropLast(1)
+                } else {
+                    ownComposing.dropLast(actions.first) + actions.second
+                }
+                return applyOwnComposing(updated, composer.toRead)
+            }
+            finishOwnComposing()
+        }
         return if (content.selection.isSelectionMode) {
             commitText("")
         } else runBlocking {
@@ -366,7 +384,9 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
                 val composer = determineComposer(subtypeManager.activeSubtype.composer)
                 val layoutId = subtypeManager.activeSubtype.layoutMap.characters.componentId
                 val actions = composer.getActionsForBackspace(content.textBeforeSelection, layoutId)
-                if (actions != null) {
+                // 한글 조합기는 지우기를 받으면 연타 상태를 비운다. 글자째 지울 때도 그 처리는 거치고 결과만 버린다.
+                val skipComposer = wholeCharacter && composer.id == "hangul-unicode"
+                if (actions != null && !skipComposer) {
                     val (rm, insertText) = actions
                     if (rm > 0) {
                         deleteAroundCursor(OperationUnit.CHARACTERS, OperationScope.BEFORE_CURSOR, n = rm)
@@ -495,6 +515,7 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     fun performClipboardSelectAll(): Boolean {
         autoSpace.setInactive()
         phantomSpace.setInactive()
+        finishOwnComposing()
         val ic = currentInputConnection() ?: return false
         ic.finishComposingText()
         return if (activeInfo.isRawInputEditor) {
@@ -537,6 +558,7 @@ class EditorInstance(context: Context) : AbstractEditorInstance(context) {
     fun performEnterAction(action: ImeOptions.Action): Boolean {
         autoSpace.setInactive()
         phantomSpace.setInactive()
+        finishOwnComposing()
         val ic = currentInputConnection() ?: return false
         return ic.performEditorAction(action.toInt())
     }

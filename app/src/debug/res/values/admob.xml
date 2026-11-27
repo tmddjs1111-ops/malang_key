@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- debug 빌드는 항상 테스트 광고만 받는다. 실제 광고를 직접 누르면 AdMob 계정이 정지될 수 있다. -->
+<resources>
+    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_banner_home_id" translatable="false">ca-app-pub-3940256099942544/9214589741</string>
+</resources>

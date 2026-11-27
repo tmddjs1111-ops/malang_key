@@ -33,6 +33,19 @@
         android:theme="@style/FlorisAppTheme"
         tools:targetApi="tiramisu">
 
+        <!-- AdMob: 설정 앱 홈 화면 하단 배너에만 쓴다. 인터넷 권한은 이 SDK 가 더한다.
+             키보드로 입력한 내용은 광고 SDK 에 넘기지 않으며 기기 밖으로 나가지 않는다. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id"/>
+        <!-- 앱(키보드 포함)이 켜질 때 광고 SDK 초기화를 미루고, 설정 화면에서만 직접 초기화한다. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true"/>
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true"/>
+
         <!-- Allow app to be profiled for benchmarking and baseline profile generation -->
         <profileable android:shell="true"/>
 

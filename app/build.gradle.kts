@@ -225,6 +225,8 @@ dependencies {
     // androidTestImplementation(composeBom)
 
     implementation(libs.androidx.activity.compose)
+    // 설정 앱 홈 화면 하단 배너 광고 전용. 키보드(IME) 쪽 코드는 이 SDK를 쓰지 않는다.
+    implementation(libs.google.play.services.ads)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.autofill)
     implementation(libs.androidx.collection.ktx)

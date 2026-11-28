@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   AdMob ID. 설정 앱 홈 화면 하단 배너에만 쓴다.
-  지금 값은 Google 공식 테스트 ID다. AdMob 에서 앱과 배너 광고 단위를 만든 뒤
-  실제 ID 로 바꿔야 수익이 난다. (debug 빌드는 src/debug 의 테스트 ID 를 계속 쓴다)
+  실제 ID 다. (AdMob 앱 "말랑키", 광고 단위 "settings_banner")
+  debug 빌드는 src/debug 의 Google 테스트 ID 를 쓴다. 실제 광고를 직접 누르면 계정이 정지될 수 있다.
 -->
 <resources>
-    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
-    <string name="admob_banner_home_id" translatable="false">ca-app-pub-3940256099942544/9214589741</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-3329562346026608~7180151164</string>
+    <string name="admob_banner_home_id" translatable="false">ca-app-pub-3329562346026608/3486243346</string>
 </resources>

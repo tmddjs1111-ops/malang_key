@@ -150,19 +150,22 @@ abstract class AbstractEditorInstance(context: Context) {
             }
         }
 
-        scope.launch {
-            val content = generateContent(
+        // 바로(동기로) 채운다. 예전엔 코루틴으로 미뤄서, 앱이 막 켜져 메인 스레드가 바쁠 때(크롬 검색창은 켜진 직후
+        // 입력을 한 번 더 다시 시작한다) 그 사이에 누른 키가 '입력칸 위치 모름' 상태로 처리됐다. 그러면 앞 글자를
+        // 못 보고 조합해서 ㅈ+ㅈ이 ㅊ 대신 ㅈㅈ이 됐다.
+        val content = runBlocking {
+            generateContent(
                 editorInfo,
                 selection,
                 textBeforeSelection,
                 textAfterSelection,
                 selectedText,
             )
-            activeCursorCapsMode = content.cursorCapsMode()
-            activeContent = content
-            keyboardManager.reevaluateInputShiftState()
-            ic.setComposingRegion(content.composing)
         }
+        activeCursorCapsMode = content.cursorCapsMode()
+        activeContent = content
+        keyboardManager.reevaluateInputShiftState()
+        ic.setComposingRegion(content.composing)
     }
 
     protected fun handleMassSelectionUpdate(newSelection: EditorRange, composing: EditorRange) {
@@ -372,14 +375,20 @@ abstract class AbstractEditorInstance(context: Context) {
     fun syncContentIfStale(): Boolean {
         val ic = currentInputConnection() ?: return false
         val content = activeContent
-        if (activeInfo.isRawInputEditor || content.selection.isNotValid || content.selection.isSelectionMode) return false
+        if (activeInfo.isRawInputEditor || content.selection.isSelectionMode) return false
+        // 사본이 아예 없으면(입력이 막 다시 시작돼 아직 못 읽었다) 입력칸이 위치를 알려 주는지 보고, 알려 주면 읽는다.
+        // 위치를 안 알려 주는 칸(보안 입력칸 등)은 그대로 두어 자체 조합으로 간다.
+        val unknown = content.selection.isNotValid
+        if (unknown && ownComposing.isNotEmpty()) return false
         val realTail = ic.getTextBeforeCursor(StaleCheckChars, 0)?.toString() ?: return false
         val cachedTail = content.textBeforeSelection.takeLast(StaleCheckChars).toString()
-        if (realTail == cachedTail) return false
+        if (!unknown && realTail == cachedTail) return false
 
-        flogDebug { "Editor cache is stale (cached='$cachedTail', real='$realTail'), re-reading" }
-        runBlocking { expectedContentQueue.clear() }
         val extracted = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)
+        if (unknown && (extracted == null || extracted.selectionStart < 0)) return false
+        flogDebug { "Editor cache is stale (cached='$cachedTail', real='$realTail'), re-reading" }
+        InputDiagnostics.log { "  RESYNC unknown=$unknown real='$realTail'" }
+        runBlocking { expectedContentQueue.clear() }
         if (extracted == null || extracted.selectionStart < 0) {
             // 위치를 알 수 없는 입력칸: 조합 상태만 버리고 다음 선택 변경 알림에서 다시 읽게 둔다.
             activeContent = EditorContent.Unspecified
@@ -509,6 +518,7 @@ abstract class AbstractEditorInstance(context: Context) {
         val previous = content.textBeforeSelection.takeLast(composer.toRead.coerceAtLeast(if (deletePreviousSpace) 1 else 0))
         val (tempRm, tempText) = composer.getActions(previous, char, layoutId)
         val rm = if (deletePreviousSpace && previous.isNotEmpty() && previous.last() == ' ') tempRm + 1 else tempRm
+        InputDiagnostics.log { "  NORM prev='$previous' + '$char' -> rm=$tempRm text='$tempText'" }
         val finalText = buildString(tempText.length + 2) {
             if (insertSpaceBeforeChar) append(' ')
             append(tempText)

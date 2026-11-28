@@ -118,13 +118,14 @@ fun HomeScreen() = FlorisScreen {
             }
 
             if (selectedTab == HomeTab.MAIN) {
-                // 메인 탭은 스크롤 없이 한 화면에 맞춘다 (하단 탭바 높이 72 + 여백 28 + 간격 12)
+                // 메인 탭은 스크롤 없이 한 화면에 맞춘다 (하단 탭바 높이 72 + 여백 28 + 간격 20).
+                // 간격은 배너 광고와 탭바 사이를 띄워 잘못 누르는 일을 막는다.
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
                         .navigationBarsPadding()
-                        .padding(top = 16.dp, bottom = 112.dp)
+                        .padding(top = 16.dp, bottom = 120.dp)
                 ) {
                     MainTabContent(navController, context)
                 }
@@ -243,6 +244,10 @@ private fun ColumnScope.MainTabContent(
             }
         }
     }
+
+    // 하단 배너 광고 (설정 앱 홈 화면에만 둔다. 키보드 화면에는 절대 넣지 않는다.)
+    // 잘못 누르지 않게 카드·하단 탭바와 간격을 둔다.
+    HomeBannerAd(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp))
 }
 
 /**
